@@ -1,0 +1,96 @@
+{
+  "title": "शैक्षिक पहल",
+  "selectYear": "वर्ष चुनें",
+  "description": "छात्रों के लिए शैक्षिक सहायता और मार्गदर्शन की पहल।",
+  "readMore": "और पढ़ें",
+  "readLess": "कम पढ़ें",
+  "years": ["2022", "2023", "2024", "2025"],
+  "data": {
+    "2025": [
+      {
+  "title": "प्राथमिक, माध्यमिक और उच्च माध्यमिक विद्यार्थी सम्मान समारोह - 2025",
+  "description": "उपरोक्त उत्सव मंडल की ओर से शैक्षणिक उपक्रम के अंतर्गत शनिवार, 2 अगस्त 2025 को डॉ. शिरोडकर हाई स्कूल सभागार में क्षेत्र के सदस्य विद्यार्थियों को अधिकतम प्रोत्साहन देने के उद्देश्य से वर्ष 2024 - 2025 में प्राथमिक, माध्यमिक और उच्च माध्यमिक परीक्षाओं में विशेष उत्कृष्टता प्राप्त करने वाले विद्यार्थियों का गुणगौरव समारोह उत्साहपूर्वक संपन्न हुआ। सभी प्रतिभाशाली विद्यार्थियों को विशेष सराहना और उनके आगे की यात्रा के लिए शुभकामनाएं!",
+  "images": [
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_1.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_2.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_3.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_4.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_5.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_6.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_7.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_8.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_9.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_10.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
+  ]
+},
+{
+        "title": "योग एवं लाठी-काठी प्रशिक्षण शिविर",
+        "description": "जन आग्रह पर वयस्क वर्ग के लिए योग एवं लाठी-काठी प्रशिक्षण शिविर आयोजित किया गया।",
+        "images": [
+          "images/pic1.jpeg",
+          "images/pic3.jpeg"
+        ]
+      }
+,
+      {
+        "title": "कंप्यूटर प्रशिक्षण केंद्र",
+        "description": "लालबाग सार्वजनिक उत्सव मंडल गणेश गल्ली-मुंबईचा राजा की ओर से शनिवार, 1 फरवरी 2025 को शैक्षिक पहल के अंतर्गत कंप्यूटर प्रशिक्षण केंद्र का उद्घाटन हुआ। आज की शैक्षिक प्रतिस्पर्धा के युग में छात्रों को आगे रखने के उद्देश्य से यह उपक्रम शुरू किया गया है। कृपया इसका लाभ लें और मंडल का आभार व्यक्त करें।",
+        "images": [
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_2.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_5.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_6.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2024": [
+      {
+        "title": "ग्रीष्मकालीन शौक वर्ग शिविर",
+        "description": "विद्यालय परीक्षाएं समाप्त होने के बाद छात्रों की कलात्मक प्रतिभा को प्रोत्साहित करने हेतु ग्रीष्मकालीन शौक वर्ग आयोजित किया गया। इस उपक्रम में विशेषज्ञों की उपस्थिति में अभिनय, सुलेखन, गायन, मंच संचालन, व्यक्तित्व विकास आदि विषयों पर कार्यशालाएं आयोजित की गईं।",
+        "images": [
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/01_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2023": [
+      {
+        "title": "ग्रीष्मकालीन शौक वर्ग शिविर",
+        "description": "विद्यालय परीक्षाएं समाप्त होने के बाद छात्रों की कलात्मक प्रतिभा को प्रोत्साहित करने हेतु ग्रीष्मकालीन शौक वर्ग आयोजित किया गया। इस उपक्रम में विशेषज्ञों की उपस्थिति में अभिनय, सुलेखन, गायन, मंच संचालन, व्यक्तित्व विकास आदि विषयों पर कार्यशालाएं आयोजित की गईं।",
+        "images": [
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/04_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/02_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2022": [
+      {
+        "title": "ग्रीष्मकालीन कार्यशाला शिविर",
+        "description": "लालबाग उत्सव मंडल और आहना फाउंडेशन के संयुक्त तत्वावधान में 7 से 16 वर्ष के बच्चों के लिए 16 अप्रैल से 24 अप्रैल 2022 तक ग्रीष्मकालीन कार्यशाला आयोजित की गई। इसमें निम्न विषयों की शिक्षा दी गई: 1) व्यक्तित्व विकास 2) फ्रेंच भाषा 3) अबेकस 4) फोनेटिक्स 5) वैदिक गणित 6) भाषण कला। प्रतिभागियों को प्रमाणपत्र और शैक्षिक सामग्री प्रदान की गई।",
+        "images": [
+          "https://www.mumbaicharaja.co/IMG-20220424-WA0035.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/IMG-20220416-WA0016.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/IMG-20220424-WA0002.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      },
+      {
+        "title": "विद्यार्थी सम्मान समारोह",
+        "description": "7 अगस्त 2022 को शाम 6 बजे शालेय व महाविद्यालयीन मेधावी विद्यार्थियों के लिए डॉ. शिरोडकर हायस्कूल, परेल में 'गुणगौरव सोहळा-2022' आयोजित किया गया। कार्यक्रम में डॉ. विद्या सुहास प्रभु द्वारा विद्यार्थियों को पुरस्कार वितरित किए गए और मार्गदर्शन भी किया गया।",
+        "images": [
+          "https://www.mumbaicharaja.co/Gunagaurav%202022/FB_IMG_1659888130814.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Gunagaurav%202022/IMG_20220807_192824.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      },
+      {
+        "title": "पुलिस भर्ती मार्गदर्शन शिविर",
+        "description": "4 दिसंबर 2022 को आयोजित पुलिस भर्ती मार्गदर्शन शिविर में इच्छुक उम्मीदवारों ने भाग लिया और महत्वपूर्ण मार्गदर्शन प्राप्त किया। विशेष धन्यवाद श्री संतोष पवार सर और श्री मयुरेश वालम सर को उनके बहुमूल्य मार्गदर्शन के लिए।",
+        "images": [
+          "https://www.mumbaicharaja.co/Prashikshan%20(1).jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Prashikshan%20(3).jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Prashikshan%20(2).jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ]
+  }
+}

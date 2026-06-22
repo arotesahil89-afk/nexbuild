@@ -1,0 +1,28 @@
+{
+  "sectionTitle": "गणेशोत्सव सजावट-2025",
+  "description": "उपरोक्त मंडल की ओर से वर्ष 2025 के लिए तमिलनाडु स्थित ‘रामनाथस्वामी मंदिर’ (रामेश्वरम) की सजावट प्रस्तुत करने का निर्णय लिया गया है।",
+  "videoTitle": "पिछले वर्ष की थीम वीडियो – महाकालेश्वर मंदिर",
+  "title": "गणेश सजावट",
+  "noData": "इस वर्ष के लिए कोई जानकारी उपलब्ध नहीं है।",
+  "years": {
+    "2025": {
+      "title": "रामेश्वरम मंदिर थीम",
+      "description": "उपरोक्त मंडल की ओर से वर्ष 2025 के लिए तमिलनाडु स्थित ‘रामनाथस्वामी मंदिर’ (रामेश्वरम) की सजावट प्रस्तुत करने का निर्णय लिया गया है।",
+  "videoTitle": "पिछले वर्ष की थीम वीडियो – महाकालेश्वर मंदिर",
+      
+      "videos": ["https://www.youtube.com/embed/oKsisg-vj28?si=sZIselKUxZiy5w2A"]
+    },
+    "2024": {
+      "title": "उज्जैन महाकाल थीम",
+      "description": "2024 में गणेश गली में उज्जैन महाकाल मंदिर पर आधारित भव्य और आध्यात्मिक सजावट की गई थी। इस सजावट में मंदिर की वास्तुकला और दिव्य वातावरण की सुंदर झलक देखने को मिली।",
+      "images": [
+        "https://sonikaagarwal.in/wp-content/uploads/2016/09/gully02.jpg",
+        "https://pbs.twimg.com/media/GWy8ZshaQAAMS4V.jpg",
+        "https://etvbharatimages.akamaized.net/etvbharat/prod-images/31-08-2024/1200-675-22340625-thumbnail-16x9-ganesh-galli-2024-decoration.jpg"
+      ],
+      "videos": [
+        "https://www.youtube.com/embed/lUT-jEY145Y?si=odGbuE7X5aYx7gbF"
+      ]
+    }
+  }
+}

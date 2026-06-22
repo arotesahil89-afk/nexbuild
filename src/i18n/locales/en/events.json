@@ -1,0 +1,32 @@
+{
+  "upcomingHeading": "Upcoming Events",
+  "scheduleHeading": "Event Schedule",
+  "eventList": [  
+  {
+    "title": "Pranapratisthapana of Mumbai Cha Raja",
+    "date": "27 August",
+    "time": "7:00 AM",
+    "description": ""
+  },
+  {
+    "title": "Live Broadcast",
+    "date": "27 August 2025",
+    "time": "7:00 AM",
+    "description": "Live viewing of the Ganesh idol available to all devotees."
+  },
+  {
+  "title": "Shri Satyanarayan Maha Puja",
+  "date": "29 August 2025",
+  "time": "5:00 PM (Evening)",
+  "description": "A sacred religious ceremony dedicated to Lord Satyanarayan. All devotees are warmly invited to attend with their families."
+},
+  {
+    "title": "Visarjan Procession",
+    "date": "6 September",
+    "time": "From 8:00 AM",
+    "description": ""
+  }
+
+
+  ]
+}

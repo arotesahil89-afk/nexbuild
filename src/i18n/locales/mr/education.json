@@ -1,0 +1,97 @@
+{
+  "title": "शैक्षणिक उपक्रम",
+  "selectYear": "वर्ष निवडा",
+  "description": "विद्यार्थ्यांसाठी शैक्षणिक मदतीचे आणि मार्गदर्शनाचे उपक्रम.",
+  "readMore": "अधिक वाचा",
+  "readLess": "कमी वाचा",
+  "years": ["2022", "2023", "2024", "2025"],
+  "data": {
+    "2025": [
+      {
+        "title": "प्राथमिक, माध्यमिक व उच्चमाध्यमिक विद्यार्थी गुणगौरव सोहळा-२०२५",
+        "description": "उपरोक्त उत्सव मंडळाच्या वतीने शैक्षणिक उपक्रमांतर्गत शनिवार दिनांक २ ऑगस्ट २०२५ रोजी डॉ.शिरोडकर हायस्कूल सभागृह येथे विभागातील वर्गणीदार विद्यार्थ्यांना अधिकाधिक प्रोत्साहन देण्याच्या उद्देशाने सन २०२४ - २०२५ या वर्षात प्राथमिक, माध्यमिक व उच्च माध्यमिक परिक्षेमध्ये विशेष नैपुण्य मिळविणाऱ्या विद्यार्थ्यांचा गुणगौरव सोहळा उत्साहात संपन्न झाला.सर्व गुणवंत विद्यार्थ्यांचे विशेष कौतुक आणि पुढील वाटचालीसाठी शुभेच्छा!",
+        "images": [
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_1.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_2.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_3.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_4.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_5.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_6.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_7.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_8.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_9.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_10.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
+          
+        ]
+      },
+      
+      {
+        "title": "योगा व लाठी-काठी प्रशिक्षण शिबीर",
+        "description": "खास लोकाग्रहास्तव प्रौढ गटाकरिता योगा व लाठी-काठी प्रशिक्षण शिबीर",
+        "images": [
+          "images/pic1.jpeg",
+          "images/pic3.jpeg"
+        ]
+      },
+      {
+        "title": "संगणक प्रशिक्षण केंद्र",
+        "description": "लालबाग सार्वजनिक उत्सव मंडळ गणेश गल्ली-मुंबईचा राजा च्या वतीने शनिवार दि.१ फेब्रूवारी २०२५ रोजी शैक्षणिक उपक्रमा अंतर्गत संगणक प्रशिक्षण केंद्राचे उद्घाटन झाले. सध्याच्या शैक्षणिक स्पर्धेच्या युगात आपले विद्यार्थी सर्व स्तरावर अग्रेसर रहावे हे उद्दिष्ट समोर ठेवून उत्सव मंडळाच्या या उपक्रमाचा अवश्य लाभ घ्यावा व मंडळास उपकृत करावे",
+        "images": [
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_2.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_5.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_6.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2024": [
+      {
+        "title": "उन्हाळी छंद वर्ग शिबिर",
+        "description": "शालेय मुलांच्या वार्षिक परीक्षा आटोपल्यानंतर त्यांच्या अंगीकृत कलागुणांना प्रोत्साहन देण्याच्या उद्देशाने मंडळाच्या वतीने उन्हाळी छंद वर्गाचे आयोजन केले जाते. ह्या उपक्रमामध्ये तज्ञ मार्गदर्शकांच्या उपस्थितीत अभिनय, सुलेखन, गायन, सूत्रसंचलन, व्यक्तिमत्व विकास इत्यादी कलाक्षेत्रातील विषयांवर कार्यशाळा आयोजित केली जाते.",
+        "images": [
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/01_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2023": [
+      {
+        "title": "उन्हाळी छंद वर्ग शिबिर",
+        "description": "शालेय मुलांच्या वार्षिक परीक्षा आटोपल्यानंतर त्यांच्या अंगीकृत कलागुणांना प्रोत्साहन देण्याच्या उद्देशाने मंडळाच्या वतीने उन्हाळी छंद वर्गाचे आयोजन केले जाते. ह्या उपक्रमामध्ये तज्ञ मार्गदर्शकांच्या उपस्थितीत अभिनय, सुलेखन, गायन, सूत्रसंचलन, व्यक्तिमत्व विकास इत्यादी कलाक्षेत्रातील विषयांवर कार्यशाळा आयोजित केली जाते.",
+        "images": [
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/04_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/02_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2022": [
+      {
+        "title": "ऊन्हाळी कार्यशाळा शिबिर",
+        "description": "उपरोक्त उत्सव मंडळ व आहना फाऊंडेशन ह्यांच्या संयुक्त विद्यमाने वय वर्षे ७ ते १६ वयोगटातील विभागीय वर्गणीदार विद्यार्थांकरिता शनिवार दि.१६एप्रिल२०२२ ते रविवार दि.२४एप्रिल२०२२ या कालावधीत तज्ञ शिक्षकांच्या मार्गदर्शनाखाली ऊन्हाळी कार्यशाळा शिबिराचे आयोजन करण्यात आले होते. सध्याचा शैक्षणिक अभ्यासक्रम पाहता सदर शिबिरांतर्गत पुढीलप्रमाणे विषय शिकविण्यात आले- १) व्यक्तिमत्व विकास (Personality development) २) फ़्रेंच भाषा (French language) ३) ॲबॅकस (Abacus) ४) फोनेटिक्स (Phonetics) ५) वैदिक गणित (Vedic Maths) ६) भाषण कला (Public speaking) उपरोक्त मंडळातर्फे शिबिरार्थींना प्रशस्तिपत्रक व शैक्षणिक साहित्य देऊन प्रोत्साहीत करण्यात आले..",
+        "images": [
+          "https://www.mumbaicharaja.co/IMG-20220424-WA0035.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/IMG-20220416-WA0016.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/IMG-20220424-WA0002.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      },
+      {
+        "title": "विद्यार्थी गुणगौरव सोहळा",
+        "description": "उपरोक्त उत्सव मंडळाच्या वतीने शैक्षणिक उपक्रमांतर्गत *रविवार दि.७ ऑगस्ट २०२२ रोजी सायं. ठीक ६:०० वाजता* शालेय व महाविद्यालयीन गुणवंत विद्यार्थ्यांना प्रोत्साहन देण्याच्या उद्देशाने डॉ.शिरोडकर हायस्कूल, परेल येथे *गुणगौरव सोहळा-२०२२* आयोजित करण्यात आला होता. तद्प्रसंगी सदर सोहळ्यामध्ये प्रमुख अतिथी डॉ.विद्या सुहास प्रभु (MA. PhD) ह्यांच्या हस्ते पारितोषिक वितरण करण्यात आले तसेच विद्यार्थ्यांना मार्गदर्शन केले.",
+        "images": [
+          "https://www.mumbaicharaja.co/Gunagaurav%202022/FB_IMG_1659888130814.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Gunagaurav%202022/IMG_20220807_192824.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      },
+      {
+        "title": "पोलीस भरती मार्गदर्शन शिबीर",
+        "description": "उपरोक्त उत्सव मंडळाच्या वतीने दि.४ डिसेंबर२०२२ रोजी आयोजित पोलीस भरती मार्गदर्शन शिबिरामध्ये इच्छुक उमेदवारांनी सहभाग घेऊन महत्त्वपूर्ण मार्गदर्शन आत्मसात केले. सदर कार्यक्रमामध्ये शिबीरार्थींना अतिशय मोलाचे मार्गदर्शन केल्याबद्दल श्री.संतोष पवार सर व श्री.मयुरेश वालम सर यांचे आभार.",
+        "images": [
+          "https://www.mumbaicharaja.co/Prashikshan%20(1).jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Prashikshan%20(3).jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Prashikshan%20(2).jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "sectionTitle": "Ganesh Festival Decoration-2025",
+  "description": "On behalf of the above committee, it has been decided to present a Decoration of the 'Ramanathaswamy Temple' (Rameswaram) located in Tamil Nadu for the year 2025.",
+  "title": "Ganesh Decoration",
+  "noData": "No information available for this year.",
+  "years": {
+    "2025": {
+      "title": "Rameshwaram Temple theme",
+      "description": "On behalf of the above committee, it has been decided to present a Decoration of the 'Ramanathaswamy Temple' (Rameswaram) located in Tamil Nadu for the year 2025.",
+      
+      "videos": ["https://www.youtube.com/embed/oKsisg-vj28?si=sZIselKUxZiy5w2A"]
+    },
+    "2024": {
+      "title": "Ujjain Mahakal Theme",
+      "description": "In 2024, Ganesh Galli featured a grand and spiritual decoration inspired by the Ujjain Mahakal temple. The design reflected temple architecture and created a divine ambiance.",
+      "images": [
+        "https://sonikaagarwal.in/wp-content/uploads/2016/09/gully02.jpg",
+        "https://pbs.twimg.com/media/GWy8ZshaQAAMS4V.jpg",
+        "https://etvbharatimages.akamaized.net/etvbharat/prod-images/31-08-2024/1200-675-22340625-thumbnail-16x9-ganesh-galli-2024-decoration.jpg"
+      ],
+      "videos": [
+        "https://www.youtube.com/embed/lUT-jEY145Y?si=odGbuE7X5aYx7gbF"
+      ]
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "title": "Educational Initiatives",
+  "selectYear": "Select Year",
+  "description": "Initiatives for student support and educational guidance.",
+  "readMore": "Read More",
+  "readLess": "Read Less",
+  "years": ["2022", "2023", "2024", "2025"],
+  "data": {
+    "2025": [
+      {
+  "title": "Primary, Secondary, and Higher Secondary Student Felicitation Ceremony – 2025",
+  "description": "Organized by the above-mentioned festive committee as part of an educational initiative, a felicitation ceremony was held with great enthusiasm on Saturday, August 2, 2025, at Dr. Shirodkar High School Auditorium. The aim was to encourage member students from the region who demonstrated exceptional academic excellence in the primary, secondary, and higher secondary examinations during the 2024–2025 academic year. Special appreciation was given to all meritorious students, along with best wishes for their future endeavors!",
+  "images": [
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_1.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_2.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_3.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_4.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_5.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_6.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_7.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_8.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_9.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_10.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
+    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
+  ]
+}
+,
+      {
+        "title": "Computer Training Center",
+        "description": "On Saturday, 1st February 2025, the Lalbaug Sarvajanik Utsav Mandal, Ganesh Galli-Mumbaicha Raja inaugurated a computer training center under its educational initiative. This step was taken to keep our students ahead in today’s competitive academic environment. Please take advantage of this initiative and support the mandal.",
+        "images": [
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_2.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_5.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Computerclass_inauguration_6.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2024": [
+      {
+        "title": "Summer Hobby Camp",
+        "description": "After annual school exams, the mandal organizes a Summer Hobby Camp to promote students’ artistic talents. With expert guidance, workshops are held in acting, calligraphy, singing, anchoring, and personality development.",
+        "images": [
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/01_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2023": [
+      {
+        "title": "Summer Hobby Camp",
+        "description": "After annual school exams, the mandal organizes a Summer Hobby Camp to promote students’ artistic talents. With expert guidance, workshops are held in acting, calligraphy, singing, anchoring, and personality development.",
+        "images": [
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/04_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/images/upkram/summercamp/02_big.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ],
+    "2022": [
+      {
+        "title": "Summer Workshop Camp",
+        "description": "From 16th to 24th April 2022, a Summer Workshop was held for children aged 7 to 16, jointly organized by the mandal and Aahna Foundation. The workshop covered the following subjects: 1) Personality Development 2) French Language 3) Abacus 4) Phonetics 5) Vedic Maths 6) Public Speaking. Participants were awarded certificates and learning materials.",
+        "images": [
+          "https://www.mumbaicharaja.co/IMG-20220424-WA0035.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/IMG-20220416-WA0016.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/IMG-20220424-WA0002.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      },
+      {
+        "title": "Student Felicitation Ceremony",
+        "description": "On Sunday, 7th August 2022 at 6:00 PM, a felicitation event was organized for meritorious school and college students at Dr. Shirodkar High School, Parel. Chief guest Dr. Vidya Suhas Prabhu awarded prizes and guided the students.",
+        "images": [
+          "https://www.mumbaicharaja.co/Gunagaurav%202022/FB_IMG_1659888130814.jpg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Gunagaurav%202022/IMG_20220807_192824.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      },
+      {
+        "title": "Police Recruitment Guidance Camp",
+        "description": "On 4th December 2022, a guidance camp was organized for police recruitment aspirants. Special thanks to Mr. Santosh Pawar and Mr. Mayuresh Valam for providing valuable guidance.",
+        "images": [
+          "https://www.mumbaicharaja.co/Prashikshan%20(1).jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Prashikshan%20(3).jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+          "https://www.mumbaicharaja.co/Prashikshan%20(2).jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+        ]
+      }
+    ]
+  }
+}

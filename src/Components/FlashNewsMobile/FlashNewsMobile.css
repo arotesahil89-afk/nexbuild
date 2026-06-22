@@ -1,0 +1,75 @@
+@keyframes popupOpen {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+
+/* .flash-toast-wrapper {
+  background-color: #b91c1c !important;
+  color: white !important;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  max-width: 50vw !important;
+  margin-left: 0.75rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+} */
+
+
+
+.Toastify__toast-body {
+  background-color: #b91c1c !important;
+  color: white !important;
+  border-radius: 0.5rem;
+}
+
+.popup-content-mobile {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  background-color: #b91c1c;
+  color: white;
+}
+
+/* 📱 Mobile Optimization */
+@media (max-width: 480px) {
+  .flash-toast-inner {
+  background-color: #b91c1c;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  width: 200px;
+}
+.Toastify__toast {
+  background-color: transparent !important;
+  width: fit-content;
+}
+  .flash-toast-wrapper {
+    max-width: 85vw !important;
+    font-size: 0.7rem;
+  }
+
+  .popup-content-mobile {
+    padding: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .popup-content-mobile img {
+    width: 80px;
+  }
+}
+
+/* 🖥️ Hide on big screens */
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+}

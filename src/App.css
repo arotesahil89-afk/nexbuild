@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Shree Dev7 2476';
+  src: url('/fonts/S2476892.otf.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.font-shreedev {
+  font-family: 'Shree Dev7 2476', sans-serif;
+}
+
+.font-dekko {
+  font-family: 'Dekko', sans-serif;
+}
+
+
+.font-tiro {
+      font-family: 'Tiro Devanagari Marathi', serif;
+    }
+    .font-anek {
+      font-family: 'Anek Devanagari', sans-serif;
+    }
+    .font-mukta {
+      font-family: 'Mukta', sans-serif;
+    }
+
+html {
+  scroll-behavior: smooth;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}

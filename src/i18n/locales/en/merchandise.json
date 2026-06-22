@@ -1,0 +1,53 @@
+{
+  "breadcrumbHome": "Home",
+  "breadcrumbStore": "Official Store",
+  "badge": "OFFICIAL 2025 EDITION",
+  "productName": "Mumbaicha Raja Official Polo — Heritage Grey",
+  "tagline": "Wear the devotion. Carry the legacy of Ganesh Galli.",
+  "rating": "{{rating}} ({{count}} reviews)",
+  "priceNote": "Inclusive of all taxes",
+  "limitedNote": "Limited festive stock — Ganeshotsav 2025",
+  "selectSize": "Select Size",
+  "sizeGuide": "Size Guide",
+  "quantity": "Quantity",
+  "inStock": "In Stock",
+  "addToCart": "Add to Cart",
+  "buyNow": "Order Now",
+  "secureNote": "100% secure checkout · UPI, Card, Net Banking & Pay-at-Pickup",
+  "highlightsTitle": "Why you'll love it",
+  "highlights": {
+    "fabric": "Premium 100% bio-washed cotton — breathable & soft",
+    "embroidery": "Hand-finished golden Ganpati crest embroidery",
+    "trim": "Signature yellow & white sleeve and collar trim",
+    "badge": "Iconic red 'Mumbaicha Raja' badge on the back"
+  },
+  "descriptionTitle": "Product Details",
+  "descriptionBody": "An official collector's polo from the Ganesh Galli Mandal. Crafted in heritage graphite grey with a regal golden Ganpati crest on the chest and the iconic red Mumbaicha Raja seal on the back. Every stitch carries 96 years of devotion. A portion of every purchase supports the Mandal's social initiatives.",
+  "specsTitle": "Specifications",
+  "specs": {
+    "material": "Material",
+    "materialValue": "100% Combed Cotton (180 GSM)",
+    "fit": "Fit",
+    "fitValue": "Regular Fit",
+    "collar": "Style",
+    "collarValue": "Polo Collar, Half Sleeve",
+    "care": "Care",
+    "careValue": "Machine wash cold, do not bleach"
+  },
+  "anglesTitle": "See Every Angle",
+  "anglesSub": "Crafted to look stunning from every side",
+  "angles": {
+    "front": "Front View",
+    "threeQuarter": "3/4 View",
+    "back": "Back View",
+    "backAngle": "Back Detail"
+  },
+  "causeTitle": "Every purchase gives back",
+  "causeBody": "Proceeds support the Mandal's blood donation drives, education aid and community welfare programs.",
+  "orderSummary": "Order Summary",
+  "total": "Total",
+  "proceedToCheckout": "Proceed to Checkout →",
+  "size": "Size",
+  "pickupTitle": "Self-Pickup Only — No Delivery",
+  "pickupBody": "Pay online & collect from Ganesh Galli Mandal Office, Lalbaug, Mumbai. Open 11 AM – 8 PM, all days during Ganeshotsav."
+}

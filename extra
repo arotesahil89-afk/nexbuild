@@ -1,0 +1,78 @@
+// जानेवारी
+// फेब्रुवारी
+// मार्च
+// एप्रिल
+// मे
+// जून
+// जुलै
+// ऑगस्ट
+// सप्टेंबर
+// ऑक्टोबर
+// नोव्हेंबर
+// डिसेंबर
+
+
+जनवरी
+फरवरी
+मार्च
+अप्रैल
+मई
+जून
+जुलाई
+अगस्त
+सितंबर
+अक्टूबर
+नवंबर
+दिसंबर
+
+January
+February
+March
+April
+May
+June
+July
+August
+September
+October
+November
+December
+
+
+to do list
+
+Navbar animation
+add my name in code
+add Lalbaugchi mata details :- about page
+add delay 1 sec
+gungaurav sohla list 
+add devi mata imgs
+tshirt
+size of pic
+
+ {
+      "title": "मराठवाडा मदत उपक्रम",
+      "description": "अतिवृष्टीमुळे दुष्काळाच्या छायेखाली हतबल झालेल्या मराठवाड्यातील नागरिक तसेच शेतकरी बांधवांच्या आधारासाठी लालबाग सार्वजनिक उत्सव मंडळ, गणेशगल्ली (मुंबईचा राजा) मंडळा तर्फे सामाजिक बांधिलकी जपत ५ लाख रुपयांची मदत जाहीर…",
+
+      "images": [
+        "https://scontent.fbom3-2.fna.fbcdn.net/v/t51.82787-15/555440046_18528301126007206_3867946348129300845_n.jpg?stp=dst-jpg_s640x640_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=6-c8Qk7Tx-0Q7kNvwFGqw__&_nc_oc=Adk6Qu3QyEwOSiqC4vOHoE6Mw2PU4xGldMzAL4zmReNtyT8LKm6fNSpGv0tOJhD240x5LhUChco4wCFGkdUdMFYS&_nc_zt=23&_nc_ht=scontent.fbom3-2.fna&_nc_gid=U37qnt_3LGrQRUfq1qaWsg&oh=00_Afc_zYX4gwPjq5C7O2bJkLLxSYdp3nXuPEYOLXbjwZNyHA&oe=68E7FFA7"
+        
+      ]
+    },
+
+     {
+  "title": "मराठवाडा सहायता उपक्रम",
+  "description": "अतिवृष्टि के कारण दुष्काळ की छाया में संघर्ष कर रहे मराठवाडा क्षेत्र के नागरिकों और किसान भाइयों की सहायता हेतु, लालबाग सार्वजनिक उत्सव मंडळ, गणेशगली (मुंबईचा राजा) मंडळ की ओर से सामाजिक उत्तरदायित्व निभाते हुए ₹5 लाख की सहायता राशि की घोषणा की गई है।",
+  "images": [
+    "https://scontent.fbom3-2.fna.fbcdn.net/v/t51.82787-15/555440046_18528301126007206_3867946348129300845_n.jpg?stp=dst-jpg_s640x640_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=6-c8Qk7Tx-0Q7kNvwFGqw__&_nc_oc=Adk6Qu3QyEwOSiqC4vOHoE6Mw2PU4xGldMzAL4zmReNtyT8LKm6fNSpGv0tOJhD240x5LhUChco4wCFGkdUdMFYS&_nc_zt=23&_nc_ht=scontent.fbom3-2.fna&_nc_gid=U37qnt_3LGrQRUfq1qaWsg&oh=00_Afc_zYX4gwPjq5C7O2bJkLLxSYdp3nXuPEYOLXbjwZNyHA&oe=68E7FFA7"
+  ]
+}
+,
+
+    {
+  "title": "Marathwada Relief Initiative",
+  "description": "In support of the citizens and farmers of Marathwada, who are struggling under the shadow of drought caused by excessive rainfall, the Lalbaug Sarvajanik Utsav Mandal, Ganesh Galli (Mumbai Cha Raja), has announced a relief donation of ₹5 lakh as part of its social responsibility.",
+  "images": [
+    "https://scontent.fbom3-2.fna.fbcdn.net/v/t51.82787-15/555440046_18528301126007206_3867946348129300845_n.jpg?stp=dst-jpg_s640x640_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=6-c8Qk7Tx-0Q7kNvwFGqw__&_nc_oc=Adk6Qu3QyEwOSiqC4vOHoE6Mw2PU4xGldMzAL4zmReNtyT8LKm6fNSpGv0tOJhD240x5LhUChco4wCFGkdUdMFYS&_nc_zt=23&_nc_ht=scontent.fbom3-2.fna&_nc_gid=U37qnt_3LGrQRUfq1qaWsg&oh=00_Afc_zYX4gwPjq5C7O2bJkLLxSYdp3nXuPEYOLXbjwZNyHA&oe=68E7FFA7"
+  ]
+}
