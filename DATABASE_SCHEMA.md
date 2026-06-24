@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines the database structure for the Mumbai Cha Raja application using PostgreSQL and Prisma ORM.
+This document defines the database structure for the Mumbai Cha Raja application using MySQL and Node.js backend services.
 
 ---
 
@@ -14,7 +14,7 @@ Stores admin login credentials and role-based permissions.
 
 | Column        | Type      |
 | ------------- | --------- |
-| id            | UUID      |
+| id            | BIGINT      |
 | name          | VARCHAR   |
 | email         | VARCHAR   |
 | password_hash | TEXT      |
@@ -44,7 +44,7 @@ Stores awards and recognitions.
 
 | Column        | Type      |
 | ------------- | --------- |
-| id            | UUID      |
+| id            | BIGINT      |
 | language      | VARCHAR   |
 | heading       | VARCHAR   |
 | title         | TEXT      |
@@ -72,7 +72,7 @@ Stores upcoming and past events.
 
 | Column         | Type      |
 | -------------- | --------- |
-| id             | UUID      |
+| id             | BIGINT      |
 | title_en       | TEXT      |
 | title_hi       | TEXT      |
 | title_mr       | TEXT      |
@@ -146,7 +146,7 @@ Stores products available for purchase.
 
 | Column         | Type      |
 | -------------- | --------- |
-| id             | UUID      |
+| id             | BIGINT      |
 | name           | VARCHAR   |
 | description    | TEXT      |
 | price          | DECIMAL   |
@@ -185,9 +185,9 @@ Stores products inside an order.
 
 | Column     | Type    |
 | ---------- | ------- |
-| id         | UUID    |
+| id         | BIGINT    |
 | order_id   | UUID    |
-| product_id | UUID    |
+| product_id | BIGINT    |
 | quantity   | INTEGER |
 | price      | DECIMAL |
 
@@ -208,7 +208,7 @@ Stores gallery images.
 
 | Column      | Type      |
 | ----------- | --------- |
-| id          | UUID      |
+| id          | BIGINT      |
 | title       | VARCHAR   |
 | category    | VARCHAR   |
 | image_url   | TEXT      |
@@ -233,7 +233,7 @@ Stores committee member information.
 
 | Column        | Type    |
 | ------------- | ------- |
-| id            | UUID    |
+| id            | BIGINT    |
 | name          | VARCHAR |
 | designation   | VARCHAR |
 | image_url     | TEXT    |
@@ -250,7 +250,7 @@ Stores messages submitted from the contact form.
 
 | Column     | Type      |
 | ---------- | --------- |
-| id         | UUID      |
+| id         | BIGINT      |
 | name       | VARCHAR   |
 | email      | VARCHAR   |
 | phone      | VARCHAR   |
@@ -275,7 +275,7 @@ Stores podcast information.
 
 | Column        | Type      |
 | ------------- | --------- |
-| id            | UUID      |
+| id            | BIGINT      |
 | title         | VARCHAR   |
 | description   | TEXT      |
 | youtube_url   | TEXT      |
@@ -292,7 +292,7 @@ Stores multilingual content.
 
 | Column   | Type    |
 | -------- | ------- |
-| id       | UUID    |
+| id       | BIGINT    |
 | key_name | VARCHAR |
 | language | VARCHAR |
 | value    | TEXT    |
@@ -318,7 +318,7 @@ Stores payment gateway transaction information.
 | Column              | Type      |
 | ------------------- | --------- |
 | id                  | UUID      |
-| reference_id        | UUID      |
+| reference_id        | VARCHAR       |
 | reference_type      | VARCHAR   |
 | razorpay_order_id   | VARCHAR   |
 | razorpay_payment_id | VARCHAR   |
@@ -343,8 +343,8 @@ Stores admin activity history.
 
 | Column      | Type      |
 | ----------- | --------- |
-| id          | UUID      |
-| admin_id    | UUID      |
+| id          | BIGINT      |
+| admin_id    | BIGINT      |
 | action      | VARCHAR   |
 | entity_type | VARCHAR   |
 | entity_id   | UUID      |
@@ -381,8 +381,7 @@ Stores admin activity history.
 
 # Recommended Technology Stack
 
-* Database: PostgreSQL
-* ORM: Prisma
+* Database: MySQL
 * Backend: Node.js + Express
 * Authentication: JWT
 * File Storage: Cloudinary
