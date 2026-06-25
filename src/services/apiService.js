@@ -1,11 +1,17 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "https://mumbaicha-raja-backend.onrender.com/api",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
+
+console.log("API URL:", import.meta.env.VITE_API_URL);
+console.log("Base URL:", apiClient.defaults.baseURL);
+
 
 // Add token to all requests
 apiClient.interceptors.request.use(
@@ -31,5 +37,6 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 export default apiClient
