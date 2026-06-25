@@ -77,16 +77,16 @@ const ManageEvents = () => {
     }
   };
 
-  const deleteEvent = async (index) => {
-    try {
-      await apiClient.delete(`/events/${index}`);
-      const updatedEvents = events.filter((_, i) => i !== index);
-      setEvents(updatedEvents);
-    } catch (error) {
-      console.error("Error deleting event:", error);
-      setError("⚠️ Failed to delete event");
-    }
-  };
+  const deleteEvent = async (eventId) => {
+  try {
+    await apiClient.delete(`/events/${eventId}`);
+
+    setEvents(events.filter(event => event.id !== eventId));
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    setError("⚠️ Failed to delete event");
+  }
+};
 
   const startEdit = (index) => {
     const event = events[index];
@@ -207,7 +207,7 @@ const ManageEvents = () => {
                   Edit
                 </button>
                 <button
-                  onClick={() => deleteEvent(index)}
+                  onClick={() => deleteEvent(event.id)}
                   className="text-red-600 hover:underline"
                 >
                   Delete
