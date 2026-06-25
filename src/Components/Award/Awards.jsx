@@ -2,7 +2,7 @@ import React from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import useAwardsLoader from "../../loaders/AwardsLoader";
 

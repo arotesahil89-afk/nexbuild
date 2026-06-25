@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { db } from "../../firebase/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import apiClient from "../../services/apiService";
 import useEventsLoader from "../../loaders/useEventsLoader";
 
 const ManageEvents = () => {
@@ -53,14 +52,15 @@ const ManageEvents = () => {
       const eventData = { ...newEvent, time: formatToAmPm(newEvent.time) };
 
       if (editIndex !== null) {
+        // Update event
         updatedEvents[editIndex] = eventData;
+        await apiClient.put(`/events/${editIndex}`, eventData);
       } else {
+        // Add new event
         updatedEvents.push(eventData);
+        await apiClient.post('/events', eventData);
       }
-
-      await updateDoc(doc(db, "translations", "events"), {
-        eventList: updatedEvents,
-      });
+      
       setEvents(updatedEvents);
 
       // Reset form
@@ -73,18 +73,18 @@ const ManageEvents = () => {
       setEditIndex(null);
     } catch (error) {
       console.error("Error saving event:", error);
+      setError("⚠️ Failed to save event");
     }
   };
 
   const deleteEvent = async (index) => {
     try {
+      await apiClient.delete(`/events/${index}`);
       const updatedEvents = events.filter((_, i) => i !== index);
-      await updateDoc(doc(db, "translations", "events"), {
-        eventList: updatedEvents,
-      });
       setEvents(updatedEvents);
     } catch (error) {
       console.error("Error deleting event:", error);
+      setError("⚠️ Failed to delete event");
     }
   };
 

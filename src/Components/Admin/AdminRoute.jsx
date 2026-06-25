@@ -1,34 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../../firebase/firebase";
+import apiClient from "../../services/apiService";
 import { Navigate } from "react-router-dom";
 
-export default function AdminRoute({ children }) {
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+const AdminRoute = ({ children }) => {
+  const [isAdmin, setIsAdmin] = useState(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setIsAdmin(false);
-        setLoading(false);
-        return;
-      }
-      const adminDoc = await getDoc(doc(db, "admins", user.uid));
-      if (adminDoc.exists()) {
+    const verifyAdmin = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          setIsAdmin(false);
+          return;
+        }
+
+        await apiClient.get('/auth/verify');
         setIsAdmin(true);
-      } else {
-        await signOut(auth);
+      } catch (err) {
+        console.error("Admin verification failed:", err);
+        localStorage.removeItem('authToken');
         setIsAdmin(false);
       }
-      setLoading(false);
-    });
-    return () => unsub();
+    };
+
+    verifyAdmin();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
-  if (!isAdmin) return <Navigate to="/admin-login" replace />;
+  if (isAdmin === null) return <div>Loading...</div>;
+  if (!isAdmin) return <Navigate to="/admin-login" />;
 
   return children;
-}
+};
+
+export default AdminRoute;

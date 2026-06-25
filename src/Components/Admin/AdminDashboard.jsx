@@ -1,7 +1,6 @@
 // AdminDashboard.jsx
 import React, { useState } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../../firebase/firebase";
+import apiClient from "../../services/apiService";
 import ManageAwards from "../../Pages/Admin/ManageAward";
 import ManageEvents from "../../Pages/Admin/ManageEvents";
 import {
@@ -12,10 +11,24 @@ import {
   X,
 } from "lucide-react";
 
-export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("awards");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // mobile drawer
 
+
+const AdminDashboard = () => {
+  const handleLogout = async () => {
+    try {
+      await apiClient.post('/auth/logout');
+      localStorage.removeItem('authToken');
+      window.location.href = "/admin-login";
+    } catch (err) {
+      console.error("Logout failed:", err);
+      // Still redirect even if API call fails
+      localStorage.removeItem('authToken');
+      window.location.href = "/admin-login";
+    }
+  };
+
+  const [activeTab, setActiveTab] = useState("awards");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-red-50 via-white to-yellow-50 mt-[50px]">
       {/* Sidebar for large screens */}
@@ -46,7 +59,7 @@ export default function AdminDashboard() {
           </ul>
         </nav>
         <button
-          onClick={() => signOut(auth)}
+          onClick={handleLogout}
           className="mt-auto flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition"
         >
           <LogOut size={18} /> Logout
@@ -118,7 +131,7 @@ export default function AdminDashboard() {
                 </ul>
               </nav>
               <button
-                onClick={() => signOut(auth)}
+                onClick={handleLogout}
                 className="mt-auto flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition"
               >
                 <LogOut size={18} /> Logout
@@ -160,4 +173,6 @@ export default function AdminDashboard() {
       </main>
     </div>
   );
-}
+};
+
+export default AdminDashboard;

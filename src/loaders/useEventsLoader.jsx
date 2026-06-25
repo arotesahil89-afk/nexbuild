@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
-import { db } from "../firebase/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import apiClient from "../services/apiService";
 
 const useEventsLoader = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const docRef = doc(db, "translations", "events");
-    const unsubscribe = onSnapshot(docRef, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setEvents(data.eventList || []);
+    const fetchEvents = async () => {
+      try {
+        const response = await apiClient.get('/events');
+        setEvents(response.data || []);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setEvents([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchEvents();
   }, []);
 
   return { events, loading, setEvents };

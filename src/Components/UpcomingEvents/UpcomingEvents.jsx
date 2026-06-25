@@ -3,9 +3,7 @@ import CountdownTimer from "../CountdownTimer/CountdownTimer.jsx";
 import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-import { db } from "../../firebase/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import apiClient from "../../services/apiService";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,13 +25,13 @@ const UpcomingEvents = () => {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   };
 
-  // Fetch events from Firestore
+  // Fetch events from API
   useEffect(() => {
-    const docRef = doc(db, "translations", "events");
-    const unsubscribe = onSnapshot(docRef, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        const upcoming = (data.eventList || [])
+    const fetchEvents = async () => {
+      try {
+        const response = await apiClient.get('/events');
+        const data = response.data;
+        const upcoming = (data || [])
           .map((ev) => {
             if (!ev.date || !ev.time) return null;
             const time24 = convertTo24Hour(ev.time);
@@ -51,10 +49,12 @@ const UpcomingEvents = () => {
           .slice(0, 4);
 
         setEvents(upcoming);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setEvents([]);
       }
-    });
-
-    return () => unsubscribe();
+    };
+    fetchEvents();
   }, [i18n.language]);
 
   // GSAP animation

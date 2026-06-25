@@ -1,19 +1,29 @@
-import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebase";
+import apiClient from "../../services/apiService";
+import { useState } from "react";
 
-export default function AdminLogin() {
+const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      window.location.href = "/admin"; // login ke baad dashboard
+      const response = await apiClient.post('/auth/login', { email, password });
+      console.log(response);
+      
+      // Save token to localStorage
+      localStorage.setItem('authToken', response.data.token);
+      
+      // Redirect to admin dashboard
+      window.location.href = "/admin";
     } catch (err) {
-      setError("Login failed: " + err.message);
+      setError(err.response?.data?.error || "Login failed");
+      setLoading(false);
     }
   };
 
@@ -41,8 +51,9 @@ export default function AdminLogin() {
           <button
             type="submit"
             className="bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition"
+            disabled={loading}
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
           {error && <p className="text-red-600 text-sm">{error}</p>}
         </form>
@@ -50,3 +61,5 @@ export default function AdminLogin() {
     </div>
   );
 }
+
+export default AdminLogin;

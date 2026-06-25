@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",  
-    "build": "vite build", 
+    "dev": "vite",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -17,6 +17,7 @@
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@vitejs/plugin-react": "^4.5.2",
     "aos": "^2.3.4",
+    "axios": "^1.18.1",
     "babel-runtime": "^6.26.0",
     "bootstrap": "^5.3.6",
     "camtel-design": "^1.0.0",

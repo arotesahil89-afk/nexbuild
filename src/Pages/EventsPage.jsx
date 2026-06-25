@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-
-import { db } from "../firebase/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import apiClient from "../services/apiService";
 
 const EventsPage = () => {
   const { i18n } = useTranslation();
   const [events, setEvents] = useState([]);
   const lang = i18n.language;
 
-  // Fetch events from Firestore
+  // Fetch events from API
   useEffect(() => {
-    const docRef = doc(db, "translations", "events");
-    const unsubscribe = onSnapshot(docRef, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setEvents(data.eventList || []);
+    const fetchEvents = async () => {
+      try {
+        const response = await apiClient.get('/events');
+        setEvents(response.data || []);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setEvents([]);
       }
-    });
-    return () => unsubscribe();
+    };
+    fetchEvents();
   }, []);
 
   const containerVariants = {
