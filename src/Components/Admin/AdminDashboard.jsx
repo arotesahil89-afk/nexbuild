@@ -3,10 +3,12 @@ import React, { useState } from "react";
 import apiClient from "../../services/apiService";
 import ManageAwards from "../../Pages/Admin/ManageAward";
 import ManageEvents from "../../Pages/Admin/ManageEvents";
+import ManageOrders from "../../Pages/Admin/ManageOrders";
 import {
   LogOut,
   Award,
   CalendarDays,
+  ShoppingBag,
   Menu,
   X,
 } from "lucide-react";
@@ -55,6 +57,16 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab("events")}
             >
               <CalendarDays size={18} /> Manage Events
+            </li>
+            <li
+              className={`flex items-center gap-2 font-medium p-2 rounded-lg cursor-pointer ${
+                activeTab === "orders"
+                  ? "bg-red-100 text-red-700"
+                  : "text-red-600 hover:bg-red-50"
+              }`}
+              onClick={() => setActiveTab("orders")}
+            >
+              <ShoppingBag size={18} /> Manage Orders
             </li>
           </ul>
         </nav>
@@ -128,6 +140,19 @@ const AdminDashboard = () => {
                   >
                     <CalendarDays size={18} /> Manage Events
                   </li>
+                  <li
+                    className={`flex items-center gap-2 font-medium p-2 rounded-lg cursor-pointer ${
+                      activeTab === "orders"
+                        ? "bg-red-100 text-red-700"
+                        : "text-red-600 hover:bg-red-50"
+                    }`}
+                    onClick={() => {
+                      setActiveTab("orders");
+                      setIsSidebarOpen(false);
+                    }}
+                  >
+                    <ShoppingBag size={18} /> Manage Orders
+                  </li>
                 </ul>
               </nav>
               <button
@@ -167,6 +192,15 @@ const AdminDashboard = () => {
                 <CalendarDays size={22} className="text-blue-500" /> Manage Events
               </h3>
               <ManageEvents />
+            </div>
+          )}
+
+          {activeTab === "orders" && (
+            <div className="bg-white border shadow-md rounded-2xl p-6 hover:shadow-lg transition">
+              <h3 className="text-xl font-semibold text-red-700 mb-4 flex items-center gap-2">
+                <ShoppingBag size={22} className="text-orange-500" /> Manage Orders
+              </h3>
+              <ManageOrders />
             </div>
           )}
         </div>

@@ -17,10 +17,12 @@ import WorldRecordVideo from "../Components/WorldRecordVideo/WorldRecordVideo.js
 import FlashNewsMobile from "../Components/FlashNewsMobile/FlashNewsMobile.jsx";
 import VisarjanSohala from "../Components/VisarjanSohala/VisarjanSohala.jsx";
 import AuraTeaser from "../Components/AuraTeaser/AuraTeaser.jsx";
+import MerchandisePromo from "../Components/MerchandisePromo/MerchandisePromo.jsx";
 
 const Home = () => {
   return (
     <>
+      <MerchandisePromo />
       <FlashBanner />
       <FlashNewsMobile />
       <SocialSidebar />

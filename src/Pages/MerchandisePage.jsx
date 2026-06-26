@@ -6,6 +6,9 @@ import {
   ChevronRight, Heart, Sparkles, Ruler, AlertCircle, Award,
   Users, BadgeCheck, Phone,
 } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../services/apiService";
 import PaymentGatewayModal from "../Components/PaymentGatewayModal/PaymentGatewayModal";
 import CheckoutDetailsModal from "../Components/CheckoutDetailsModal/CheckoutDetailsModal";
 import { featuredProduct as P } from "../data/merchData";
@@ -123,8 +126,7 @@ const MerchandisePage = () => {
   const { t } = useTranslation("merchandise");
 
   const [active, setActive]           = useState(0);
-  const [size, setSize]               = useState("L");
-  const [qty, setQty]                 = useState(1);
+  const [selectQty, setSelectQty]     = useState({ S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
   const [sizeGuideOpen, setSizeGuide] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [payOpen, setPayOpen]         = useState(false);
@@ -132,14 +134,22 @@ const MerchandisePage = () => {
 
   const name     = t("productName");
   const discount = P.oldPrice ? Math.round(((P.oldPrice - P.price) / P.oldPrice) * 100) : 0;
-  const sizeStock = P.stock[size] ?? 999;
-  const isLow     = sizeStock < LOW_STOCK_THRESHOLD;
-  const maxQty    = Math.min(MAX_QTY, sizeStock);
-  const orderTotal = P.price * qty;
 
-  const handleSizeChange = (s) => {
-    setSize(s);
-    setQty(1); // reset qty when size changes
+  const totalQty = Object.values(selectQty).reduce((a, b) => a + b, 0);
+  const orderTotal = P.price * totalQty;
+
+  const handleSizeQtyChange = (s, q) => {
+    if (q < 0) return;
+    const stock = P.stock[s] ?? 999;
+    if (q > stock) q = stock;
+
+    const newSelectQty = { ...selectQty, [s]: q };
+    const newTotalQty = Object.values(newSelectQty).reduce((a, b) => a + b, 0);
+    if (newTotalQty > 50) {
+      toast.warning("Maximum total limit is 50 T-Shirts per order.", { position: "top-center" });
+      return;
+    }
+    setSelectQty(newSelectQty);
   };
 
   const handleOrder = () => setDetailsOpen(true);
@@ -150,9 +160,41 @@ const MerchandisePage = () => {
     setPayOpen(true);
   };
 
-  const handlePaymentSuccess = () => {
-    setCustomer(null);
-    setQty(1);
+  const handlePaymentSuccess = async (payData) => {
+    try {
+      const paymentMethod = payData?.method === 'pickup' ? 'pickup' : 'online';
+      const selectedSizes = Object.entries(selectQty).filter(([_, q]) => q > 0);
+      const sizeSummary = selectedSizes.map(([s, q]) => `${s}: ${q}`).join(", ");
+
+      await apiClient.post('/orders', {
+        customerName:  customer?.name  || '',
+        customerEmail: customer?.email || '',
+        customerPhone: customer?.phone || '',
+        productName:   name,
+        size:          sizeSummary,
+        quantity:      totalQty,
+        unitPrice:     P.price,
+        totalAmount:   orderTotal,
+        paymentMethod,
+        paymentId:     payData?.txnId || payData?.razorpay_payment_id || null,
+      });
+
+      toast.success(
+        paymentMethod === 'pickup'
+          ? '📦 Order reserved! See you at the Mandal office.'
+          : '✅ Order confirmed! Check your email for details.',
+        { position: 'top-center', autoClose: 5000 }
+      );
+    } catch (err) {
+      console.error('Failed to save order:', err);
+      toast.warning(
+        '⚠️ Order placed but could not be saved. Please contact the Mandal office.',
+        { position: 'top-center', autoClose: 6000 }
+      );
+    } finally {
+      setCustomer(null);
+      setSelectQty({ S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
+    }
   };
 
   const highlights = [
@@ -165,9 +207,15 @@ const MerchandisePage = () => {
   const orderSummaryJsx = (
     <div className="bg-gray-50 rounded-xl p-4 mb-2">
       <p className="text-xs font-semibold text-gray-500 mb-2">{t("orderSummary")}</p>
-      <div className="flex justify-between text-sm text-gray-700 mb-1">
-        <span>{name} ({size}) × {qty}</span>
-        <span className="font-semibold">₹{orderTotal}</span>
+      <div className="space-y-1.5 max-h-36 overflow-y-auto">
+        {Object.entries(selectQty)
+          .filter(([_, q]) => q > 0)
+          .map(([s, q]) => (
+            <div key={s} className="flex justify-between text-sm text-gray-700">
+              <span>{name} ({s}) × {q}</span>
+              <span className="font-semibold">₹{P.price * q}</span>
+            </div>
+          ))}
       </div>
       <div className="flex justify-between text-sm font-bold text-[#B91C1C] mt-2 pt-2 border-t border-gray-200">
         <span>{t("total")}</span>
@@ -276,8 +324,8 @@ const MerchandisePage = () => {
 
           {/* ── Size selector ── */}
           <div className="mt-6">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-sm font-semibold text-gray-700">{t("selectSize")}</span>
+            <div className="flex items-center justify-between mb-3.5">
+              <span className="text-sm font-bold text-gray-800">{t("selectSize")}</span>
               <button
                 onClick={() => setSizeGuide(true)}
                 className="text-xs text-[#B91C1C] font-semibold flex items-center gap-1 hover:underline"
@@ -286,92 +334,58 @@ const MerchandisePage = () => {
               </button>
             </div>
 
-            <div className="flex gap-2.5 flex-wrap">
+            <div className="space-y-2.5">
               {P.sizes.map((s) => {
                 const stock = P.stock[s] ?? 999;
                 const soldOut = stock === 0;
-                const low = stock > 0 && stock < LOW_STOCK_THRESHOLD;
+                const sizeQty = selectQty[s] || 0;
                 return (
-                  <div key={s} className="flex flex-col items-center gap-1">
-                    <button
-                      onClick={() => !soldOut && handleSizeChange(s)}
-                      disabled={soldOut}
-                      className={`w-14 h-14 rounded-xl text-sm font-bold border-2 transition relative ${
-                        soldOut
-                          ? "border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed"
-                          : size === s
-                          ? "bg-[#B91C1C] text-white border-[#B91C1C] shadow-lg scale-105"
-                          : "border-gray-200 text-gray-700 hover:border-[#B91C1C] hover:scale-105"
-                      }`}
-                    >
-                      {s}
-                      {soldOut && (
-                        <span className="absolute inset-0 flex items-center justify-center">
-                          <span className="w-full h-0.5 bg-gray-300 rotate-45 absolute" />
-                        </span>
-                      )}
-                    </button>
-                    {low && !soldOut && (
-                      <span className="text-[10px] font-bold text-orange-600 leading-none">
-                        {stock} left
+                  <div key={s} className="flex items-center justify-between border border-gray-100 rounded-xl p-3 bg-white hover:border-[#B91C1C]/20 transition shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="w-10 h-10 rounded-lg bg-red-50 text-[#B91C1C] font-bold text-sm flex items-center justify-center">
+                        {s}
                       </span>
-                    )}
-                    {soldOut && (
-                      <span className="text-[10px] text-gray-400 leading-none">Out</span>
+                      <div>
+                        <span className="text-sm font-bold text-gray-800">Size {s}</span>
+                        {soldOut ? (
+                          <p className="text-[11px] text-red-500 font-semibold leading-none mt-0.5">Sold Out</p>
+                        ) : stock < LOW_STOCK_THRESHOLD ? (
+                          <p className="text-[11px] text-orange-500 font-semibold leading-none mt-0.5">Only {stock} left</p>
+                        ) : (
+                          <p className="text-[11px] text-green-600 font-medium leading-none mt-0.5">In Stock</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quantity Selector for this specific size */}
+                    {!soldOut && (
+                      <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-9">
+                        <button
+                          type="button"
+                          onClick={() => handleSizeQtyChange(s, sizeQty - 1)}
+                          className="px-3 hover:bg-gray-50 active:bg-gray-100 h-full text-gray-600 flex items-center justify-center border-none bg-transparent"
+                        >
+                          <Minus size={13} />
+                        </button>
+                        <span className="w-9 text-center font-bold text-sm text-gray-800">{sizeQty}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleSizeQtyChange(s, sizeQty + 1)}
+                          disabled={totalQty >= 50 || sizeQty >= stock}
+                          className="px-3 hover:bg-gray-50 active:bg-gray-100 h-full text-gray-600 disabled:opacity-30 flex items-center justify-center border-none bg-transparent"
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Low stock alert for selected size */}
-            {isLow && sizeStock > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-3 flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2"
-              >
-                <AlertCircle size={15} className="text-orange-500 shrink-0" />
-                <p className="text-xs font-semibold text-orange-700">
-                  Only {sizeStock} left in size {size}! Order soon.
-                </p>
-              </motion.div>
-            )}
-          </div>
-
-          {/* ── Quantity ── */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-gray-700">{t("quantity")}</span>
-              <span className="text-xs text-gray-400">Max {MAX_QTY} per order</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="inline-flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="w-12 text-center font-bold text-lg">{qty}</span>
-                <button
-                  onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
-                  disabled={qty >= maxQty}
-                  className="px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100 disabled:opacity-30"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-              <div>
-                <p className="text-lg font-extrabold text-gray-900">
-                  ₹{orderTotal.toLocaleString("en-IN")}
-                </p>
-                <p className="text-xs text-gray-400">{qty > 1 ? `₹${P.price} × ${qty}` : t("priceNote")}</p>
-              </div>
-            </div>
-            {qty >= MAX_QTY && (
-              <p className="text-xs text-orange-600 mt-2 font-semibold">
-                Maximum {MAX_QTY} t-shirts per order
+            {totalQty >= 50 && (
+              <p className="text-xs text-orange-600 mt-2 font-semibold text-center">
+                Maximum limit of 50 total t-shirts reached
               </p>
             )}
           </div>
@@ -380,9 +394,10 @@ const MerchandisePage = () => {
           <div className="hidden sm:block mt-7">
             <button
               onClick={handleOrder}
-              className="w-full bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-200 flex items-center justify-center gap-2 text-base"
+              disabled={totalQty === 0}
+              className="w-full bg-[#B91C1C] hover:bg-red-800 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-200 flex items-center justify-center gap-2 text-base"
             >
-              <ShoppingBag size={20} /> {t("buyNow")} — ₹{orderTotal.toLocaleString("en-IN")}
+              <ShoppingBag size={20} /> {totalQty > 0 ? `${t("buyNow")} (${totalQty}) — ₹${orderTotal.toLocaleString("en-IN")}` : "Select Quantity"}
             </button>
             <p className="text-xs text-gray-400 mt-2.5 flex items-center justify-center gap-1.5">
               <ShieldCheck size={13} className="text-green-600" /> {t("secureNote")}
@@ -524,15 +539,19 @@ const MerchandisePage = () => {
         <div className="flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-500 truncate">
-              Size <span className="font-bold text-gray-800">{size}</span> · Qty <span className="font-bold text-gray-800">{qty}</span>
+              {Object.entries(selectQty)
+                .filter(([_, q]) => q > 0)
+                .map(([s, q]) => `${s}: ${q}`)
+                .join(", ") || "No items selected"}
             </p>
-            <p className="text-lg font-extrabold text-[#B91C1C] leading-none">
+            <p className="text-lg font-extrabold text-[#B91C1C] leading-none mt-0.5">
               ₹{orderTotal.toLocaleString("en-IN")}
             </p>
           </div>
           <button
             onClick={handleOrder}
-            className="flex-shrink-0 bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-red-200 flex items-center gap-2 transition"
+            disabled={totalQty === 0}
+            className="flex-shrink-0 bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-red-200 flex items-center gap-2 transition"
           >
             <ShoppingBag size={18} /> {t("buyNow")}
           </button>
@@ -543,7 +562,7 @@ const MerchandisePage = () => {
       <SizeGuideModal
         open={sizeGuideOpen}
         onClose={() => setSizeGuide(false)}
-        activeSize={size}
+        activeSize={Object.keys(selectQty).find(s => selectQty[s] > 0) || "L"}
       />
 
       <CheckoutDetailsModal
@@ -562,6 +581,8 @@ const MerchandisePage = () => {
         customer={customer}
         onSuccess={handlePaymentSuccess}
       />
+
+      <ToastContainer />
     </div>
   );
 };

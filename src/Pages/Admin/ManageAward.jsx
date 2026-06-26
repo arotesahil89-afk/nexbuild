@@ -116,7 +116,10 @@ const ManageAwards = () => {
 
   return (
     <div className="p-5 max-w-5xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">🏆 Manage Awards</h2>
+      <div style={{ marginBottom: 24 }}>
+        <h1 className="a-page-title">🏆 Manage Awards</h1>
+        <p style={{ fontSize: 13, color: "var(--a-muted)", marginTop: 3 }}>Add, edit and manage awards in all languages</p>
+      </div>
 
       {/* Add New Award */}
       <div className="border p-4 rounded-lg shadow mb-8">

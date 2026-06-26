@@ -104,7 +104,10 @@ const ManageEvents = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">Manage Events</h2>
+      <div style={{ marginBottom: 20 }}>
+        <h1 className="a-page-title">📅 Manage Events</h1>
+        <p style={{ fontSize: 13, color: "var(--a-muted)", marginTop: 3 }}>Schedule and manage upcoming events</p>
+      </div>
 
       {/* Error Message */}
       {error && <p className="text-red-600 mb-2">{error}</p>}

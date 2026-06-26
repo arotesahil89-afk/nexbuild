@@ -1,0 +1,312 @@
+/* Glassmorphism backdrop blur */
+.merch-promo-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.merch-promo-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Premium modal card container */
+.merch-promo-modal {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 
+              0 0 40px rgba(185, 28, 28, 0.15); /* Subtle red glow */
+  overflow: hidden;
+  border: 1px solid rgba(185, 28, 28, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Close button */
+.merch-promo-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  z-index: 10;
+}
+
+.merch-promo-close-btn:hover {
+  background: #B91C1C;
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+/* Content layout */
+.merch-promo-content {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .merch-promo-content {
+    grid-template-columns: 1.1fr 1.2fr;
+  }
+}
+
+/* Image section (Left) */
+.merch-promo-image-sec {
+  background: radial-gradient(circle at center, #fef2f2 0%, #fee2e2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  position: relative;
+}
+
+.merch-promo-spotlight {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Glow ring behind product */
+.merch-promo-spotlight::before {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.25) 0%, rgba(234, 179, 8, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+.merch-promo-badge {
+  position: absolute;
+  top: -12px;
+  left: 0;
+  z-index: 2;
+  background: #B91C1C;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px -1px rgba(185, 28, 28, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.merch-promo-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  z-index: 1;
+  filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.12));
+  transition: transform 0.5s ease;
+}
+
+.merch-promo-modal:hover .merch-promo-img {
+  transform: scale(1.05) translateY(-5px);
+}
+
+/* Details Section (Right) */
+.merch-promo-info-sec {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.merch-promo-tag {
+  font-size: 10px;
+  font-weight: 800;
+  color: #ea580c;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.merch-promo-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.25;
+  margin: 0 0 8px 0;
+}
+
+.merch-promo-desc {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+
+/* Price & Review */
+.merch-promo-price-review {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.merch-promo-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.merch-promo-price-new {
+  font-size: 28px;
+  font-weight: 800;
+  color: #B91C1C;
+}
+
+.merch-promo-price-old {
+  font-size: 16px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.merch-promo-discount {
+  font-size: 11px;
+  font-weight: 700;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.merch-promo-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef08a;
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+
+.merch-promo-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.merch-promo-rating-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #854d0e;
+}
+
+/* Features list */
+.merch-promo-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.merch-promo-features li {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+/* Action Buttons */
+.merch-promo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (min-width: 480px) {
+  .merch-promo-actions {
+    flex-direction: row;
+  }
+}
+
+.merch-promo-btn-primary {
+  flex: 1;
+  background: linear-gradient(135deg, #B91C1C 0%, #991b1b 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 10px 15px -3px rgba(185, 28, 28, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+
+.merch-promo-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -3px rgba(185, 28, 28, 0.35);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.merch-promo-btn-primary:active {
+  transform: translateY(0);
+}
+
+.merch-promo-btn-secondary {
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.merch-promo-btn-secondary:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
