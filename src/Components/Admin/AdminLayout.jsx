@@ -1,16 +1,17 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import apiClient from "../../services/apiService";
 import "./admin.css";
 import {
   LayoutDashboard, Award, CalendarDays, ShoppingBag,
-  LogOut, Menu, User, ChevronRight, Shield,
+  LogOut, Menu, User, ChevronRight, Shield, Shirt,
 } from "lucide-react";
 
 // ─── Nav items definition ───────────────────────────────────────────────────
 const NAV = [
   { to: "/admin",          end: true,  icon: LayoutDashboard, label: "Dashboard"    },
   { to: "/admin/orders",              icon: ShoppingBag,      label: "Orders"       },
+  { to: "/admin/merchandise",         icon: Shirt,            label: "Merchandise"  },
   { to: "/admin/awards",              icon: Award,            label: "Awards"       },
   { to: "/admin/events",              icon: CalendarDays,     label: "Events"       },
   { to: "/admin/profile",             icon: User,             label: "Profile"      },
@@ -18,7 +19,6 @@ const NAV = [
 
 // ─── Sidebar ────────────────────────────────────────────────────────────────
 const Sidebar = ({ open, onClose }) => {
-  const location = useLocation();
 
   return (
     <>
