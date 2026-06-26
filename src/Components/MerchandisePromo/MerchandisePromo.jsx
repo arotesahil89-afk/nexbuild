@@ -10,32 +10,16 @@ const MerchandisePromo = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Promo active for 3 months (June 26, 2026 to September 26, 2026)
-  const PROMO_START_DATE = new Date("2026-06-26T00:00:00");
-  const PROMO_END_DATE = new Date("2026-09-26T23:59:59");
-  const SHOW_COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours cooldown
-
   useEffect(() => {
-    const now = new Date();
-    // 1. Check if within the 3-month window
-    if (now < PROMO_START_DATE || now > PROMO_END_DATE) {
-      return;
-    }
-
-    // 2. Check if dismissed recently in localStorage
-    const dismissedTime = localStorage.getItem("merch_promo_dismissed_time");
-    if (!dismissedTime || now.getTime() - Number(dismissedTime) > SHOW_COOLDOWN) {
-      // Small delay before showing modal for better UX feel
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
+    // Small delay before showing modal for better UX feel
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleClose = () => {
     setIsOpen(false);
-    localStorage.setItem("merch_promo_dismissed_time", Date.now().toString());
   };
 
   const handleShopNow = () => {

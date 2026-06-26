@@ -9,9 +9,6 @@ const apiClient = axios.create({
   },
 });
 
-console.log("API URL:", import.meta.env.VITE_API_URL);
-console.log("Base URL:", apiClient.defaults.baseURL);
-
 
 // Add token to all requests
 apiClient.interceptors.request.use(
