@@ -334,48 +334,49 @@ const MerchandisePage = () => {
               </button>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
               {P.sizes.map((s) => {
                 const stock = P.stock[s] ?? 999;
                 const soldOut = stock === 0;
                 const sizeQty = selectQty[s] || 0;
+                const isLowStock = stock > 0 && stock < LOW_STOCK_THRESHOLD;
                 return (
-                  <div key={s} className="flex items-center justify-between border border-gray-100 rounded-xl p-3 bg-white hover:border-[#B91C1C]/20 transition shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="w-10 h-10 rounded-lg bg-red-50 text-[#B91C1C] font-bold text-sm flex items-center justify-center">
+                  <div key={s} className="flex flex-col justify-between border border-gray-100 rounded-xl p-2.5 bg-white shadow-sm hover:border-[#B91C1C]/20 transition">
+                    {/* Header: Size and Stock Badge */}
+                    <div className="flex items-center justify-between mb-1.5 min-w-0">
+                      <span className="w-7 h-7 rounded bg-red-50 text-[#B91C1C] font-bold text-xs flex items-center justify-center shrink-0">
                         {s}
                       </span>
-                      <div>
-                        <span className="text-sm font-bold text-gray-800">Size {s}</span>
-                        {soldOut ? (
-                          <p className="text-[11px] text-red-500 font-semibold leading-none mt-0.5">Sold Out</p>
-                        ) : stock < LOW_STOCK_THRESHOLD ? (
-                          <p className="text-[11px] text-orange-500 font-semibold leading-none mt-0.5">Only {stock} left</p>
-                        ) : (
-                          <p className="text-[11px] text-green-600 font-medium leading-none mt-0.5">In Stock</p>
-                        )}
-                      </div>
+                      {soldOut ? (
+                        <span className="text-[9px] text-red-500 font-bold bg-red-50 px-1 py-0.5 rounded leading-none shrink-0">Out</span>
+                      ) : isLowStock ? (
+                        <span className="text-[9px] text-orange-500 font-bold bg-orange-50 px-1 py-0.5 rounded leading-none shrink-0 truncate max-w-[50px]">{stock} left</span>
+                      ) : null}
                     </div>
 
-                    {/* Quantity Selector for this specific size */}
-                    {!soldOut && (
-                      <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-9">
+                    {/* Quantity control */}
+                    {!soldOut ? (
+                      <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-7 w-full">
                         <button
                           type="button"
                           onClick={() => handleSizeQtyChange(s, sizeQty - 1)}
-                          className="px-3 hover:bg-gray-50 active:bg-gray-100 h-full text-gray-600 flex items-center justify-center border-none bg-transparent"
+                          className="flex-1 h-full hover:bg-gray-50 text-gray-500 flex items-center justify-center border-none bg-transparent active:bg-gray-100"
                         >
-                          <Minus size={13} />
+                          <Minus size={11} />
                         </button>
-                        <span className="w-9 text-center font-bold text-sm text-gray-800">{sizeQty}</span>
+                        <span className="w-6 text-center font-bold text-xs text-gray-800">{sizeQty}</span>
                         <button
                           type="button"
                           onClick={() => handleSizeQtyChange(s, sizeQty + 1)}
                           disabled={totalQty >= 50 || sizeQty >= stock}
-                          className="px-3 hover:bg-gray-50 active:bg-gray-100 h-full text-gray-600 disabled:opacity-30 flex items-center justify-center border-none bg-transparent"
+                          className="flex-1 h-full hover:bg-gray-50 text-gray-500 disabled:opacity-30 flex items-center justify-center border-none bg-transparent active:bg-gray-100"
                         >
-                          <Plus size={13} />
+                          <Plus size={11} />
                         </button>
+                      </div>
+                    ) : (
+                      <div className="text-center text-xs text-gray-400 font-medium py-0.5">
+                        Sold Out
                       </div>
                     )}
                   </div>
