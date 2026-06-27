@@ -6,7 +6,7 @@ import {
   Search, RefreshCw, Download, ChevronUp, ChevronDown,
   ChevronsUpDown, CheckCircle2, XCircle, PackageCheck,
   Clock, ShoppingBag, IndianRupee, ChevronDown as DropIcon,
-  Truck, Eye, X,
+  Truck, Eye, X, Trash2, MapPin
 } from "lucide-react";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -25,17 +25,28 @@ const STATUS_CFG = {
   cancelled: { label: "Cancelled", bg: "#fef2f2", text: "#b91c1c", icon: XCircle },
 };
 
+const SHIPMENT_STATUS_CFG = {
+  'Booked':                  { label: 'Booked', bg: '#f1f5f9', text: '#475569' },
+  'Picked Up':               { label: 'Picked Up', bg: '#ecfdf5', text: '#047857' },
+  'In Transit':              { label: 'In Transit', bg: '#eff6ff', text: '#1d4ed8' },
+  'Reached Destination Hub': { label: 'Reached Hub', bg: '#faf5ff', text: '#7e22ce' },
+  'Out For Delivery':        { label: 'Out for Delivery', bg: '#fff7ed', text: '#c2410c' },
+  'Delivered':               { label: 'Delivered', bg: '#f0fdf4', text: '#15803d' },
+  'Cancelled':               { label: 'Cancelled', bg: '#fef2f2', text: '#b91c1c' },
+  'Failed':                  { label: 'Failed', bg: '#fff1f2', text: '#e11d48' },
+  'Return To Origin':        { label: 'RTO', bg: '#fef3c7', text: '#d97706' },
+  'Lost':                    { label: 'Lost', bg: '#f5f5f5', text: '#737373' }
+};
+
 const PAYMENT_LABELS = {
   online: "Online", pickup: "Pay at Pickup",
   card: "Card", upi: "UPI", cod: "COD",
 };
 
-const DTDC_URL = "https://www.dtdc.in/trace.asp";
-
 // ─── Skeleton row ────────────────────────────────────────────────────────────
 const SkeletonRow = () => (
   <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
-    {[160, 90, 140, 100, 60, 40, 70, 90, 90].map((w, i) => (
+    {[140, 180, 140, 100, 100, 100, 100, 90].map((w, i) => (
       <td key={i} style={{ padding: "13px 14px" }}>
         <div style={{
           height: 12, width: w, borderRadius: 6,
@@ -63,13 +74,27 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ─── Inline Action Dropdown ──────────────────────────────────────────────────
-const ActionDropdown = ({ order, onStatusChange, onView, onBookDTDC }) => {
+// ─── Shipment Status Badge ───────────────────────────────────────────────────
+const ShipmentStatusBadge = ({ status }) => {
+  if (!status) return <span style={{ fontSize: 11, color: '#94a3b8' }}>N/A</span>;
+  const c = SHIPMENT_STATUS_CFG[status] || { label: status, bg: '#f1f5f9', text: '#475569' };
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center",
+      padding: "2.5px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+      background: c.bg, color: c.text, whiteSpace: "nowrap",
+    }}>
+      {c.label}
+    </span>
+  );
+};
+
+// ─── Action Dropdown ──────────────────────────────────────────────────
+const ActionDropdown = ({ order, onStatusChange, onView, onTrack, onCancelShipment, onRefreshStatus, onBookManual }) => {
   const [open,   setOpen]   = useState(false);
   const [saving, setSaving] = useState(false);
   const ref = useRef();
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -91,10 +116,8 @@ const ActionDropdown = ({ order, onStatusChange, onView, onBookDTDC }) => {
     }
   };
 
-  const bookDTDC = () => {
-    onBookDTDC(order);
-    setOpen(false);
-  };
+  const hasShipping = order.shipping && order.shipping.awb;
+  const isOnline = order.paymentMethod !== 'pickup';
 
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
@@ -133,12 +156,72 @@ const ActionDropdown = ({ order, onStatusChange, onView, onBookDTDC }) => {
             <Eye size={13} color="#64748b" /> View Details
           </button>
 
+          {isOnline && hasShipping && (
+            <>
+              <div style={{ height: 1, background: "#f1f5f9", margin: "2px 0" }} />
+              <p style={dropItemHeaderStyle}>Courier Actions</p>
+              
+              <button
+                onClick={() => { onTrack(order); setOpen(false); }}
+                style={{ ...dropItemStyle, color: "#1d4ed8" }}
+              >
+                <Truck size={13} color="#1d4ed8" /> Track Shipment
+              </button>
+
+              <button
+                onClick={() => {
+                  window.open(`${apiClient.defaults.baseURL}/shipping/label/${order.shipping.awb}`, "_blank");
+                  setOpen(false);
+                }}
+                style={dropItemStyle}
+              >
+                <Download size={13} color="#475569" /> Shipping Label
+              </button>
+
+              <button
+                onClick={() => {
+                  window.open(`${apiClient.defaults.baseURL}/shipping/manifest/${order.shipping.shipmentId}`, "_blank");
+                  setOpen(false);
+                }}
+                style={dropItemStyle}
+              >
+                <Download size={13} color="#475569" /> Manifest PDF
+              </button>
+
+              <button
+                onClick={() => { onRefreshStatus(order.shipping.awb); setOpen(false); }}
+                style={dropItemStyle}
+              >
+                <RefreshCw size={13} color="#0d9488" /> Refresh Status
+              </button>
+
+              {order.shipping.status !== 'Cancelled' && (
+                <button
+                  onClick={() => { onCancelShipment(order.id); setOpen(false); }}
+                  style={{ ...dropItemStyle, color: "#b91c1c" }}
+                >
+                  <Trash2 size={13} color="#b91c1c" /> Cancel Shipment
+                </button>
+              )}
+            </>
+          )}
+
+          {isOnline && !hasShipping && order.address && (
+            <>
+              <div style={{ height: 1, background: "#f1f5f9", margin: "2px 0" }} />
+              <button
+                onClick={() => { onBookManual(order.id); setOpen(false); }}
+                style={{ ...dropItemStyle, color: "#0369a1" }}
+              >
+                <Truck size={13} color="#0369a1" /> Generate Shipment
+              </button>
+            </>
+          )}
+
           <div style={{ height: 1, background: "#f1f5f9", margin: "2px 0" }} />
 
           {/* Status options */}
-          <p style={{ padding: "4px 12px", fontSize: 10, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em" }}>
-            Change Status
-          </p>
+          <p style={dropItemHeaderStyle}>Change Order Status</p>
           {Object.entries(STATUS_CFG).map(([val, cfg]) => {
             const Icon = cfg.icon;
             const isActive = order.status === val;
@@ -161,13 +244,6 @@ const ActionDropdown = ({ order, onStatusChange, onView, onBookDTDC }) => {
               </button>
             );
           })}
-
-          <div style={{ height: 1, background: "#f1f5f9", margin: "2px 0" }} />
-
-          {/* DTDC Courier */}
-          <button onClick={bookDTDC} style={{ ...dropItemStyle, color: "#0369a1" }}>
-            <Truck size={13} color="#0369a1" /> Book DTDC Courier
-          </button>
         </div>
       )}
     </div>
@@ -183,22 +259,21 @@ const dropItemStyle = {
   transition: "background .1s",
 };
 
+const dropItemHeaderStyle = {
+  padding: "4px 12px", fontSize: 9.5, color: "#94a3b8",
+  fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em",
+  marginTop: 2, marginBottom: 2
+};
+
 // ─── Order Detail Modal ──────────────────────────────────────────────────────
-const OrderDetailModal = ({ order, onClose }) => {
+const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment }) => {
   if (!order) return null;
-  const dtdcMatch = order.notes && order.notes.match(/^DTDC:\s*([A-Za-z0-9]+)/i);
-  const cleanNotes = dtdcMatch ? order.notes.replace(/^DTDC:\s*[A-Za-z0-9]+\s*/i, "").trim() : order.notes;
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 200,
-      background: "rgba(0,0,0,.5)", display: "flex",
-      alignItems: "center", justifyContent: "center", padding: 16,
-      backdropFilter: "blur(4px)",
-    }}>
+    <div style={modalOverlayStyle}>
       <div style={{
         background: "#fff", borderRadius: 18,
-        width: "100%", maxWidth: 480,
+        width: "100%", maxWidth: 500,
         maxHeight: "90dvh", overflowY: "auto",
         boxShadow: "0 20px 60px rgba(0,0,0,.2)",
       }}>
@@ -207,21 +282,28 @@ const OrderDetailModal = ({ order, onClose }) => {
             <p style={{ fontWeight: 700, fontSize: 15 }}>Order Details</p>
             <p style={{ fontFamily: "monospace", fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{order.orderNo}</p>
           </div>
-          <button onClick={onClose} style={{ background: "#f1f5f9", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={onClose} style={closeBtnStyle}>
             <X size={14} color="#64748b" />
           </button>
         </div>
         <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
           {/* Customer */}
-          <section style={{ background: "#f8fafc", borderRadius: 10, padding: "14px 16px" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 8 }}>Customer</p>
+          <section style={cardSectionStyle}>
+            <p style={cardSectionTitleStyle}>Customer Details</p>
             <Row label="Name"  value={order.customerName} />
             <Row label="Phone" value={`+91 ${order.customerPhone}`} />
             <Row label="Email" value={order.customerEmail} mono />
+            {order.address && (
+              <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #e2e8f0" }}>
+                <span style={{ fontSize: 11, color: "#94a3b8", display: "block", marginBottom: 2 }}>Shipping Address:</span>
+                <span style={{ fontSize: 12.5, color: "#374151", lineHeight: 1.4, display: "block" }}>{order.address}</span>
+              </div>
+            )}
           </section>
-          {/* Order */}
-          <section style={{ background: "#f8fafc", borderRadius: 10, padding: "14px 16px" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 8 }}>Order</p>
+
+          {/* Order info */}
+          <section style={cardSectionStyle}>
+            <p style={cardSectionTitleStyle}>Order Details</p>
             <Row label="Product"  value={order.productName} />
             <Row label="Size"     value={order.size} />
             <Row label="Qty"      value={order.quantity} />
@@ -231,27 +313,54 @@ const OrderDetailModal = ({ order, onClose }) => {
             {order.paymentId && <Row label="Txn ID"  value={order.paymentId} mono small />}
             <Row label="Date"     value={new Date(order.createdAt).toLocaleString("en-IN")} />
           </section>
-          {dtdcMatch && (
-            <section style={{ background: "#eff6ff", borderRadius: 10, padding: "14px 16px", border: "1px solid #bfdbfe" }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: "#1d4ed8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 8 }}>Courier (DTDC)</p>
-              <Row label="Tracking No" value={dtdcMatch[1]} mono />
-              <button
-                onClick={() => window.open(`https://www.dtdc.in/tracking/tracking-result.asp?strCnno=${dtdcMatch[1]}`, "_blank")}
-                style={{
-                  width: "100%", marginTop: 8, padding: "8px 12px", borderRadius: 8,
-                  background: "#1d4ed8", border: "none", color: "#fff",
-                  fontSize: 12, fontWeight: 600, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-                }}
-              >
-                <Truck size={14} /> Track Package
-              </button>
-            </section>
-          )}
-          {cleanNotes && (
-            <section style={{ background: "#fffbeb", borderRadius: 10, padding: "12px 16px" }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: "#92400e", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 4 }}>Notes</p>
-              <p style={{ fontSize: 13, color: "#78350f" }}>{cleanNotes}</p>
+
+          {/* Shipping / Courier Details */}
+          {order.shipping && (
+            <section style={{ ...cardSectionStyle, background: "#eff6ff", border: "1px solid #bfdbfe" }}>
+              <p style={{ ...cardSectionTitleStyle, color: "#1d4ed8" }}>Shipping Details (DTDC Mock)</p>
+              {order.shipping.awb && <Row label="AWB Number" value={order.shipping.awb} mono bold />}
+              {order.shipping.shipmentId && <Row label="Shipment ID" value={order.shipping.shipmentId} mono small />}
+              <Row label="Shipment Status" value={<ShipmentStatusBadge status={order.shipping.status || 'Pending'} />} />
+              
+              <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #bfdbfe", display: "flex", flexDirection: "column", gap: 4 }}>
+                <Row label="Pincode" value={order.shipping.pincode || "—"} />
+                <Row label="City" value={order.shipping.city || "—"} />
+                <Row label="State" value={order.shipping.state || "—"} />
+                <Row label="Delivery Charge" value={`₹${order.shipping.deliveryCharge || 0}`} bold />
+                <Row label="Est. Delivery" value={order.shipping.estimatedDeliveryText || "—"} />
+              </div>
+              
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                <button
+                  onClick={() => window.open(`${apiClient.defaults.baseURL}/shipping/label/${order.shipping.awb}`, "_blank")}
+                  style={actionBtnStyle("#1d4ed8")}
+                >
+                  <Download size={13} /> Label PDF
+                </button>
+                
+                <button
+                  onClick={() => window.open(`${apiClient.defaults.baseURL}/shipping/manifest/${order.shipping.shipmentId}`, "_blank")}
+                  style={actionBtnStyle("#0f172a")}
+                >
+                  <Download size={13} /> Manifest PDF
+                </button>
+                
+                <button
+                  onClick={() => { onRefreshStatus(order.shipping.awb); }}
+                  style={actionBtnStyle("#0d9488")}
+                >
+                  <RefreshCw size={13} /> Refresh
+                </button>
+
+                {order.shipping.status !== 'Cancelled' && (
+                  <button
+                    onClick={() => { onCancelShipment(order.id); }}
+                    style={actionBtnStyle("#b91c1c")}
+                  >
+                    <Trash2 size={13} /> Cancel
+                  </button>
+                )}
+              </div>
             </section>
           )}
         </div>
@@ -260,123 +369,127 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
-// ─── DTDC Courier Modal ──────────────────────────────────────────────────────
-const DTDCModal = ({ order, onClose, onSave }) => {
-  const [trackingNo, setTrackingNo] = useState("");
-  const [saving, setSaving] = useState(false);
+// ─── Tracking Timeline Modal ────────────────────────────────────────────────
+const TrackingTimelineModal = ({ order, onClose }) => {
+  const [timeline, setTimeline] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleSave = async () => {
-    if (!trackingNo.trim()) {
-      toast.error("Please enter a tracking number");
-      return;
-    }
-    setSaving(true);
-    try {
-      const newNotes = `DTDC: ${trackingNo.trim()}${order.notes ? `\n${order.notes}` : ""}`;
-      await apiClient.patch(`/orders/${order.id}/status`, { status: "picked_up", notes: newNotes });
-      onSave(order.id, "picked_up", newNotes);
-      toast.success("✅ DTDC details saved and status updated to Picked Up!");
-      onClose();
-    } catch {
-      toast.error("❌ Failed to update DTDC details");
-    } finally {
-      setSaving(false);
-    }
-  };
+  useEffect(() => {
+    if (!order || !order.shipping) return;
+    
+    apiClient.get(`/shipping/track/${order.shipping.awb}`)
+      .then(res => {
+        const details = res.data || res;
+        setTimeline(details.timeline || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Failed to fetch tracking details");
+        setLoading(false);
+      });
+  }, [order]);
 
-  const copyDetails = () => {
-    const text = `Name: ${order.customerName}\nPhone: +91 ${order.customerPhone}\nEmail: ${order.customerEmail}\nProduct: ${order.productName} (${order.size})`;
-    navigator.clipboard.writeText(text);
-    toast.info("📋 Customer details copied to clipboard!");
-  };
+  if (!order) return null;
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 200,
-      background: "rgba(0,0,0,.5)", display: "flex",
-      alignItems: "center", justifyContent: "center", padding: 16,
-      backdropFilter: "blur(4px)",
-    }}>
+    <div style={modalOverlayStyle}>
       <div style={{
         background: "#fff", borderRadius: 18,
         width: "100%", maxWidth: 440,
         boxShadow: "0 20px 60px rgba(0,0,0,.2)",
+        overflow: "hidden"
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: "1px solid #f1f5f9" }}>
           <div>
-            <p style={{ fontWeight: 700, fontSize: 15 }}>Book DTDC Courier</p>
-            <p style={{ fontFamily: "monospace", fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{order.orderNo}</p>
+            <p style={{ fontWeight: 700, fontSize: 15 }}>Shipment Timeline</p>
+            <p style={{ fontFamily: "monospace", fontSize: 11, color: "#94a3b8", marginTop: 2 }}>AWB: {order.shipping.awb}</p>
           </div>
-          <button onClick={onClose} style={{ background: "#f1f5f9", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={onClose} style={closeBtnStyle}>
             <X size={14} color="#64748b" />
           </button>
         </div>
-        <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
-          {/* Customer Info Card */}
-          <div style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 14px" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Customer Info</p>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{order.customerName}</p>
-            <p style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Phone: +91 {order.customerPhone}</p>
-            <p style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Email: {order.customerEmail}</p>
-            <button
-              onClick={copyDetails}
-              style={{
-                marginTop: 10, width: "100%", padding: "6px 10px", borderRadius: 6,
-                background: "#f1f5f9", border: "1px solid #cbd5e1",
-                fontSize: 11.5, fontWeight: 600, color: "#475569", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 5
-              }}
-            >
-              Copy Details for Booking
-            </button>
-          </div>
 
-          {/* DTDC Booking Link */}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={() => window.open("https://www.dtdc.in/", "_blank")}
-              style={{
-                flex: 1, padding: "10px 14px", borderRadius: 8,
-                background: "#fef2f2", border: "1px solid #fecaca",
-                fontSize: 12.5, fontWeight: 700, color: "#991b1b", cursor: "pointer",
-                textAlign: "center"
-              }}
-            >
-              Open DTDC Portal
-            </button>
-          </div>
+        <div style={{ padding: "20px 22px", maxHeight: "65vh", overflowY: "auto" }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "30px 0" }}>
+              <RefreshCw size={24} style={{ animation: "spin .8s linear infinite", margin: "0 auto 12px", color: "#991b1b" }} />
+              <p style={{ fontSize: 13, color: "#64748b" }}>Loading dynamic tracking data...</p>
+            </div>
+          ) : error ? (
+            <div style={{ textAlign: "center", padding: "20px 0", color: "#b91c1c" }}>{error}</div>
+          ) : (
+            <div style={{ position: "relative", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 18 }}>
+              {/* Stepper line */}
+              <div style={{
+                position: "absolute", left: 4, top: 8, bottom: 8,
+                width: 2, background: "#e2e8f0"
+              }} />
 
-          {/* Consignment Form */}
-          <div style={{ marginTop: 6 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 6 }}>
-              Consignment / Tracking Number
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. D12345678"
-              value={trackingNo}
-              onChange={e => setTrackingNo(e.target.value.toUpperCase())}
-              className="a-input"
-            />
-          </div>
+              {timeline.map((event, idx) => {
+                const isLatest = idx === timeline.length - 1;
+                return (
+                  <div key={idx} style={{ position: "relative", display: "flex", flexDirection: "column" }}>
+                    {/* Stepper Dot */}
+                    <div style={{
+                      position: "absolute", left: -18, top: 4,
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: isLatest ? "#991b1b" : "#cbd5e1",
+                      border: isLatest ? "2.5px solid #fecaca" : "none",
+                      boxSizing: "border-box"
+                    }} />
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              width: "100%", marginTop: 8, padding: "11px", borderRadius: 8,
-              background: "#991b1b", color: "#fff", border: "none",
-              fontSize: 13, fontWeight: 700, cursor: saving ? "wait" : "pointer",
-              opacity: saving ? 0.7 : 1
-            }}
-          >
-            {saving ? "Saving..." : "Save Tracking & Mark Shipped"}
-          </button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: isLatest ? "#991b1b" : "#1e293b" }}>{event.status}</span>
+                      <span style={{ fontSize: 10, color: "#94a3b8" }}>{event.location}</span>
+                    </div>
+                    <span style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                      {new Date(event.date).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    {event.description && (
+                      <span style={{ fontSize: 11.5, color: "#475569", marginTop: 4, background: "#f8fafc", padding: "4px 8px", borderRadius: 6 }}>
+                        {event.description}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+const modalOverlayStyle = {
+  position: "fixed", inset: 0, zIndex: 200,
+  background: "rgba(0,0,0,.5)", display: "flex",
+  alignItems: "center", justifyContent: "center", padding: 16,
+  backdropFilter: "blur(4px)",
+};
+
+const closeBtnStyle = {
+  background: "#f1f5f9", border: "none", borderRadius: "50%",
+  width: 28, height: 28, cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center"
+};
+
+const cardSectionStyle = {
+  background: "#f8fafc", borderRadius: 10, padding: "14px 16px"
+};
+
+const cardSectionTitleStyle = {
+  fontSize: 10.5, fontWeight: 700, color: "#94a3b8",
+  textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10
+};
+
+const actionBtnStyle = (color) => ({
+  padding: "6px 12px", borderRadius: 6,
+  background: color, border: "none", color: "#fff",
+  fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center", gap: 5
+});
 
 const Row = ({ label, value, mono, bold, red, small }) => (
   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6, gap: 8 }}>
@@ -435,8 +548,11 @@ const ManageOrders = () => {
   const [sortCol, setSortCol] = useState("createdAt");
   const [sortDir, setSortDir] = useState("desc");
   const [page,    setPage]    = useState(1);
-  const [detail,  setDetail]  = useState(null);   // for detail modal (view only)
-  const [dtdcOrder, setDtdcOrder] = useState(null); // for DTDC modal
+  
+  // Modals state
+  const [detail,  setDetail]  = useState(null);       // order details modal
+  const [trackOrder, setTrackOrder] = useState(null); // tracking modal
+  
   const LIMIT = 50;
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
@@ -495,20 +611,73 @@ const ManageOrders = () => {
     }).catch(() => {});
   };
 
+  // ── Courier Actions ────────────────────────────────────────────────────────
+  const handleRefreshStatus = async (awb) => {
+    try {
+      const res = await apiClient.get(`/shipping/status/${awb}`);
+      const data = res.data || res;
+      toast.success(`🔄 Shipment status refreshed: ${data.status}`);
+      fetchOrders(true);
+      if (detail && detail.shipping && detail.shipping.awb === awb) {
+        setDetail(prev => ({
+          ...prev,
+          shipping: { ...prev.shipping, status: data.status }
+        }));
+      }
+    } catch {
+      toast.error("❌ Failed to refresh shipment status");
+    }
+  };
+
+  const handleCancelShipment = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this shipment?")) return;
+    try {
+      const res = await apiClient.post(`/shipping/cancel`, { orderId });
+      const data = res.data || res;
+      toast.warn("🚫 Shipment Cancelled");
+      fetchOrders(true);
+      
+      // Update order status to cancelled
+      handleStatusChange(orderId, 'cancelled');
+      
+      if (detail && detail.id === orderId) {
+        setDetail(prev => ({
+          ...prev,
+          status: 'cancelled',
+          shipping: { ...prev.shipping, status: 'Cancelled' }
+        }));
+      }
+    } catch {
+      toast.error("❌ Failed to cancel shipment");
+    }
+  };
+
+  const handleBookManual = async (orderId) => {
+    try {
+      toast.info("Generating Mock DTDC consignment...");
+      const res = await apiClient.post(`/shipping/create`, { orderId });
+      toast.success("✅ Shipment successfully created!");
+      fetchOrders(true);
+    } catch {
+      toast.error("❌ Failed to generate shipment");
+    }
+  };
+
   // ── CSV Export ─────────────────────────────────────────────────────────────
   const exportCSV = () => {
-    const H = ["Order No","Date","Name","Phone","Email","Product","Size","Qty","Unit","Total","Payment","Txn ID","Status"];
+    const H = ["Order No","Date","Name","Phone","Email","Address","Product","Size","Qty","Total","Payment","Txn ID","Status","Courier","AWB","Shipment Status"];
     const rows = sorted.map(o => [
       o.orderNo, new Date(o.createdAt).toLocaleDateString("en-IN"),
-      o.customerName, o.customerPhone, o.customerEmail,
-      o.productName, o.size, o.quantity, o.unitPrice, o.totalAmount,
+      o.customerName, o.customerPhone, o.customerEmail, o.address || "",
+      o.productName, o.size, o.quantity, o.totalAmount,
       PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod,
       o.paymentId || "", o.status,
+      o.shipping?.provider || "", o.shipping?.awb || "", o.shipping?.status || ""
     ]);
     const csv = [H, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
     const a = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
-      download: `mcr-orders-${new Date().toISOString().slice(0,10)}.csv`,
+      download: `mcr-shipping-orders-${new Date().toISOString().slice(0,10)}.csv`,
     });
     a.click();
   };
@@ -529,7 +698,7 @@ const ManageOrders = () => {
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 1280 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 1400 }}>
       {/* ── shimmer keyframes ── */}
       <style>{`
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
@@ -541,8 +710,8 @@ const ManageOrders = () => {
       {/* Page title */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <h1 className="a-page-title">Manage Orders</h1>
-          <p style={{ fontSize: 13, color: "var(--a-muted)", marginTop: 3 }}>View, filter and update merchandise orders</p>
+          <h1 className="a-page-title">Shipping & Order Management Dashboard</h1>
+          <p style={{ fontSize: 13, color: "var(--a-muted)", marginTop: 3 }}>Manage merchandise shipments, tracking, labels and manifests via Mock DTDC</p>
         </div>
         <button
           onClick={() => fetchOrders()}
@@ -564,8 +733,8 @@ const ManageOrders = () => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
         <StatCard icon={ShoppingBag}  label="Total Orders"  value={stats.total}    color="red"   loading={loading} />
         <StatCard icon={IndianRupee}  label="Revenue"       value={`₹${stats.revenue.toLocaleString("en-IN")}`} color="green" loading={loading} />
-        <StatCard icon={Clock}        label="Pending"        value={stats.pending}  color="amber" loading={loading} />
-        <StatCard icon={PackageCheck} label="Picked Up"     value={stats.pickedup} color="blue"  loading={loading} />
+        <StatCard icon={Clock}        label="Pending Orders" value={stats.pending}  color="amber" loading={loading} />
+        <StatCard icon={PackageCheck} label="Picked Up / Shipped" value={stats.pickedup} color="blue"  loading={loading} />
       </div>
 
       {/* Filter bar */}
@@ -576,7 +745,7 @@ const ManageOrders = () => {
             <Search size={14} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
             <input
               type="text"
-              placeholder="Search name, phone, email, order no…"
+              placeholder="Search name, phone, email, order no, address…"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               style={{
@@ -635,16 +804,15 @@ const ManageOrders = () => {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr>
-                <TH col="orderNo">Order No</TH>
-                <TH col="createdAt">Date</TH>
-                <TH col="customerName">Customer</TH>
-                <TH col="productName">Product / Size</TH>
+                <TH col="orderNo">Order No / Date</TH>
+                <TH col="customerName">Customer & Shipping Address</TH>
+                <TH col="productName">Product / Qty</TH>
                 <TH col="totalAmount">Amount</TH>
                 <TH col="paymentMethod">Payment</TH>
-                <TH col="status">Status</TH>
-                <th style={{ padding: "11px 14px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".05em", color: "#94a3b8", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>
-                  Actions
-                </th>
+                <th style={staticTHStyle}>Courier / AWB</th>
+                <th style={staticTHStyle}>Shipment Status</th>
+                <th style={staticTHStyle}>Est. Delivery</th>
+                <th style={staticTHStyle}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -653,42 +821,48 @@ const ManageOrders = () => {
                 : sorted.length === 0
                 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: "48px 24px", textAlign: "center", color: "#94a3b8" }}>
+                    <td colSpan={9} style={{ padding: "48px 24px", textAlign: "center", color: "#94a3b8" }}>
                       <ShoppingBag size={36} style={{ margin: "0 auto 10px", opacity: .3 }} />
                       <p style={{ fontSize: 13 }}>No orders found — try adjusting filters</p>
                     </td>
                   </tr>
                 )
                 : sorted.map((order, i) => {
-                  const isOnline = ["online", "upi", "card"].includes(order.paymentMethod);
+                  const isOnline = order.paymentMethod !== 'pickup';
+                  const hasShipping = order.shipping && order.shipping.awb;
                   return (
                     <tr key={order.id} style={{
                       borderBottom: "1px solid #f8fafc",
                       background: i % 2 === 0 ? "#fff" : "#fafafa",
                     }}>
-                      {/* Order No */}
-                      <td style={{ padding: "12px 14px", fontFamily: "monospace", fontSize: 11.5, color: "#64748b", whiteSpace: "nowrap" }}>
-                        {order.orderNo}
-                      </td>
-
-                      {/* Date */}
+                      {/* Order No / Date */}
                       <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
-                        <p style={{ fontSize: 12.5, color: "#374151" }}>
+                        <p style={{ fontFamily: "monospace", fontSize: 11.5, fontWeight: 700, color: "#475569" }}>
+                          {order.orderNo}
+                        </p>
+                        <p style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 2 }}>
                           {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}
                         </p>
-                        <p style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 1 }}>
-                          {new Date(order.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
                       </td>
 
-                      {/* Customer */}
-                      <td style={{ padding: "12px 14px", minWidth: 140 }}>
+                      {/* Customer & Address */}
+                      <td style={{ padding: "12px 14px", minWidth: 200 }}>
                         <p style={{ fontWeight: 600, color: "#0f172a", fontSize: 13 }}>{order.customerName}</p>
-                        <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>+91 {order.customerPhone}</p>
+                        <p style={{ fontSize: 11.5, color: "#64748b", marginTop: 1 }}>+91 {order.customerPhone}</p>
+                        {order.address ? (
+                          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 3, display: "flex", items: "center", gap: 3 }}>
+                            <MapPin size={10} style={{ flexShrink: 0, marginTop: 2 }} />
+                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: 220 }} title={order.address}>
+                              {order.address}
+                            </span>
+                          </p>
+                        ) : (
+                          <p style={{ fontSize: 11, color: "#cbd5e1", marginTop: 3 }}>No address (Pickup)</p>
+                        )}
                       </td>
 
-                      {/* Product / Size */}
-                      <td style={{ padding: "12px 14px", minWidth: 130 }}>
+                      {/* Product */}
+                      <td style={{ padding: "12px 14px", minWidth: 120 }}>
                         <p style={{ fontSize: 12.5, color: "#374151" }}>{order.productName}</p>
                         <span style={{ display: "inline-block", marginTop: 3, background: "#f1f5f9", borderRadius: 5, padding: "1px 7px", fontSize: 11, fontWeight: 700, color: "#475569" }}>
                           {order.size} × {order.quantity}
@@ -696,12 +870,12 @@ const ManageOrders = () => {
                       </td>
 
                       {/* Amount */}
-                      <td style={{ padding: "12px 14px", fontWeight: 800, color: "#991b1b", whiteSpace: "nowrap", fontSize: 13.5 }}>
+                      <td style={{ padding: "12px 14px", fontWeight: 800, color: "#991b1b", whiteSpace: "nowrap", fontSize: 13 }}>
                         ₹{order.totalAmount?.toLocaleString("en-IN")}
                       </td>
 
-                      {/* Payment — method + UTR/txn for online */}
-                      <td style={{ padding: "12px 14px", minWidth: 110 }}>
+                      {/* Payment */}
+                      <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
                         <span style={{
                           display: "inline-block", padding: "2px 8px", borderRadius: 6,
                           background: isOnline ? "#eff6ff" : "#f0fdf4",
@@ -711,26 +885,47 @@ const ManageOrders = () => {
                           {PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod}
                         </span>
                         {isOnline && order.paymentId && (
-                          <p style={{ fontFamily: "monospace", fontSize: 9.5, color: "#94a3b8", marginTop: 3, maxWidth: 110, wordBreak: "break-all" }}>
-                            UTR: {order.paymentId}
+                          <p style={{ fontFamily: "monospace", fontSize: 9.5, color: "#94a3b8", marginTop: 3, maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis" }} title={order.paymentId}>
+                            Txn: {order.paymentId}
                           </p>
                         )}
                       </td>
 
-                      {/* Status */}
+                      {/* Courier / AWB */}
                       <td style={{ padding: "12px 14px" }}>
-                        <StatusBadge status={order.status} />
-                        {order.status === "picked_up" && order.notes && order.notes.match(/^DTDC:\s*([A-Za-z0-9]+)/i) && (
-                          <div style={{ marginTop: 4 }}>
-                            <a
-                              href={`https://www.dtdc.in/tracking/tracking-result.asp?strCnno=${order.notes.match(/^DTDC:\s*([A-Za-z0-9]+)/i)[1]}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#1d4ed8", textDecoration: "none", fontWeight: 600 }}
-                            >
-                              <Truck size={10} /> Track DTDC
-                            </a>
-                          </div>
+                        {isOnline ? (
+                          hasShipping ? (
+                            <>
+                              <p style={{ fontWeight: 600, color: "#334155", fontSize: 12 }}>
+                                {order.shipping.provider.toUpperCase()}
+                              </p>
+                              <p style={{ fontFamily: "monospace", fontSize: 11, color: "#1e293b", fontWeight: 700, marginTop: 1 }}>
+                                {order.shipping.awb}
+                              </p>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: 11.5, color: "#ef4444", fontWeight: 600 }}>Unassigned</span>
+                          )
+                        ) : (
+                          <span style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Self-Pickup</span>
+                        )}
+                      </td>
+
+                      {/* Shipment Status */}
+                      <td style={{ padding: "12px 14px" }}>
+                        {isOnline ? (
+                          <ShipmentStatusBadge status={order.shipping?.status} />
+                        ) : (
+                          <StatusBadge status={order.status} />
+                        )}
+                      </td>
+
+                      {/* Estimated Delivery */}
+                      <td style={{ padding: "12px 14px", whiteSpace: "nowrap", fontSize: 12, color: "#475569" }}>
+                        {hasShipping ? (
+                          new Date(order.shipping.estimatedDelivery).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
+                        ) : (
+                          <span style={{ color: "#94a3b8" }}>—</span>
                         )}
                       </td>
 
@@ -740,7 +935,10 @@ const ManageOrders = () => {
                           order={order}
                           onStatusChange={handleStatusChange}
                           onView={setDetail}
-                          onBookDTDC={setDtdcOrder}
+                          onTrack={setTrackOrder}
+                          onCancelShipment={handleCancelShipment}
+                          onRefreshStatus={handleRefreshStatus}
+                          onBookManual={handleBookManual}
                         />
                       </td>
                     </tr>
@@ -769,20 +967,33 @@ const ManageOrders = () => {
       </div>
 
       {/* Detail Modal */}
-      {detail && <OrderDetailModal order={detail} onClose={() => setDetail(null)} />}
+      {detail && (
+        <OrderDetailModal
+          order={detail}
+          onClose={() => setDetail(null)}
+          onRefreshStatus={handleRefreshStatus}
+          onCancelShipment={handleCancelShipment}
+        />
+      )}
 
-      {/* DTDC Courier Booking Modal */}
-      {dtdcOrder && (
-        <DTDCModal
-          order={dtdcOrder}
-          onClose={() => setDtdcOrder(null)}
-          onSave={handleStatusChange}
+      {/* Tracking Timeline Modal */}
+      {trackOrder && (
+        <TrackingTimelineModal
+          order={trackOrder}
+          onClose={() => setTrackOrder(null)}
         />
       )}
 
       <ToastContainer position="top-right" autoClose={2500} />
     </div>
   );
+};
+
+const staticTHStyle = {
+  padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 600,
+  textTransform: "uppercase", letterSpacing: ".05em", color: "#94a3b8",
+  background: "#f8fafc", borderBottom: "1px solid #e2e8f0",
+  whiteSpace: "nowrap"
 };
 
 const pgBtnStyle = (disabled) => ({

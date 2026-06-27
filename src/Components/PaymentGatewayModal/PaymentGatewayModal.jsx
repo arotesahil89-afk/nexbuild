@@ -34,8 +34,10 @@ const PaymentGatewayModal = ({
   const [progress, setProgress] = useState(0);
   const [payData,  setPayData]  = useState(null);
 
-  const fee      = computeFee(mode, amount, showCod);
-  const total    = amount + fee;
+  const deliveryCharge = mode === "online" ? (customer?.shippingCharge || 0) : 0;
+  const baseTotal      = amount + deliveryCharge;
+  const fee            = computeFee(mode, baseTotal, showCod);
+  const total          = baseTotal + fee;
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -212,6 +214,12 @@ const PaymentGatewayModal = ({
                       <span className="text-gray-500">Order amount</span>
                       <span className="font-semibold text-gray-800">₹{fmtINR(amount)}</span>
                     </div>
+                    {mode === "online" && deliveryCharge > 0 && (
+                      <div className="flex justify-between items-center text-sm mb-2">
+                        <span className="text-gray-500">Delivery charges</span>
+                        <span className="font-semibold text-gray-800">₹{fmtINR(deliveryCharge)}</span>
+                      </div>
+                    )}
                     {showCod && fee > 0 && (
                       <div className="flex justify-between items-center text-sm mb-2">
                         <span className="text-gray-400">

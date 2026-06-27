@@ -4,13 +4,14 @@ import apiClient from "../../services/apiService";
 import "./admin.css";
 import {
   LayoutDashboard, Award, CalendarDays, ShoppingBag,
-  LogOut, Menu, User, ChevronRight, Shield,
+  LogOut, Menu, User, ChevronRight, Shield, Truck,
 } from "lucide-react";
 
 // ─── Nav items definition ───────────────────────────────────────────────────
 const NAV = [
   { to: "/admin",          end: true,  icon: LayoutDashboard, label: "Dashboard"    },
   { to: "/admin/orders",              icon: ShoppingBag,      label: "Orders"       },
+  { to: "/admin/shipping",            icon: Truck,            label: "Shipping Master" },
   { to: "/admin/awards",              icon: Award,            label: "Awards"       },
   { to: "/admin/events",              icon: CalendarDays,     label: "Events"       },
   { to: "/admin/profile",             icon: User,             label: "Profile"      },
