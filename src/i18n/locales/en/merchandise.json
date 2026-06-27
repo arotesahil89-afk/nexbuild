@@ -11,9 +11,13 @@
   "sizeGuide": "Size Guide",
   "quantity": "Quantity",
   "inStock": "In Stock",
+  "left": "{{count}} left",
+  "soldOut": "Sold Out",
   "addToCart": "Add to Cart",
   "buyNow": "Order Now",
   "secureNote": "100% secure checkout · UPI, Card, Net Banking & Pay-at-Pickup",
+  "otherMerchTitle": "Explore More Merchandise",
+  "otherMerchSub": "Bring home official collectibles and support the Mandal's causes",
   "highlightsTitle": "Why you'll love it",
   "highlights": {
     "fabric": "Premium 100% bio-washed cotton — breathable & soft",
@@ -32,7 +36,12 @@
     "collar": "Style",
     "collarValue": "Polo Collar, Half Sleeve",
     "care": "Care",
-    "careValue": "Machine wash cold, do not bleach"
+    "careValue": "Machine wash cold, do not bleach",
+    "size": "Size",
+    "weight": "Weight",
+    "packaging": "Packaging",
+    "capacity": "Capacity",
+    "finish": "Finish"
   },
   "anglesTitle": "See Every Angle",
   "anglesSub": "Crafted to look stunning from every side",
@@ -53,5 +62,56 @@
   "promoTitle": "Official Merchandise Is Live!",
   "promoTagline": "Get your Mumbaicha Raja Heritage Grey Polo T-Shirt. Limited stock available for Ganeshotsav!",
   "promoCta": "Shop Now 👕",
-  "promoDismiss": "Explore Website"
+  "promoDismiss": "Explore Website",
+  "keychain": {
+    "name": "Mumbaicha Raja Gold-Plated Keychain — Official 2025 Edition",
+    "tagline": "Keep the blessings close wherever you go.",
+    "description": "An official gold-plated keychain of Mumbaicha Raja (Ganesh Galli). Elaborately designed with a dual-sided Ganpati seal and premium glossy finish. Ideal for vehicle keys, home keys, or as a pocket souvenir of Lalbaug's historic Mandal.",
+    "highlights": {
+      "1": "24K Gold-Plated zinc alloy — premium weight & shine",
+      "2": "Exquisite dual-sided traditional Ganpati emblem",
+      "3": "Strong double-ring clasp for keys & backpack attachment",
+      "4": "Engraved Mandal official mark of authenticity on the back"
+    },
+    "specs": {
+      "material": "Gold Plated Zinc Alloy",
+      "size": "2.5\" x 1.5\" Emblem Size",
+      "weight": "45 Grams (Heavy Weight)",
+      "packaging": "Comes in a premium velvet gift box"
+    }
+  },
+  "mug": {
+    "name": "Mumbaicha Raja Heritage Ceramic Coffee Mug",
+    "tagline": "Start your mornings with devotional warmth.",
+    "description": "Premium matte-finished ceramic coffee mug in heritage graphite grey. Emblazoned with the golden Ganpati crest of Ganesh Galli Mandal on both sides. Keeps your beverage hot while reminding you of Lalbaug's rich legacy.",
+    "highlights": {
+      "1": "High-grade scratch resistant ceramic body",
+      "2": "325ml standard capacity — perfect for tea or coffee",
+      "3": "Microwave safe & top-rack dishwasher safe",
+      "4": "Dual-sided golden Ganpati insignia printing"
+    },
+    "specs": {
+      "material": "Premium Matte Ceramic",
+      "capacity": "325 ml (11 oz)",
+      "finish": "Graphite Grey with Gold Print",
+      "care": "Microwave and Dishwasher safe"
+    }
+  },
+  "bag": {
+    "name": "Mumbaicha Raja Devotional Canvas Tote Bag",
+    "tagline": "Eco-friendly devotion for your everyday needs.",
+    "description": "A spacious, heavy-duty canvas bag printed with organic dyes. Features the iconic red Mumbaicha Raja Mandal seal on natural unbleached cotton. Perfect for grocery runs, books, and daily carry.",
+    "highlights": {
+      "1": "100% organic cotton canvas — eco-friendly & durable",
+      "2": "Reinforced cross-stitching on double shoulder straps",
+      "3": "Convenient inner pocket for phone, coins & keys",
+      "4": "Printed using non-toxic water-based organic red dye"
+    },
+    "specs": {
+      "material": "100% Organic Canvas Cotton (300 GSM)",
+      "size": "15\" x 16\" x 4\" Dimension",
+      "capacity": "Spacious main compartment (Holds up to 15 kg)",
+      "care": "Hand wash with cold water, dry flat"
+    }
+  }
 }
