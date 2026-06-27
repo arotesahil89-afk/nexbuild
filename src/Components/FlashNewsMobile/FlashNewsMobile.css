@@ -25,7 +25,7 @@
 
 
 
-.Toastify__toast-body {
+.flash-toast-wrapper .Toastify__toast-body {
   background-color: #b91c1c !important;
   color: white !important;
   border-radius: 0.5rem;
@@ -41,17 +41,17 @@
 /* 📱 Mobile Optimization */
 @media (max-width: 480px) {
   .flash-toast-inner {
-  background-color: #b91c1c;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  width: 200px;
-}
-.Toastify__toast {
-  background-color: transparent !important;
-  width: fit-content;
-}
+    background-color: #b91c1c;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    width: 200px;
+  }
+  .flash-toast-wrapper.Toastify__toast {
+    background-color: transparent !important;
+    width: fit-content;
+  }
   .flash-toast-wrapper {
     max-width: 85vw !important;
     font-size: 0.7rem;

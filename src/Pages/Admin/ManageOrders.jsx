@@ -276,6 +276,7 @@ const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment })
         width: "100%", maxWidth: 500,
         maxHeight: "90dvh", overflowY: "auto",
         boxShadow: "0 20px 60px rgba(0,0,0,.2)",
+        margin: "auto",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: "1px solid #f1f5f9" }}>
           <div>
@@ -398,7 +399,11 @@ const TrackingTimelineModal = ({ order, onClose }) => {
         background: "#fff", borderRadius: 18,
         width: "100%", maxWidth: 440,
         boxShadow: "0 20px 60px rgba(0,0,0,.2)",
-        overflow: "hidden"
+        overflow: "hidden",
+        margin: "auto",
+        maxHeight: "90dvh",
+        display: "flex",
+        flexDirection: "column",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: "1px solid #f1f5f9" }}>
           <div>
@@ -410,7 +415,7 @@ const TrackingTimelineModal = ({ order, onClose }) => {
           </button>
         </div>
 
-        <div style={{ padding: "20px 22px", maxHeight: "65vh", overflowY: "auto" }}>
+        <div style={{ padding: "20px 22px", overflowY: "auto", flex: 1 }}>
           {loading ? (
             <div style={{ textAlign: "center", padding: "30px 0" }}>
               <RefreshCw size={24} style={{ animation: "spin .8s linear infinite", margin: "0 auto 12px", color: "#991b1b" }} />
@@ -467,6 +472,7 @@ const modalOverlayStyle = {
   background: "rgba(0,0,0,.5)", display: "flex",
   alignItems: "center", justifyContent: "center", padding: 16,
   backdropFilter: "blur(4px)",
+  overflowY: "auto",
 };
 
 const closeBtnStyle = {

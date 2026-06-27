@@ -329,7 +329,11 @@ const ManageShipping = () => {
             background: "#fff", borderRadius: 16,
             width: "100%", maxWidth: 400,
             boxShadow: "0 20px 50px rgba(0,0,0,.15)",
-            overflow: "hidden"
+            overflow: "hidden",
+            margin: "auto",
+            maxHeight: "90dvh",
+            display: "flex",
+            flexDirection: "column"
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid #f1f5f9" }}>
               <p style={{ fontWeight: 700, fontSize: 14 }}>
@@ -340,7 +344,7 @@ const ManageShipping = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} style={{ padding: "20px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+            <form onSubmit={handleSubmit} style={{ padding: "20px 20px", display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
               {/* Pincode */}
               <div>
                 <label style={labelStyle}>Pincode *</label>
@@ -483,6 +487,7 @@ const modalOverlayStyle = {
   background: "rgba(0,0,0,.45)", display: "flex",
   alignItems: "center", justifyContent: "center", padding: 16,
   backdropFilter: "blur(3px)",
+  overflowY: "auto",
 };
 
 const closeBtnStyle = {

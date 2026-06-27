@@ -10,6 +10,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  overflow-y: auto;
 }
 
 .merch-promo-backdrop {
@@ -36,6 +37,7 @@
   border: 1px solid rgba(185, 28, 28, 0.1);
   display: flex;
   flex-direction: column;
+  margin: auto;
 }
 
 /* Close button */
@@ -46,12 +48,13 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4b5563;
+  color: #1f2937;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   z-index: 10;
@@ -309,4 +312,105 @@
 .merch-promo-btn-secondary:hover {
   background: #e5e7eb;
   color: #1f2937;
+}
+
+/* Responsive mobile view adjustments */
+@media (max-width: 640px) {
+  .merch-promo-overlay {
+    align-items: flex-start;
+    padding: 0.5rem;
+  }
+  
+  .merch-promo-modal {
+    margin: 1.5rem auto;
+    border-radius: 16px;
+  }
+
+  .merch-promo-image-sec {
+    padding: 1.5rem 1rem;
+  }
+
+  .merch-promo-spotlight {
+    max-width: 140px;
+  }
+
+  .merch-promo-spotlight::before {
+    width: 100px;
+    height: 100px;
+  }
+
+  .merch-promo-badge {
+    top: -8px;
+    font-size: 8px;
+    padding: 4px 8px;
+  }
+
+  .merch-promo-info-sec {
+    padding: 1.25rem;
+  }
+
+  .merch-promo-tag {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+
+  .merch-promo-title {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .merch-promo-desc {
+    font-size: 12.5px;
+    margin-bottom: 12px;
+  }
+
+  .merch-promo-price-review {
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .merch-promo-price-new {
+    font-size: 22px;
+  }
+
+  .merch-promo-price-old {
+    font-size: 14px;
+  }
+
+  .merch-promo-discount {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  .merch-promo-rating {
+    padding: 2px 8px;
+  }
+
+  .merch-promo-rating-text {
+    font-size: 11px;
+  }
+
+  .merch-promo-features {
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  .merch-promo-features li {
+    font-size: 12px;
+  }
+
+  .merch-promo-actions {
+    gap: 8px;
+  }
+
+  .merch-promo-btn-primary {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .merch-promo-btn-secondary {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
 }
