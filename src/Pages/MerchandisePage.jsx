@@ -225,6 +225,7 @@ const MerchandisePage = () => {
   };
 
   const handlePaymentSuccess = async (payData) => {
+    if (!payData) return;
     try {
       const paymentMethod = payData?.method === 'pickup' ? 'pickup' : 'online';
       const selectedSizes = Object.entries(selectQty).filter((entry) => entry[1] > 0);
@@ -245,13 +246,6 @@ const MerchandisePage = () => {
         paymentMethod,
         paymentId:     payData?.txnId || payData?.razorpay_payment_id || null,
       });
-
-      toast.success(
-        paymentMethod === 'pickup'
-          ? '📦 Order reserved! See you at the Mandal office.'
-          : '✅ Order confirmed! Check your email for details.',
-        { position: 'top-center', autoClose: 5000 }
-      );
     } catch (err) {
       console.error('Failed to save order:', err);
       toast.warning(
@@ -711,12 +705,18 @@ const MerchandisePage = () => {
 
       <PaymentGatewayModal
         open={payOpen}
-        onClose={() => { setPayOpen(false); handlePaymentSuccess(); }}
+        onClose={() => setPayOpen(false)}
         amount={orderTotal}
         title="Merchandise Order"
         showCod
         customer={customer}
         onSuccess={handlePaymentSuccess}
+        orderDetails={{
+          productName: name,
+          price: product.price,
+          sizes: Object.entries(selectQty).filter(([_, q]) => q > 0).map(([s, q]) => ({ size: s, qty: q })),
+          shippingCharge: customer?.shippingCharge || 0
+        }}
       />
 
       <ToastContainer />
