@@ -76,6 +76,7 @@ function App() {
         <Route path="/podcast"         element={<PodcastPage lang={i18n.language} />} />
         <Route path="/gun-gaurav-gallery" element={<GunGauravGallery lang={i18n.language} />} />
         <Route path="/merchandise"     element={<MerchandisePage lang={i18n.language} />} />
+        <Route path="/merchandise/:slug" element={<MerchandisePage lang={i18n.language} />} />
         <Route path="/donate-now"      element={<DonationDrivePage lang={i18n.language} />} />
         <Route path="/membership"      element={<MembershipPage lang={i18n.language} />} />
 
