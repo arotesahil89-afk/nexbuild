@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -128,10 +129,34 @@ const TrustStrip = () => (
   </div>
 );
 
+const getProductSlug = (prod) => {
+  if (!prod) return "";
+  if (prod.name?.en) {
+    return prod.name.en.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+  if (typeof prod.name === "string" && prod.name) {
+    return prod.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+  switch (prod.id) {
+    case "mr-polo-2025":
+      return "mumbaicha-raja-official-polo";
+    case "mr-keychain-2025":
+      return "mumbaicha-raja-official-keychain";
+    case "mr-mug-2025":
+      return "mumbaicha-raja-official-mug";
+    case "mr-bag-2025":
+      return "mumbaicha-raja-official-bag";
+    default:
+      return prod.id;
+  }
+};
+
 /* ─── Page ─── */
 const MerchandisePage = () => {
   const { t, i18n } = useTranslation("merchandise");
   const { products, loading } = useMerchandiseLoader();
+  const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [active, setActive]           = useState(0);
   const [product, setProduct]         = useState(null);
@@ -174,10 +199,21 @@ const MerchandisePage = () => {
   };
 
   React.useEffect(() => {
-    if (products.length > 0 && !product) {
-      setProduct(products[0]);
+    if (products.length > 0) {
+      if (slug) {
+        const found = products.find(p => getProductSlug(p) === slug || p.id === slug);
+        if (found) {
+          setProduct(found);
+        } else {
+          setProduct(products[0]);
+          navigate(`/merchandise/${getProductSlug(products[0])}`, { replace: true });
+        }
+      } else {
+        setProduct(products[0]);
+        navigate(`/merchandise/${getProductSlug(products[0])}`, { replace: true });
+      }
     }
-  }, [products, product]);
+  }, [products, slug, navigate]);
 
   React.useEffect(() => {
     if (!product) return;
@@ -397,92 +433,119 @@ const MerchandisePage = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {product.sizes.map((s) => {
-                const stock = product.stock[s] ?? 999;
-                const soldOut = stock === 0;
-                const sizeQty = selectQty[s] || 0;
-                const isLowStock = stock > 0 && stock < LOW_STOCK_THRESHOLD;
-                const isSelected = sizeQty > 0;
+              {(() => {
+                const hasApparelSizes = product.sizes.some(s => ["S", "M", "L", "XL", "XXL"].includes(s));
+                const sizesToRender = hasApparelSizes ? ["S", "M", "L", "XL", "XXL"] : product.sizes;
+                
+                return sizesToRender.map((s) => {
+                  const isOffered = product.sizes.includes(s);
+                  const stock = isOffered ? (product.stock[s] ?? 0) : 0;
+                  const soldOut = stock === 0;
+                  const sizeQty = selectQty[s] || 0;
+                  const isLowStock = stock > 0 && stock < LOW_STOCK_THRESHOLD;
+                  const isSelected = sizeQty > 0;
 
-                return (
-                  <div
-                    key={s}
-                    className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-200 ${
-                      soldOut
-                        ? "bg-gray-50/50 border-gray-100 opacity-60"
-                        : isSelected
-                        ? "bg-red-50/40 border-[#B91C1C] shadow-sm"
-                        : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
-                    }`}
-                  >
-                    {/* Left: Size Name & Stock Status */}
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className={`px-2 min-w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors shrink-0 ${
-                          soldOut
-                            ? "bg-gray-100 text-gray-400"
-                            : isSelected
-                            ? "bg-[#B91C1C] text-white"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {s}
-                      </span>
-                      <div className="flex flex-col min-w-0">
-                        {soldOut ? (
-                          <span className="text-[10px] text-red-500 font-bold leading-none">
-                            {t("soldOut")}
-                          </span>
-                        ) : isLowStock ? (
-                          <span className="text-[10px] text-orange-500 font-bold leading-none truncate">
-                            {t("left", { count: stock })}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-emerald-600 font-medium leading-none">
-                            {t("inStock")}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right: Quantity Selector */}
-                    {!soldOut ? (
+                  if (!isOffered) {
+                    return (
                       <div
-                        className={`flex items-center border rounded-lg overflow-hidden h-7 bg-white transition-colors shrink-0 ${
-                          isSelected ? "border-[#B91C1C]/40" : "border-gray-200"
-                        }`}
+                        key={s}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-gray-100 bg-gray-50/40 opacity-50 cursor-not-allowed select-none"
                       >
-                        <button
-                          type="button"
-                          onClick={() => handleSizeQtyChange(s, sizeQty - 1)}
-                          className="w-7 h-full hover:bg-gray-50 text-gray-500 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
-                        >
-                          <Minus size={10} strokeWidth={2.5} />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 min-w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center bg-gray-100 text-gray-400">
+                            {s}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-bold leading-none">
+                            Not Available
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-gray-400 font-semibold pr-1">
+                          N/A
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={s}
+                      className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-200 ${
+                        soldOut
+                          ? "bg-gray-50/50 border-gray-100 opacity-60"
+                          : isSelected
+                          ? "bg-red-50/40 border-[#B91C1C] shadow-sm"
+                          : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
+                      }`}
+                    >
+                      {/* Left: Size Name & Stock Status */}
+                      <div className="flex items-center gap-2 min-w-0">
                         <span
-                          className={`w-6 text-center font-bold text-xs transition-colors ${
-                            isSelected ? "text-[#B91C1C]" : "text-gray-700"
+                          className={`px-2 min-w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors shrink-0 ${
+                            soldOut
+                              ? "bg-gray-100 text-gray-400"
+                              : isSelected
+                              ? "bg-[#B91C1C] text-white"
+                              : "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {sizeQty}
+                          {s}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => handleSizeQtyChange(s, sizeQty + 1)}
-                          disabled={totalQty >= 50 || sizeQty >= stock}
-                          className="w-7 h-full hover:bg-gray-50 text-gray-500 disabled:opacity-30 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
-                        >
-                          <Plus size={10} strokeWidth={2.5} />
-                        </button>
+                        <div className="flex flex-col min-w-0">
+                          {soldOut ? (
+                            <span className="text-[10px] text-red-500 font-bold leading-none">
+                              {t("soldOut")}
+                            </span>
+                          ) : isLowStock ? (
+                            <span className="text-[10px] text-orange-500 font-bold leading-none truncate">
+                              {t("left", { count: stock })}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-emerald-600 font-medium leading-none">
+                              {t("inStock")}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-[11px] text-gray-400 font-semibold pr-1 shrink-0">
-                        {t("soldOut")}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+
+                      {/* Right: Quantity Selector */}
+                      {!soldOut ? (
+                        <div
+                          className={`flex items-center border rounded-lg overflow-hidden h-7 bg-white transition-colors shrink-0 ${
+                            isSelected ? "border-[#B91C1C]/40" : "border-gray-200"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleSizeQtyChange(s, sizeQty - 1)}
+                            className="w-7 h-full hover:bg-gray-50 text-gray-500 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
+                          >
+                            <Minus size={10} strokeWidth={2.5} />
+                          </button>
+                          <span
+                            className={`w-6 text-center font-bold text-xs transition-colors ${
+                              isSelected ? "text-[#B91C1C]" : "text-gray-700"
+                            }`}
+                          >
+                            {sizeQty}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleSizeQtyChange(s, sizeQty + 1)}
+                            disabled={totalQty >= 50 || sizeQty >= stock}
+                            className="w-7 h-full hover:bg-gray-50 text-gray-500 disabled:opacity-30 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
+                          >
+                            <Plus size={10} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-gray-400 font-semibold pr-1 shrink-0">
+                          {t("soldOut")}
+                        </span>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
             </div>
 
             {totalQty >= 50 && (
@@ -579,7 +642,7 @@ const MerchandisePage = () => {
                 <div key={item.id} className="outline-none">
                   <div
                     onClick={() => {
-                      setProduct(item);
+                      navigate(`/merchandise/${getProductSlug(item)}`);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-white border border-gray-100 shadow-sm cursor-pointer aspect-square"
