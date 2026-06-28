@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -128,10 +129,34 @@ const TrustStrip = () => (
   </div>
 );
 
+const getProductSlug = (prod) => {
+  if (!prod) return "";
+  if (prod.name?.en) {
+    return prod.name.en.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+  if (typeof prod.name === "string" && prod.name) {
+    return prod.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+  switch (prod.id) {
+    case "mr-polo-2025":
+      return "mumbaicha-raja-official-polo";
+    case "mr-keychain-2025":
+      return "mumbaicha-raja-official-keychain";
+    case "mr-mug-2025":
+      return "mumbaicha-raja-official-mug";
+    case "mr-bag-2025":
+      return "mumbaicha-raja-official-bag";
+    default:
+      return prod.id;
+  }
+};
+
 /* ─── Page ─── */
 const MerchandisePage = () => {
   const { t, i18n } = useTranslation("merchandise");
   const { products, loading } = useMerchandiseLoader();
+  const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [active, setActive]           = useState(0);
   const [product, setProduct]         = useState(null);
@@ -174,10 +199,21 @@ const MerchandisePage = () => {
   };
 
   React.useEffect(() => {
-    if (products.length > 0 && !product) {
-      setProduct(products[0]);
+    if (products.length > 0) {
+      if (slug) {
+        const found = products.find(p => getProductSlug(p) === slug || p.id === slug);
+        if (found) {
+          setProduct(found);
+        } else {
+          setProduct(products[0]);
+          navigate(`/merchandise/${getProductSlug(products[0])}`, { replace: true });
+        }
+      } else {
+        setProduct(products[0]);
+        navigate(`/merchandise/${getProductSlug(products[0])}`, { replace: true });
+      }
     }
-  }, [products, product]);
+  }, [products, slug, navigate]);
 
   React.useEffect(() => {
     if (!product) return;
@@ -579,7 +615,7 @@ const MerchandisePage = () => {
                 <div key={item.id} className="outline-none">
                   <div
                     onClick={() => {
-                      setProduct(item);
+                      navigate(`/merchandise/${getProductSlug(item)}`);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                     className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-white border border-gray-100 shadow-sm cursor-pointer aspect-square"
