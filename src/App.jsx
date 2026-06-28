@@ -24,6 +24,7 @@ import OtherSocialPage         from "./Pages/OtherSocialPage.jsx";
 import GunGauravGallery        from "./Pages/GunGauravGallery.jsx";
 import PodcastPage             from "./Pages/PodcastPage.jsx";
 import MerchandisePage         from "./Pages/MerchandisePage.jsx";
+import CheckoutPage            from "./Pages/CheckoutPage.jsx";
 import DonationDrivePage       from "./Pages/DonationDrivePage.jsx";
 import MembershipPage          from "./Pages/MembershipPage.jsx";
 
@@ -77,6 +78,7 @@ function App() {
         <Route path="/gun-gaurav-gallery" element={<GunGauravGallery lang={i18n.language} />} />
         <Route path="/merchandise"     element={<MerchandisePage lang={i18n.language} />} />
         <Route path="/merchandise/:slug" element={<MerchandisePage lang={i18n.language} />} />
+        <Route path="/merchandise/:slug/checkout" element={<CheckoutPage />} />
         <Route path="/donate-now"      element={<DonationDrivePage lang={i18n.language} />} />
         <Route path="/membership"      element={<MembershipPage lang={i18n.language} />} />
 

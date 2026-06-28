@@ -14,8 +14,6 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import apiClient from "../services/apiService";
-import PaymentGatewayModal from "../Components/PaymentGatewayModal/PaymentGatewayModal";
-import CheckoutDetailsModal from "../Components/CheckoutDetailsModal/CheckoutDetailsModal";
 import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 
 const MAX_QTY = 5;
@@ -162,9 +160,6 @@ const MerchandisePage = () => {
   const [product, setProduct]         = useState(null);
   const [selectQty, setSelectQty]     = useState({});
   const [sizeGuideOpen, setSizeGuide] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [payOpen, setPayOpen]         = useState(false);
-  const [customer, setCustomer]       = useState(null);
 
   const otherProducts = products.filter((p) => p.id !== product?.id);
   const slidesCount = Math.min(3, otherProducts.length);
@@ -252,71 +247,17 @@ const MerchandisePage = () => {
     setSelectQty(newSelectQty);
   };
 
-  const handleOrder = () => setDetailsOpen(true);
-
-  const handleDetailsContinue = (form) => {
-    setCustomer(form);
-    setDetailsOpen(false);
-    setPayOpen(true);
-  };
-
-  const handlePaymentSuccess = async (payData) => {
-    if (!payData) return;
-    try {
-      const paymentMethod = payData?.method === 'pickup' ? 'pickup' : 'online';
-      const selectedSizes = Object.entries(selectQty).filter((entry) => entry[1] > 0);
-      const sizeSummary = selectedSizes.map(([s, q]) => `${s}: ${q}`).join(", ");
-
-      await apiClient.post('/orders', {
-        customerName:  customer?.name  || '',
-        customerEmail: customer?.email || '',
-        customerPhone: customer?.phone || '',
-        address:       customer?.address || '',
-        pincode:       customer?.pincode || '',
-        shippingCharge:paymentMethod === 'pickup' ? 0 : (customer?.shippingCharge || 0),
-        productName:   name,
-        size:          sizeSummary,
-        quantity:      totalQty,
-        unitPrice:     product.price,
-        totalAmount:   orderTotal + (paymentMethod === 'pickup' ? 0 : (customer?.shippingCharge || 0)),
-        paymentMethod,
-        paymentId:     payData?.txnId || payData?.razorpay_payment_id || null,
-      });
-    } catch (err) {
-      console.error('Failed to save order:', err);
-      toast.warning(
-        '⚠️ Order placed but could not be saved. Please contact the Mandal office.',
-        { position: 'top-center', autoClose: 6000 }
-      );
-    } finally {
-      setCustomer(null);
-      setSelectQty({ S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
-    }
+  const handleOrder = () => {
+    const itemsParam = Object.entries(selectQty)
+      .filter(([_, q]) => q > 0)
+      .map(([s, q]) => `${s}:${q}`)
+      .join(",");
+    navigate(`/merchandise/${getProductSlug(product)}/checkout?items=${itemsParam}`);
   };
 
   const highlights = Array.isArray(product.highlights)
     ? product.highlights.map(key => t(key))
     : (product.highlights?.[i18n.language] || product.highlights?.en || []);
-
-  const orderSummaryJsx = (
-    <div className="bg-gray-50 rounded-xl p-4 mb-2">
-      <p className="text-xs font-semibold text-gray-500 mb-2">{t("orderSummary")}</p>
-      <div className="space-y-1.5 max-h-36 overflow-y-auto">
-        {Object.entries(selectQty)
-          .filter((entry) => entry[1] > 0)
-          .map(([s, q]) => (
-            <div key={s} className="flex justify-between text-sm text-gray-700">
-              <span>{name} ({s}) × {q}</span>
-              <span className="font-semibold">₹{product.price * q}</span>
-            </div>
-          ))}
-      </div>
-      <div className="flex justify-between text-sm font-bold text-[#B91C1C] mt-2 pt-2 border-t border-gray-200">
-        <span>{t("total")}</span>
-        <span>₹{orderTotal}</span>
-      </div>
-    </div>
-  );
 
   return (
     <div className="bg-gradient-to-b from-white to-gray-50 min-h-screen pb-28 sm:pb-0">
@@ -759,28 +700,7 @@ const MerchandisePage = () => {
         activeSize={Object.keys(selectQty).find(s => selectQty[s] > 0) || "L"}
       />
 
-      <CheckoutDetailsModal
-        open={detailsOpen}
-        onClose={() => setDetailsOpen(false)}
-        onContinue={handleDetailsContinue}
-        summary={orderSummaryJsx}
-      />
 
-      <PaymentGatewayModal
-        open={payOpen}
-        onClose={() => setPayOpen(false)}
-        amount={orderTotal}
-        title="Merchandise Order"
-        showCod
-        customer={customer}
-        onSuccess={handlePaymentSuccess}
-        orderDetails={{
-          productName: name,
-          price: product.price,
-          sizes: Object.entries(selectQty).filter(([_, q]) => q > 0).map(([s, q]) => ({ size: s, qty: q })),
-          shippingCharge: customer?.shippingCharge || 0
-        }}
-      />
 
       <ToastContainer />
     </div>
