@@ -267,6 +267,7 @@ const dropItemHeaderStyle = {
 
 // ─── Order Detail Modal ──────────────────────────────────────────────────────
 const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment }) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
   if (!order) return null;
 
   return (
@@ -307,7 +308,6 @@ const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment })
             <p style={cardSectionTitleStyle}>Order Details</p>
             <Row label="Product"  value={order.productName} />
             <Row label="Size"     value={order.size} />
-            <Row label="Qty"      value={order.quantity} />
             <Row label="Unit"     value={`₹${order.unitPrice?.toLocaleString("en-IN")}`} />
             <Row label="Total"    value={`₹${order.totalAmount?.toLocaleString("en-IN")}`} bold red />
             <Row label="Payment"  value={PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod} />
@@ -347,10 +347,23 @@ const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment })
                 </button>
                 
                 <button
-                  onClick={() => { onRefreshStatus(order.shipping.awb); }}
-                  style={actionBtnStyle("#0d9488")}
+                  onClick={async () => {
+                    if (isRefreshing) return;
+                    setIsRefreshing(true);
+                    await onRefreshStatus(order.shipping.awb);
+                    setTimeout(() => {
+                      setIsRefreshing(false);
+                    }, 2000);
+                  }}
+                  disabled={isRefreshing}
+                  style={{
+                    ...actionBtnStyle(isRefreshing ? "#64748b" : "#0d9488"),
+                    opacity: isRefreshing ? 0.6 : 1,
+                    cursor: isRefreshing ? "not-allowed" : "pointer"
+                  }}
                 >
-                  <RefreshCw size={13} /> Refresh
+                  <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
+                  {isRefreshing ? "Refreshed" : "Refresh"}
                 </button>
 
                 {order.shipping.status !== 'Cancelled' && (
@@ -647,11 +660,7 @@ const ManageOrders = () => {
       handleStatusChange(orderId, 'cancelled');
       
       if (detail && detail.id === orderId) {
-        setDetail(prev => ({
-          ...prev,
-          status: 'cancelled',
-          shipping: { ...prev.shipping, status: 'Cancelled' }
-        }));
+        setDetail(null); // Close the detail modal after clicking cancel
       }
     } catch {
       toast.error("❌ Failed to cancel shipment");
@@ -848,6 +857,9 @@ const ManageOrders = () => {
                         </p>
                         <p style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 2 }}>
                           {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}
+                          <span style={{ marginLeft: 6, color: "#64748b", fontWeight: 600 }}>
+                            {new Date(order.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                          </span>
                         </p>
                       </td>
 
@@ -871,7 +883,7 @@ const ManageOrders = () => {
                       <td style={{ padding: "12px 14px", minWidth: 120 }}>
                         <p style={{ fontSize: 12.5, color: "#374151" }}>{order.productName}</p>
                         <span style={{ display: "inline-block", marginTop: 3, background: "#f1f5f9", borderRadius: 5, padding: "1px 7px", fontSize: 11, fontWeight: 700, color: "#475569" }}>
-                          {order.size} × {order.quantity}
+                          {order.size}
                         </span>
                       </td>
 

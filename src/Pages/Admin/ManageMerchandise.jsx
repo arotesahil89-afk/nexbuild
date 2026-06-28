@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useMerchandiseLoader from "../../loaders/useMerchandiseLoader";
@@ -103,6 +103,60 @@ const ImageUploaderSlot = ({ label, value, onChange, onClear }) => {
   );
 };
 
+/* ─── Skeleton Loader Row ─── */
+const SkeletonRow = () => (
+  <tr className="border-b border-gray-100 animate-pulse">
+    {/* Product Info */}
+    <td className="px-6 py-4 flex items-center gap-3">
+      <div className="w-12 h-12 rounded-lg bg-gray-200" />
+      <div className="space-y-2">
+        <div className="h-3 w-28 bg-gray-200 rounded" />
+        <div className="h-2 w-16 bg-gray-200 rounded" />
+      </div>
+    </td>
+    {/* Product ID */}
+    <td className="px-6 py-4">
+      <div className="h-3 w-20 bg-gray-200 rounded" />
+    </td>
+    {/* Price */}
+    <td className="px-6 py-4">
+      <div className="space-y-1.5">
+        <div className="h-3 w-12 bg-gray-200 rounded" />
+        <div className="h-2 w-8 bg-gray-200 rounded" />
+      </div>
+    </td>
+    {/* Sizes & Stock */}
+    <td className="px-6 py-4">
+      <div className="space-y-1.5">
+        <div className="h-3 w-16 bg-gray-200 rounded" />
+        <div className="flex gap-1.5 mt-1">
+          <div className="h-2.5 w-8 bg-gray-200 rounded" />
+          <div className="h-2.5 w-8 bg-gray-200 rounded" />
+          <div className="h-2.5 w-8 bg-gray-200 rounded" />
+        </div>
+      </div>
+    </td>
+    {/* Swatch Color */}
+    <td className="px-6 py-4">
+      <div className="flex items-center gap-2">
+        <div className="w-5 h-5 rounded-full bg-gray-200" />
+        <div className="h-3 w-12 bg-gray-200 rounded" />
+      </div>
+    </td>
+    {/* Rating */}
+    <td className="px-6 py-4">
+      <div className="h-3 w-14 bg-gray-200 rounded" />
+    </td>
+    {/* Actions */}
+    <td className="px-6 py-4 text-right">
+      <div className="flex gap-2 justify-end">
+        <div className="w-8 h-8 rounded-lg bg-gray-200" />
+        <div className="w-8 h-8 rounded-lg bg-gray-200" />
+      </div>
+    </td>
+  </tr>
+);
+
 const ManageMerchandise = () => {
   const { products, loading, setProducts } = useMerchandiseLoader();
   const [form, setForm] = useState(DEFAULT_FORM_STATE);
@@ -113,6 +167,18 @@ const ManageMerchandise = () => {
   const [view, setView] = useState("list"); // "list" | "create" | "edit"
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [isTableLoading, setIsTableLoading] = useState(true);
+
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        setIsTableLoading(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    } else {
+      setIsTableLoading(true);
+    }
+  }, [loading]);
 
   const handleLangInputChange = (lang, field, val) => {
     setForm((prev) => ({
@@ -275,10 +341,8 @@ const ManageMerchandise = () => {
     return idMatch || nameMatch || typeMatch;
   });
 
-  if (loading) return <div className="p-6 text-gray-500 font-semibold">Loading merchandise catalog...</div>;
-
   return (
-    <div className="max-w-6xl mx-auto p-4 relative">
+    <div className="w-full relative">
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div>
@@ -291,7 +355,7 @@ const ManageMerchandise = () => {
 
       {view === "list" ? (
         /* ─── DATATABLE VIEW (All products listed) ─── */
-        <div className="bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden w-full">
+        <div className="w-full bg-white overflow-hidden">
           {/* Controls */}
           <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/50">
             {/* Search */}
@@ -333,7 +397,9 @@ const ManageMerchandise = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredProducts.length === 0 ? (
+                {isTableLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+                ) : filteredProducts.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="text-center py-12 text-gray-400 font-medium">
                       No products found matching your search.
