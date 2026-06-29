@@ -448,7 +448,7 @@ const CheckoutPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen bg-gray-50 pb-16 pt-24 md:pt-28">
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Redirecting loader overlay */}
@@ -461,58 +461,6 @@ const CheckoutPage = () => {
           <p className="text-xs text-gray-400 mt-1">Please do not refresh or press back</p>
           <div className="w-48 h-1.5 bg-gray-100 rounded-full mt-6 overflow-hidden">
             <div className="h-full bg-[#B91C1C] rounded-full transition-all duration-200" style={{ width: `${progress}%` }} />
-          </div>
-        </div>
-      )}
-
-      {/* Success Receipt overlay */}
-      {step === "success" && payData && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white p-6 overflow-y-auto">
-          <div className="max-w-md w-full text-center">
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100">
-              <CheckCircle2 size={40} />
-            </div>
-            
-            <h2 className="text-2xl font-black text-gray-900 leading-tight">Order Confirmed!</h2>
-            <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-              {payData.method === "pickup"
-                ? "Your merchandise reservation is successful. Please pick up and pay at the Mandal Office."
-                : "Thank you for purchasing! Your official invoice has been downloaded successfully."}
-            </p>
-
-            <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 mt-8 mb-8 text-left space-y-3.5">
-              <div className="flex justify-between items-center text-xs text-gray-400 font-bold uppercase tracking-wider">
-                <span>Receipt Summary</span>
-                <span>{payData.method === "pickup" ? "RESERVED" : "PAID"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-semibold">Transaction ID</span>
-                <span className="font-bold text-gray-800 font-mono">{payData.txnId || payData.razorpay_payment_id}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-semibold">Payment Mode</span>
-                <span className="font-bold text-gray-800">{payData.method === "pickup" ? "Pay at Pickup" : "Online Payment"}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-semibold">Total Amount</span>
-                <span className="font-extrabold text-[#B91C1C]">₹{fmtINR(paidAmount)}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
-              <button
-                onClick={downloadInvoice}
-                className="w-full sm:flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 font-bold py-3.5 px-6 rounded-2xl transition text-gray-700 text-sm flex items-center justify-center gap-2"
-              >
-                <Download size={16} /> Download Invoice
-              </button>
-              <Link
-                to="/merchandise"
-                className="w-full sm:flex-1 bg-[#B91C1C] hover:bg-red-800 font-bold py-3.5 px-6 rounded-2xl transition text-white text-sm flex items-center justify-center"
-              >
-                Continue Shopping
-              </Link>
-            </div>
           </div>
         </div>
       )}
@@ -543,21 +491,73 @@ const CheckoutPage = () => {
         </div>
       )}
 
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to={`/merchandise/${slug}`} className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
-              <ArrowLeft size={20} />
-            </Link>
-            <span className="font-bold text-gray-900 text-lg">Checkout Details</span>
-          </div>
-          <span className="font-bold text-sm text-[#B91C1C] tracking-wide uppercase">Mumbai Cha Raja</span>
-        </div>
-      </header>
+      {/* Render either themed success layout or the standard checkout form */}
+      {step === "success" && payData ? (
+        <div className="max-w-xl mx-auto px-4">
+          <div className="bg-white rounded-3xl border-2 border-red-100 shadow-xl p-6 sm:p-8 text-center relative overflow-hidden">
+            {/* Gold/Red accent line at top */}
+            <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-[#B91C1C] via-yellow-400 to-[#B91C1C]" />
+            
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 mt-4">
+              <CheckCircle2 size={40} />
+            </div>
+            
+            <h2 className="text-2xl font-black text-gray-900 leading-tight">Order Confirmed!</h2>
+            <p className="text-xs font-bold text-[#B91C1C] uppercase tracking-wider mt-1.5 flex items-center justify-center gap-1">
+              Ganpati Bappa Morya! 🙏
+            </p>
+            <p className="text-gray-500 text-sm mt-3 leading-relaxed">
+              {payData.method === "pickup"
+                ? "Your merchandise reservation is successful. Please pick up and pay at the Ganesh Galli Mandal Office."
+                : "Thank you for purchasing! Your official invoice has been downloaded successfully."}
+            </p>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="bg-amber-50/30 rounded-2xl p-5 border border-amber-100/50 mt-8 mb-8 text-left space-y-3.5">
+              <div className="flex justify-between items-center text-xs text-amber-800 font-bold uppercase tracking-wider border-b border-amber-100/50 pb-2.5">
+                <span>Receipt Summary</span>
+                <span className="text-[#B91C1C]">{payData.method === "pickup" ? "RESERVED" : "PAID"}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 font-medium">Transaction ID</span>
+                <span className="font-bold text-gray-800 font-mono select-all">{payData.txnId || payData.razorpay_payment_id}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 font-medium">Payment Mode</span>
+                <span className="font-bold text-gray-800">{payData.method === "pickup" ? "Pay at Pickup" : "Online Payment"}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-1 border-t border-dashed border-amber-200">
+                <span className="text-gray-950 font-bold">Total Amount</span>
+                <span className="font-black text-xl text-[#B91C1C]">₹{fmtINR(paidAmount)}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
+              <button
+                onClick={downloadInvoice}
+                className="w-full sm:flex-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 font-bold py-3.5 px-6 rounded-2xl transition text-amber-900 text-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download size={16} /> Download Invoice
+              </button>
+              <Link
+                to="/merchandise"
+                className="w-full sm:flex-1 bg-[#B91C1C] hover:bg-red-800 border-2 border-transparent font-bold py-3.5 px-6 rounded-2xl transition text-white text-sm flex items-center justify-center shadow-md shadow-red-100"
+              >
+                Continue Shopping
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Breadcrumb link container under fixed navbar */}
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+            <Link to={`/merchandise/${slug}`} className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#B91C1C] hover:underline transition">
+              <ArrowLeft size={14} /> Back to Product
+            </Link>
+          </div>
+
+          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Form details */}
           <div className="lg:col-span-7 bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm">
@@ -783,18 +783,13 @@ const CheckoutPage = () => {
               </div>
             </div>
 
-            {/* Additional info */}
-            <div className="bg-blue-50 border border-blue-100 rounded-3xl p-5 text-xs text-blue-700 leading-relaxed space-y-2">
-              <p className="font-bold text-blue-800 text-sm">Shipping & Pickup Info</p>
-              <p>For **Online Payment**, delivery is handled securely via DTDC shipping directly to your address.</p>
-              <p>For **Pay at Pickup**, items are reserved. You must visit our Lalbaug Mandal Office to pay cash and collect them.</p>
             </div>
           </div>
-
-        </div>
-      </main>
-    </div>
-  );
+        </main>
+      </>
+    )}
+  </div>
+);
 };
 
 export default CheckoutPage;

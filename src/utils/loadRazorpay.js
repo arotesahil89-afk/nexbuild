@@ -1,6 +1,6 @@
 // Dynamically load Razorpay checkout.js and resolve true/false.
 // Only the public Key ID is used here — the Key Secret stays on the server.
-export const RAZORPAY_KEY_ID = "rzp_test_T2hBM6vUF4TiSW";
+export const RAZORPAY_KEY_ID = "rzp_live_T7UuPu8TrojC5I";
 
 export const loadRazorpay = () =>
   new Promise((resolve) => {
@@ -37,18 +37,19 @@ export const openRazorpayCheckout = ({ total, method, title, customer, onSuccess
     prefill: {
       name:    customer?.name    || "",
       email:   customer?.email   || "",
-      contact: customer?.phone   ? `+91${customer.phone}` : "",
+      contact: customer?.phone   || "",
     },
     notes: {
       pickup: "Ganesh Galli Mandal Office, Lalbaug, Mumbai – 400 012",
     },
     theme:  { color: "#B91C1C" },
     modal:  { ondismiss: onDismiss, animation: true },
+    
     handler: (response) =>
       onSuccess({
         txnId:   response.razorpay_payment_id,
         orderId: response.razorpay_order_id || null,
-        method,
+        method:  method || "online",
         amount:  total,
       }),
   };
