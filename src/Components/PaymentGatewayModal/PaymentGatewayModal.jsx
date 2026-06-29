@@ -65,329 +65,366 @@ const PaymentGatewayModal = ({
   const downloadInvoice = () => {
     try {
       const logoImg = new Image();
-      logoImg.src = "/images/logo - img.png";
-      
+      logoImg.crossOrigin = "anonymous";
+      logoImg.src = "/images/logo-removebg-preview.png";
+
       const generatePDF = (img) => {
         const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-        
-        const redColor = [185, 28, 28]; // #B91C1C
-        const goldColor = [212, 175, 55]; // #D4AF37
-        const darkColor = [15, 23, 42]; // #0F172A
-        const greyColor = [100, 116, 139]; // #64748B
-        const lightGreyColor = [156, 163, 175]; // #9CA3AF
 
-        // ── Header Background ──
-        doc.setFillColor(...redColor);
-        doc.rect(0, 0, 210, 42, "F");
+        // ── Color Palette ──
+        const RED    = [185, 28, 28];
+        const GOLD   = [212, 175, 55];
+        const DARK   = [15, 23, 42];
+        const GREY   = [100, 116, 139];
+        const LGREY  = [180, 188, 198];
+        const GREEN  = [22, 163, 74];
+        const WHITE  = [255, 255, 255];
 
-        // ── Gold Line ──
-        doc.setFillColor(...goldColor);
-        doc.rect(0, 42, 210, 1.5, "F");
+        // Helper: format currency without ₹ symbol (jsPDF built-in fonts don't support it)
+        const fmt = (n) => `Rs. ${Number(n).toLocaleString("en-IN")}`;
 
-        // ── Title & Logo ──
+        /* ════════════════════════════════════════
+           HEADER BANNER
+        ════════════════════════════════════════ */
+        // Header banner — taller for bigger logo
+        doc.setFillColor(...RED);
+        doc.rect(0, 0, 210, 54, "F");
+
+        // Gold accent line
+        doc.setFillColor(...GOLD);
+        doc.rect(0, 54, 210, 2, "F");
+
+        // White circle backdrop for logo
+        doc.setFillColor(255, 255, 255);
+        doc.circle(29, 27, 22, "F");
+
+        // Circular logo — large, centred in header
         if (img) {
-          try {
-            doc.addImage(img, "PNG", 12, 9, 22, 22);
-          } catch (e) {
-            console.warn("Could not add logo to PDF:", e);
-          }
+          try { doc.addImage(img, "PNG", 8, 6, 42, 42); }
+          catch (e) { console.warn("Logo failed:", e); }
         }
 
-        doc.setTextColor(255, 255, 255);
+        // Mandal name & address (right of logo)
+        doc.setTextColor(...WHITE);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("Lalbaug Sarvajanik Utsav Mandal", 38, 15);
-        
+        doc.setFontSize(15);
+        doc.text("Lalbaug Sarvajanik Utsav Mandal", 57, 18);
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.setTextColor(230, 230, 230);
-        doc.text("MumbaichaRaja | Ganesh Galli, Lalbaug,", 38, 21);
-        doc.text("Mumbai—400 012", 38, 25);
-        doc.text("mumbaicharaja.co | Est. 1928", 38, 31);
+        doc.text("MumbaichaRaja  |  Ganesh Galli, Lalbaug,", 57, 25);
+        doc.text("Mumbai - 400 012", 57, 31);
+        doc.text("mumbaicharaja.co  |  Est. 1928", 57, 37);
 
-        // ── Header Box (Right) ──
-        doc.setDrawColor(...goldColor);
-        doc.setLineWidth(0.5);
-        doc.rect(135, 12, 60, 18, "D");
+        // Gold ORDER INVOICE box (top-right) — compact
+        doc.setDrawColor(...GOLD);
+        doc.setLineWidth(0.6);
+        doc.rect(143, 16, 54, 18, "D");
 
-        doc.setTextColor(255, 255, 255);
+        doc.setTextColor(...WHITE);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.text("ORDER INVOICE", 165, 18, { align: "center" });
+        doc.setFontSize(7);
+        doc.text("ORDER INVOICE", 170, 22, { align: "center" });
 
-        const refId = payData?.txnId || payData?.razorpay_payment_id || "pickup-" + Date.now().toString().slice(-6);
-        const txnIdStr = `#TXN${refId.toUpperCase().slice(-10)}`;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10.5);
-        doc.setTextColor(...goldColor);
-        doc.text(txnIdStr, 165, 24, { align: "center" });
-
-        // ── Metadata Table (Date, Time, Order ID, Payment Info, Customer Details) ──
-        // Left Column
+        const refId     = payData?.txnId || payData?.razorpay_payment_id || "PICKUP" + Date.now().toString().slice(-6);
+        const txnDisplay = ("#TXN" + refId.toUpperCase()).slice(0, 16);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8.5);
-        doc.setTextColor(...lightGreyColor);
-        doc.text("INVOICE DATE", 15, 53);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(...darkColor);
-        const dateFormatted = new Date().toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric"
-        });
-        doc.text(dateFormatted, 15, 58);
+        doc.setTextColor(...GOLD);
+        doc.text(txnDisplay, 170, 29, { align: "center" });
 
+        /* ════════════════════════════════════════
+           META INFO SECTION (two columns)
+        ════════════════════════════════════════ */
+        let metaY = 62;
+
+        // ── Left Column ──
+        const LC = 15;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...lightGreyColor);
-        doc.text("TIME", 15, 66);
-        
+        doc.setFontSize(7.5);
+        doc.setTextColor(...LGREY);
+        doc.text("INVOICE DATE", LC, metaY);
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
-        doc.setTextColor(...darkColor);
-        const timeFormatted = new Date().toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true
-        });
-        doc.text(timeFormatted, 15, 71);
+        doc.setTextColor(...DARK);
+        const dateStr = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+        doc.text(dateStr, LC, metaY + 5.5);
 
+        metaY += 13;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...lightGreyColor);
-        doc.text("ORDER ID", 15, 79);
-        
+        doc.setFontSize(7.5);
+        doc.setTextColor(...LGREY);
+        doc.text("TIME", LC, metaY);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(...DARK);
+        const timeStr = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+        doc.text(timeStr, LC, metaY + 5.5);
+
+        metaY += 13;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(...LGREY);
+        doc.text("ORDER ID", LC, metaY);
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(11);
-        doc.setTextColor(...redColor);
-        const orderIdFormatted = "#ORD" + refId.slice(-6).toUpperCase();
-        doc.text(orderIdFormatted, 15, 84);
+        doc.setTextColor(...RED);
+        const orderId = "#ORD" + refId.slice(-6).toUpperCase();
+        doc.text(orderId, LC, metaY + 6);
 
-        // Vertical divider line in the middle
-        doc.setDrawColor(229, 231, 235);
+        // ── Vertical divider ──
+        doc.setDrawColor(220, 225, 232);
         doc.setLineWidth(0.4);
-        doc.line(105, 48, 105, 96);
+        doc.line(108, 58, 108, 110);
 
-        // Right Column
+        // ── Right Column ──
+        const RC = 115;
+        let rcY = 62;
+
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...lightGreyColor);
-        doc.text("PAYMENT STATUS", 115, 53);
-        
+        doc.setFontSize(7.5);
+        doc.setTextColor(...LGREY);
+        doc.text("PAYMENT STATUS", RC, rcY);
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
-        doc.setTextColor(22, 163, 74); // emerald green
-        doc.text("✓ PAID — Successful", 115, 58);
+        doc.setTextColor(...GREEN);
+        doc.text("[PAID]  Successful", RC, rcY + 5.5);
 
+        rcY += 13;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...lightGreyColor);
-        doc.text("PAYMENT METHOD", 115, 66);
-        
+        doc.setFontSize(7.5);
+        doc.setTextColor(...LGREY);
+        doc.text("PAYMENT METHOD", RC, rcY);
+
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(...darkColor);
-        doc.text(showCod ? "Pay at Office (Self-Pickup)" : "UPI / Digital Payment", 115, 71);
+        doc.setFontSize(9.5);
+        doc.setTextColor(...DARK);
+        doc.text(showCod ? "Pay at Office (Self-Pickup)" : "UPI / Digital Payment", RC, rcY + 5.5);
 
-        // Customer Details Sub-section inside Right Column
+        rcY += 13;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...lightGreyColor);
-        doc.text("CUSTOMER DETAILS", 115, 79);
-        
+        doc.setFontSize(7.5);
+        doc.setTextColor(...LGREY);
+        doc.text("CUSTOMER DETAILS", RC, rcY);
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(9.5);
-        doc.setTextColor(...darkColor);
-        doc.text(customer?.name || "Devotee", 115, 84);
-        
+        doc.setTextColor(...DARK);
+        doc.text(customer?.name || "Devotee", RC, rcY + 5.5);
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
-        doc.setTextColor(...greyColor);
-        doc.text(`Phone: +91 ${customer?.phone || "—"}`, 115, 88);
-        doc.text(`Email: ${customer?.email || "—"}`, 115, 92);
-        
-        let currentY = 104;
+        doc.setTextColor(...GREY);
+        doc.text(`Phone: +91 ${customer?.phone || "-"}`, RC, rcY + 10.5);
+        doc.text(`Email: ${customer?.email || "-"}`, RC, rcY + 15);
+
+        // Shipping address if online order
+        let bottomY = Math.max(100, rcY + 20);
         if (!showCod && customer?.address) {
-          const splitAddr = doc.splitTextToSize(`Address: ${customer.address}`, 80);
-          doc.text(splitAddr, 115, 96);
-          currentY = Math.max(104, 96 + splitAddr.length * 4);
+          doc.setFontSize(8);
+          const addrLines = doc.splitTextToSize(`Address: ${customer.address}${customer.pincode ? ", " + customer.pincode : ""}`, 82);
+          doc.text(addrLines, RC, rcY + 20);
+          bottomY = Math.max(bottomY, rcY + 20 + addrLines.length * 4);
         }
 
-        // Horizontal Separator Line
-        doc.setDrawColor(229, 231, 235);
+        /* ════════════════════════════════════════
+           HORIZONTAL SEPARATOR
+        ════════════════════════════════════════ */
+        const sepY = bottomY + 4;
+        doc.setDrawColor(220, 225, 232);
         doc.setLineWidth(0.4);
-        doc.line(15, currentY, 195, currentY);
+        doc.line(15, sepY, 195, sepY);
 
-        currentY += 12;
+        /* ════════════════════════════════════════
+           ORDER INVOICE TITLE + STAMP
+        ════════════════════════════════════════ */
+        const titleY = sepY + 12;
 
-        // ── Order Invoice Header & Stamp ──
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.setTextColor(...redColor);
-        doc.text("Order Invoice", 15, currentY);
+        doc.setFontSize(20);
+        doc.setTextColor(...RED);
+        doc.text("Order Invoice", 15, titleY);
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(...greyColor);
-        doc.text("Official Merchandise Store — Ganeshotsav 2026", 15, currentY + 5.5);
+        doc.setTextColor(...GREY);
+        doc.text("Official Merchandise Store  -  Ganeshotsav 2026", 15, titleY + 6);
 
-        // Draw Stamp
-        const stampY = currentY + 1;
-        doc.setDrawColor(...redColor);
-        doc.setLineWidth(0.6);
-        doc.circle(172, stampY, 11, "D");
-        
-        doc.setTextColor(...redColor);
+        // (stamp removed)
+
+        // Red separator below title
+        doc.setDrawColor(...RED);
+        doc.setLineWidth(0.7);
+        doc.line(15, titleY + 10, 195, titleY + 10);
+
+        /* ════════════════════════════════════════
+           ITEMS TABLE
+        ════════════════════════════════════════ */
+        const tblY = titleY + 14;
+
+        // Table header
+        doc.setFillColor(254, 242, 242);
+        doc.rect(15, tblY, 180, 9, "F");
+
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(5.5);
-        doc.text("PAYMENT", 172, stampY - 3.5, { align: "center" });
-        doc.text("CONFIRMED", 172, stampY - 0.5, { align: "center" });
-        
-        doc.setLineWidth(0.3);
-        doc.line(164, stampY + 1.2, 180, stampY + 1.2);
-        
-        const dateStampStr = new Date().toLocaleDateString("en-US", {
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }).toUpperCase();
-        doc.setFontSize(5);
-        doc.text(dateStampStr, 172, stampY + 4.5, { align: "center" });
+        doc.setFontSize(8);
+        doc.setTextColor(...RED);
+        doc.text("#",           19,  tblY + 6);
+        doc.text("DESCRIPTION", 28,  tblY + 6);
+        doc.text("QTY",        120,  tblY + 6, { align: "center" });
+        doc.text("SIZE",       142,  tblY + 6, { align: "center" });
+        doc.text("RATE",       163,  tblY + 6, { align: "center" });
+        doc.text("AMOUNT",     192,  tblY + 6, { align: "right"  });
 
-        // Red separator line below Order Invoice header
-        doc.setDrawColor(...redColor);
-        doc.setLineWidth(0.6);
-        doc.line(15, currentY + 12, 195, currentY + 12);
+        // Rows
+        const sizes    = Object.entries(orderDetails?.sizes || {}).filter(([, q]) => q > 0);
+        const unitPrice = orderDetails?.basePrice || 0;
+        let rowY = tblY + 9;
+        let serial = 1;
 
-        // ── Order Summary Table ──
-        const tableY = currentY + 16;
-        doc.setFillColor(254, 242, 242); // #FEF2F2 (light pink)
-        doc.rect(15, tableY, 180, 8, "F");
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...redColor);
-        doc.text("#", 18, tableY + 5.5);
-        doc.text("DESCRIPTION", 28, tableY + 5.5);
-        doc.text("QTY", 125, tableY + 5.5, { align: "center" });
-        doc.text("SIZE", 145, tableY + 5.5, { align: "center" });
-        doc.text("RATE", 165, tableY + 5.5, { align: "center" });
-        doc.text("AMOUNT", 188, tableY + 5.5, { align: "center" });
-
-        let itemY = tableY + 8;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9.5);
-        doc.setTextColor(51, 65, 85); // Slate-700
-        
-        const selectedSizes = Object.entries(orderDetails?.sizes || {});
-        const basePrice = orderDetails?.basePrice || 0;
-        let serialNo = 1;
-
-        selectedSizes.forEach(([sz, qty]) => {
-          if (qty > 0) {
-            // Draw row separator line
-            doc.setDrawColor(229, 231, 235);
-            doc.setLineWidth(0.3);
-            doc.line(15, itemY + 12, 195, itemY + 12);
-
-            // Serial
-            doc.text(serialNo.toString(), 18, itemY + 6);
-            
-            // Description & details subtext
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(...darkColor);
-            doc.text(orderDetails.productName, 28, itemY + 5);
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(7.5);
-            doc.setTextColor(...greyColor);
-            doc.text(`Size: ${sz}  ·  Qty: ${qty}`, 28, itemY + 9);
-            
-            // Restore normal font size & color
-            doc.setFontSize(9.5);
-            doc.setTextColor(51, 65, 85);
-            
-            // Qty, Size, Rate, Amount
-            doc.text(qty.toString(), 125, itemY + 6, { align: "center" });
-            doc.text(sz, 145, itemY + 6, { align: "center" });
-            doc.text(`₹${basePrice}`, 165, itemY + 6, { align: "center" });
-            doc.text(`₹${basePrice * qty}`, 188, itemY + 6, { align: "center" });
-            
-            serialNo += 1;
-            itemY += 12;
-          }
-        });
-
-        // Shipping row if shipping fee applies
-        if (!showCod && orderDetails?.shippingCost > 0) {
-          doc.setDrawColor(229, 231, 235);
+        sizes.forEach(([sz, qty]) => {
+          // Row separator
+          doc.setDrawColor(235, 238, 242);
           doc.setLineWidth(0.3);
-          doc.line(15, itemY + 12, 195, itemY + 12);
+          doc.line(15, rowY + 13, 195, rowY + 13);
 
-          doc.text(serialNo.toString(), 18, itemY + 6);
+          // Serial
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...DARK);
+          doc.text(String(serial), 19, rowY + 7);
+
+          // Product name (bold) + size·qty (small)
           doc.setFont("helvetica", "bold");
-          doc.setTextColor(...darkColor);
-          doc.text("Shipping & Handling Charge", 28, itemY + 5);
+          doc.setFontSize(9);
+          doc.setTextColor(...DARK);
+          const prodName = doc.splitTextToSize(orderDetails.productName, 70);
+          doc.text(prodName, 28, rowY + 6);
+
           doc.setFont("helvetica", "normal");
           doc.setFontSize(7.5);
-          doc.setTextColor(...greyColor);
-          doc.text("DTDC Mock Delivery", 28, itemY + 9);
+          doc.setTextColor(...GREY);
+          doc.text(`Size: ${sz}   Qty: ${qty}`, 28, rowY + 11);
 
-          doc.setFontSize(9.5);
-          doc.setTextColor(51, 65, 85);
-          
-          doc.text("1", 125, itemY + 6, { align: "center" });
-          doc.text("—", 145, itemY + 6, { align: "center" });
-          doc.text(`₹${orderDetails.shippingCost}`, 165, itemY + 6, { align: "center" });
-          doc.text(`₹${orderDetails.shippingCost}`, 188, itemY + 6, { align: "center" });
-          
-          itemY += 12;
+          // Qty / Size / Rate / Amount columns
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...DARK);
+          doc.text(String(qty),              120, rowY + 7, { align: "center" });
+          doc.text(sz,                       142, rowY + 7, { align: "center" });
+          doc.text(fmt(unitPrice),           163, rowY + 7, { align: "center" });
+          doc.text(fmt(unitPrice * qty),     192, rowY + 7, { align: "right"  });
+
+          rowY += 14;
+          serial++;
+        });
+
+        // Shipping row (if online delivery)
+        if (!showCod && orderDetails?.shippingCost > 0) {
+          doc.setDrawColor(235, 238, 242);
+          doc.setLineWidth(0.3);
+          doc.line(15, rowY + 13, 195, rowY + 13);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...DARK);
+          doc.text(String(serial), 19, rowY + 7);
+
+          doc.setFont("helvetica", "bold");
+          doc.text("Shipping & Handling", 28, rowY + 6);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7.5);
+          doc.setTextColor(...GREY);
+          doc.text("DTDC Delivery Charge", 28, rowY + 11);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...DARK);
+          doc.text("1",                               120, rowY + 7, { align: "center" });
+          doc.text("-",                               142, rowY + 7, { align: "center" });
+          doc.text(fmt(orderDetails.shippingCost),   163, rowY + 7, { align: "center" });
+          doc.text(fmt(orderDetails.shippingCost),   192, rowY + 7, { align: "right"  });
+          rowY += 14;
         }
 
-        // Draw summary values
+        /* ════════════════════════════════════════
+           SUMMARY SECTION
+        ════════════════════════════════════════ */
+        const shipping    = (!showCod && orderDetails?.shippingCost) ? orderDetails.shippingCost : 0;
+        const subtotal    = paidAmount - shipping - fee;
+        const summaryX    = 140;
+
+        rowY += 4;
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9.5);
-        doc.setTextColor(...greyColor);
-        
-        doc.text("Subtotal", 165, itemY + 8, { align: "right" });
+        doc.setTextColor(...GREY);
+        doc.text("Subtotal",        summaryX, rowY);
+        doc.setTextColor(...DARK);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(...darkColor);
-        doc.text(`₹${orderDetails?.shippingCost ? paidAmount - orderDetails.shippingCost - fee : paidAmount - fee}`, 188, itemY + 8, { align: "right" });
-        
+        doc.text(fmt(subtotal),     192, rowY, { align: "right" });
+
+        rowY += 7;
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(...greyColor);
-        doc.text("Convenience Fee", 165, itemY + 15, { align: "right" });
+        doc.setTextColor(...GREY);
+        doc.text("Convenience Fee", summaryX, rowY);
+        doc.setTextColor(...DARK);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(...darkColor);
-        doc.text(`₹${fee.toFixed(2)}`, 188, itemY + 15, { align: "right" });
-        
-        // Final total line
-        doc.setDrawColor(...redColor);
-        doc.setLineWidth(0.6);
-        doc.line(15, itemY + 21, 195, itemY + 21);
-        
+        doc.text(fmt(Number(fee.toFixed(2))), 192, rowY, { align: "right" });
+
+        if (shipping > 0) {
+          rowY += 7;
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(...GREY);
+          doc.text("Shipping", summaryX, rowY);
+          doc.setTextColor(...DARK);
+          doc.setFont("helvetica", "bold");
+          doc.text(fmt(shipping), 192, rowY, { align: "right" });
+        }
+
+        rowY += 5;
+        // Red total line
+        doc.setDrawColor(...RED);
+        doc.setLineWidth(0.7);
+        doc.line(15, rowY, 195, rowY);
+
+        rowY += 8;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(15, 23, 42); // dark slate
-        doc.text("TOTAL PAID", 165, itemY + 28, { align: "right" });
-        doc.setTextColor(...redColor); // red total
-        doc.text(`₹${paidAmount}`, 188, itemY + 28, { align: "right" });
+        doc.setFontSize(12);
+        doc.setTextColor(...DARK);
+        doc.text("TOTAL PAID", summaryX, rowY);
+        doc.setTextColor(...RED);
+        doc.text(fmt(paidAmount), 192, rowY, { align: "right" });
 
-        // Save the document
-        doc.save(`mumbaicha-raja-receipt-${refId}.pdf`);
+        /* ════════════════════════════════════════
+           FOOTER NOTE
+        ════════════════════════════════════════ */
+        rowY += 14;
+        doc.setDrawColor(220, 225, 232);
+        doc.setLineWidth(0.3);
+        doc.line(15, rowY, 195, rowY);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(...GREY);
+        doc.text("Thank you for your support. All proceeds go to Mandal community welfare.", 15, rowY + 6);
+        doc.text("Queries? Visit us at Lalbaug, Mumbai or email: info@mumbaicharaja.co", 15, rowY + 11);
+
+        doc.save(`mumbaicha-raja-invoice-${orderId}.pdf`);
       };
 
-      logoImg.onload = () => {
-        generatePDF(logoImg);
-      };
-      logoImg.onerror = () => {
-        generatePDF(null);
-      };
+      logoImg.onload  = () => generatePDF(logoImg);
+      logoImg.onerror = () => generatePDF(null);
     } catch (err) {
-      console.error("Failed to generate and download PDF receipt:", err);
+      console.error("PDF generation failed:", err);
     }
   };
+
 
   useEffect(() => {
     if (step === "success" && payData && orderDetails) {
