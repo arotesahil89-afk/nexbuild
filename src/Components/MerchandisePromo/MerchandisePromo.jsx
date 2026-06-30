@@ -104,7 +104,7 @@ const MerchandisePromo = () => {
                 <div className="merch-promo-actions">
                   <button className="merch-promo-btn-primary" onClick={handleShopNow}>
                     <ShoppingBag size={18} />
-                    <span>{t("promoCta", "Shop Merchandise 👕")}</span>
+                    <span>{t("promoCta", "Shop Merchandise")}</span>
                   </button>
                   <button className="merch-promo-btn-secondary" onClick={handleClose}>
                     {t("promoDismiss", "Explore Website")}
