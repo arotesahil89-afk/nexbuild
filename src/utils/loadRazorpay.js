@@ -1,6 +1,6 @@
 // Dynamically load Razorpay checkout.js and resolve true/false.
 // Only the public Key ID is used here — the Key Secret stays on the server.
-export const RAZORPAY_KEY_ID = "rzp_live_T7UuPu8TrojC5I";
+export const RAZORPAY_KEY_ID = "rzp_test_SLAq0dZtQOINXD";
 
 export const loadRazorpay = () =>
   new Promise((resolve) => {
