@@ -174,7 +174,6 @@ const CheckoutPage = () => {
         paymentMethod,
         paymentId,
       });
-      toast.success("Order saved to Mandal Database.");
     } catch (err) {
       console.error("Database sync failed:", err);
       toast.warning("Payment complete, but database failed to save. Please show your invoice to the Mandal office.");
