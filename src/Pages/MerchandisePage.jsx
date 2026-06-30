@@ -776,9 +776,11 @@ const MerchandisePage = () => {
         onSuccess={handlePaymentSuccess}
         orderDetails={{
           productName: name,
-          price: product.price,
-          sizes: Object.entries(selectQty).filter(([_, q]) => q > 0).map(([s, q]) => ({ size: s, qty: q })),
-          shippingCharge: customer?.shippingCharge || 0
+          basePrice: product.price,
+          sizes: Object.fromEntries(
+            Object.entries(selectQty).filter(([, q]) => q > 0)
+          ),
+          shippingCost: customer?.shippingCharge || 0,
         }}
       />
 
