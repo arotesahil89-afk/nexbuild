@@ -469,10 +469,6 @@ const CheckoutPage = () => {
           const prodName = doc.splitTextToSize(productName, 70);
           doc.text(prodName, 28, rowY + 6);
 
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(7.5);
-          doc.setTextColor(...GREY);
-          doc.text(`Size: ${item.size}   Qty: ${item.qty}`, 28, rowY + 11);
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);

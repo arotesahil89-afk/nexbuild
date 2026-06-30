@@ -306,10 +306,6 @@ const PaymentGatewayModal = ({
           const prodName = doc.splitTextToSize(orderDetails.productName, 70);
           doc.text(prodName, 28, rowY + 6);
 
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(7.5);
-          doc.setTextColor(...GREY);
-          doc.text(`Size: ${sz}   Qty: ${qty}`, 28, rowY + 11);
 
           // Qty / Size / Rate / Amount columns
           doc.setFont("helvetica", "normal");
