@@ -69,7 +69,7 @@ const CheckoutPage = () => {
 
   const [product, setProduct] = useState(null);
   const [items, setItems] = useState([]); // Array of { size, qty }
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", pincode: "", address: "" });
   const [errors, setErrors] = useState({});
 
   const [step, setStep] = useState("idle"); // idle, redirecting, cod-confirm, success
@@ -115,6 +115,10 @@ const CheckoutPage = () => {
       e.email = "Enter a valid email address";
     if (!/^[6-9]\d{9}$/.test(form.phone))
       e.phone = "Enter a valid 10-digit mobile number";
+    if (!form.pincode || !/^\d{6}$/.test(form.pincode))
+      e.pincode = "Enter a valid 6-digit pincode";
+    if (!form.address || form.address.trim().length < 5)
+      e.address = "Enter a valid address (min 5 characters)";
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -127,8 +131,8 @@ const CheckoutPage = () => {
         customerName:  form.name,
         customerEmail: form.email,
         customerPhone: form.phone,
-        address:       null,
-        pincode:       null,
+        address:       form.address,
+        pincode:       form.pincode,
         shippingCharge:0,
         productName:   productName,
         size:          sizeSummary,
@@ -340,7 +344,7 @@ const CheckoutPage = () => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         doc.setTextColor(...GREEN);
-        doc.text(payData?.method === "pickup" ? "[RESERVED]" : "[PAID]  Successful", RC, rcY + 5.5);
+        doc.text("[PAID ONLINE] Successful", RC, rcY + 5.5);
 
         rcY += 13;
         doc.setFont("helvetica", "bold");
@@ -351,7 +355,7 @@ const CheckoutPage = () => {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9.5);
         doc.setTextColor(...DARK);
-        doc.text(payData?.method === "pickup" ? "Pay at Office (Self-Pickup)" : "UPI / Digital Payment", RC, rcY + 5.5);
+        doc.text("Razorpay Online (UPI/Card)", RC, rcY + 5.5);
 
         rcY += 13;
         doc.setFont("helvetica", "bold");
@@ -371,9 +375,9 @@ const CheckoutPage = () => {
         doc.text(`Email: ${form?.email || "-"}`, RC, rcY + 15);
 
         let bottomY = Math.max(100, rcY + 20);
-        if (payData?.method !== "pickup" && form?.address) {
+        if (form?.address) {
           doc.setFontSize(8);
-          const addrLines = doc.splitTextToSize(`Address: ${form.address}${form.pincode ? ", " + form.pincode : ""}`, 82);
+          const addrLines = doc.splitTextToSize(`Billing Address: ${form.address}${form.pincode ? ", " + form.pincode : ""}`, 82);
           doc.text(addrLines, RC, rcY + 20);
           bottomY = Math.max(bottomY, rcY + 20 + addrLines.length * 4);
         }
@@ -483,14 +487,32 @@ const CheckoutPage = () => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.setTextColor(...DARK);
-        doc.text(payData?.method === "pickup" ? "TOTAL TO PAY" : "TOTAL PAID", summaryX, rowY);
+        doc.text("TOTAL PAID", summaryX, rowY);
         doc.setTextColor(...RED);
         doc.text(fmt(paidAmount), 192, rowY, { align: "right" });
+
+        // Draw collection box
+        rowY += 10;
+        doc.setFillColor(254, 251, 238);
+        doc.setDrawColor(245, 158, 11);
+        doc.setLineWidth(0.3);
+        doc.rect(15, rowY, 180, 16, "FD");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(180, 83, 9);
+        doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(120, 53, 4);
+        doc.text("Please collect your items from Mandal Office: Ganesh Galli, Lalbaug, Mumbai - 400 012.", 19, rowY + 9);
+        doc.text("Present a copy of this receipt at the counter to verify your payment and retrieve your order.", 19, rowY + 13);
 
         /* ════════════════════════════════════════
            FOOTER NOTE
         ════════════════════════════════════════ */
-        rowY += 14;
+        rowY += 22;
         doc.setDrawColor(220, 225, 232);
         doc.setLineWidth(0.3);
         doc.line(15, rowY, 195, rowY);
@@ -693,6 +715,35 @@ const CheckoutPage = () => {
                 />
               </Field>
 
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
+                <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
+                  errors.pincode
+                    ? "border-red-400 bg-red-50"
+                    : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
+                }`}>
+                  <span className="pl-3.5 text-gray-400 shrink-0"><HelpCircle size={16} /></span>
+                  <input
+                    className="flex-1 px-3.5 py-3.5 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-bold"
+                    placeholder="6-digit billing pincode"
+                    value={form.pincode}
+                    onChange={(e) => setForm(p => ({ ...p, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
+                    inputMode="numeric"
+                    maxLength={6}
+                  />
+                </div>
+                {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
+              </div>
+
+              <Field icon={MapPin} label="Billing Address" error={errors.address}>
+                <textarea
+                  className="flex-1 px-3.5 py-2.5 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-20"
+                  placeholder="Complete Address"
+                  value={form.address}
+                  onChange={set("address")}
+                />
+              </Field>
+
               <div className="flex items-center gap-1.5 pt-2">
                 <ShieldCheck size={14} className="text-green-600 shrink-0" />
                 <p className="text-xs text-gray-400">Your details are encrypted and never shared</p>
@@ -702,21 +753,22 @@ const CheckoutPage = () => {
             {/* Action Buttons */}
             {step === "idle" && (
               <div className="mt-8 space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs sm:text-sm text-amber-800">
+                  <p className="font-bold flex items-center gap-1">
+                    📍 Collect from Mandal:
+                  </p>
+                  <p className="mt-1 font-medium text-amber-700 leading-relaxed">
+                    No home delivery is available. After paying online, please collect your items from the <strong>Ganesh Galli Mandal Office, Lalbaug, Mumbai - 400 012</strong>.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-4">
                   {/* Pay Online Button */}
                   <button
                     onClick={handlePayOnline}
-                    className="flex-1 font-bold py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 text-sm text-white bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 shadow-red-100 cursor-pointer"
+                    className="w-full font-bold py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 text-sm text-white bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 shadow-red-100 cursor-pointer"
                   >
-                    <Lock size={15} /> Pay Online (UPI/Card)
-                  </button>
-
-                  {/* Pay at Pickup Button */}
-                  <button
-                    onClick={handlePayPickup}
-                    className="flex-1 font-bold py-4 rounded-2xl transition border-2 flex items-center justify-center gap-2 text-sm border-gray-200 bg-white hover:bg-gray-50 text-gray-700 active:bg-gray-100 cursor-pointer"
-                  >
-                    <Store size={15} /> Pay at Pickup (Cash)
+                    <Lock size={15} /> Pay Online & Collect from Mandal
                   </button>
                 </div>
                 <p className="text-center text-[10px] text-gray-400 font-semibold">
@@ -772,32 +824,16 @@ const CheckoutPage = () => {
                   </div>
                 )}
 
-                {payMode === "pickup" && (
-                  <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-gray-500">Booking fee (self-pickup)</span>
-                    <span className="text-gray-800">+ ₹19</span>
-                  </div>
-                )}
-
                 <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-1">
                   <div className="flex flex-col">
                     <span className="font-extrabold text-sm text-gray-900">Total payable</span>
                     <span className="text-[10px] text-gray-400 font-semibold italic">
-                      {payMode === "online" ? "Selected: Pay Online" : "Selected: Pay at Pickup"}
+                      Selected: Pay Online & Collect from Mandal
                     </span>
                   </div>
                   <span className="text-[#B91C1C] font-black text-xl">
                     ₹{getBreakdownTotal()}
                   </span>
-                </div>
-
-                <div className="flex justify-center gap-4 pt-2 text-[10px] font-bold text-gray-400">
-                  <label className="flex items-center gap-1 cursor-pointer">
-                    <input type="radio" checked={payMode === "online"} onChange={() => setPayMode("online")} className="accent-[#B91C1C]" /> Show Online details
-                  </label>
-                  <label className="flex items-center gap-1 cursor-pointer">
-                    <input type="radio" checked={payMode === "pickup"} onChange={() => setPayMode("pickup")} className="accent-[#B91C1C]" /> Show Pickup details
-                  </label>
                 </div>
               </div>
             </div>

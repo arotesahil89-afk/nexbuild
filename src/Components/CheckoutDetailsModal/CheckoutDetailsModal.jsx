@@ -19,7 +19,7 @@ const Field = ({ icon: Icon, label, error, children }) => (
 );
 
 const CheckoutDetailsModal = ({ open, onClose, onContinue, summary }) => {
-  const [form,   setForm]   = useState({ name: "", email: "", phone: "" });
+  const [form,   setForm]   = useState({ name: "", email: "", phone: "", pincode: "", address: "" });
   const [errors, setErrors] = useState({});
 
   if (!open) return null;
@@ -36,6 +36,10 @@ const CheckoutDetailsModal = ({ open, onClose, onContinue, summary }) => {
       e.email = "Enter a valid email address";
     if (!/^[6-9]\d{9}$/.test(form.phone))
       e.phone = "Enter a valid 10-digit mobile number";
+    if (!form.pincode || !/^\d{6}$/.test(form.pincode))
+      e.pincode = "Enter a valid 6-digit pincode";
+    if (!form.address || form.address.trim().length < 5)
+      e.address = "Enter a valid address (min 5 characters)";
     
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -132,6 +136,39 @@ const CheckoutDetailsModal = ({ open, onClose, onContinue, summary }) => {
                     autoComplete="email"
                   />
                 </Field>
+
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
+                  <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
+                    errors.pincode
+                      ? "border-red-400 bg-red-50"
+                      : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
+                  }`}>
+                    <span className="pl-3.5 text-gray-400 shrink-0"><HelpCircle size={16} /></span>
+                    <input
+                      className="flex-1 px-3 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-bold"
+                      placeholder="6-digit billing pincode"
+                      value={form.pincode}
+                      onChange={(e) => setForm(p => ({ ...p, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
+                      inputMode="numeric"
+                      maxLength={6}
+                    />
+                  </div>
+                  {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
+                </div>
+
+                <Field icon={MapPin} label="Billing Address" error={errors.address}>
+                  <textarea
+                    className="flex-1 px-3 py-2 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-16"
+                    placeholder="Complete Address"
+                    value={form.address}
+                    onChange={set("address")}
+                  />
+                </Field>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-4 font-medium">
+                  📍 <strong>Self-Pickup:</strong> Collect from Mandal Office, Ganesh Galli, Lalbaug, Mumbai - 400 012. No home delivery is available.
+                </div>
 
                 <div className="flex items-center gap-1.5 mt-1">
                   <ShieldCheck size={13} className="text-green-600 shrink-0" />

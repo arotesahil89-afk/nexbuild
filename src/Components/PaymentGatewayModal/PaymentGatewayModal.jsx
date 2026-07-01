@@ -193,7 +193,7 @@ const PaymentGatewayModal = ({
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         doc.setTextColor(...GREEN);
-        doc.text("[PAID]  Successful", RC, rcY + 5.5);
+        doc.text("[PAID ONLINE] Successful", RC, rcY + 5.5);
 
         rcY += 13;
         doc.setFont("helvetica", "bold");
@@ -204,7 +204,7 @@ const PaymentGatewayModal = ({
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9.5);
         doc.setTextColor(...DARK);
-        doc.text(showCod ? "Pay at Office (Self-Pickup)" : "UPI / Digital Payment", RC, rcY + 5.5);
+        doc.text("Razorpay Online (UPI/Card)", RC, rcY + 5.5);
 
         rcY += 13;
         doc.setFont("helvetica", "bold");
@@ -223,11 +223,11 @@ const PaymentGatewayModal = ({
         doc.text(`Phone: +91 ${customer?.phone || "-"}`, RC, rcY + 10.5);
         doc.text(`Email: ${customer?.email || "-"}`, RC, rcY + 15);
 
-        // Shipping address if online order
+        // Billing address
         let bottomY = Math.max(100, rcY + 20);
-        if (!showCod && customer?.address) {
+        if (customer?.address) {
           doc.setFontSize(8);
-          const addrLines = doc.splitTextToSize(`Address: ${customer.address}${customer.pincode ? ", " + customer.pincode : ""}`, 82);
+          const addrLines = doc.splitTextToSize(`Billing Address: ${customer.address}${customer.pincode ? ", " + customer.pincode : ""}`, 82);
           doc.text(addrLines, RC, rcY + 20);
           bottomY = Math.max(bottomY, rcY + 20 + addrLines.length * 4);
         }
@@ -356,10 +356,28 @@ const PaymentGatewayModal = ({
         doc.setTextColor(...RED);
         doc.text(fmt(paidAmount), 192, rowY, { align: "right" });
 
+        // Draw collection box
+        rowY += 10;
+        doc.setFillColor(254, 251, 238);
+        doc.setDrawColor(245, 158, 11);
+        doc.setLineWidth(0.3);
+        doc.rect(15, rowY, 180, 16, "FD");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(180, 83, 9);
+        doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(120, 53, 4);
+        doc.text("Please collect your items from Mandal Office: Ganesh Galli, Lalbaug, Mumbai - 400 012.", 19, rowY + 9);
+        doc.text("Present a copy of this receipt at the counter to verify your payment and retrieve your order.", 19, rowY + 13);
+
         /* ════════════════════════════════════════
            FOOTER NOTE
         ════════════════════════════════════════ */
-        rowY += 14;
+        rowY += 22;
         doc.setDrawColor(220, 225, 232);
         doc.setLineWidth(0.3);
         doc.line(15, rowY, 195, rowY);
