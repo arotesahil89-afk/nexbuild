@@ -69,11 +69,8 @@ const CheckoutPage = () => {
 
   const [product, setProduct] = useState(null);
   const [items, setItems] = useState([]); // Array of { size, qty }
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", pincode: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [errors, setErrors] = useState({});
-  const [pinLoading, setPinLoading] = useState(false);
-  const [pinDetails, setPinDetails] = useState(null);
-  const [pinError, setPinError] = useState("");
 
   const [step, setStep] = useState("idle"); // idle, redirecting, cod-confirm, success
   const [payMode, setPayMode] = useState("online");
@@ -110,30 +107,6 @@ const CheckoutPage = () => {
   const formatPhone = (e) =>
     setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }));
 
-  const handlePincodeChange = async (e) => {
-    const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-    setForm(p => ({ ...p, pincode: val }));
-    setPinError("");
-    setPinDetails(null);
-
-    if (val.length === 6) {
-      setPinLoading(true);
-      try {
-        const res = await apiClient.get(`/shipping/pincode/${val}`);
-        const data = res.data || res;
-        if (data.deliveryAvailable) {
-          setPinDetails(data);
-        } else {
-          setPinError("Delivery is not available for this location.");
-        }
-      } catch (err) {
-        setPinError("Failed to check delivery serviceability.");
-      } finally {
-        setPinLoading(false);
-      }
-    }
-  };
-
   const validate = () => {
     const e = {};
     if (!form.name.trim() || form.name.trim().length < 2)
@@ -142,16 +115,7 @@ const CheckoutPage = () => {
       e.email = "Enter a valid email address";
     if (!/^[6-9]\d{9}$/.test(form.phone))
       e.phone = "Enter a valid 10-digit mobile number";
-    
-    if (!form.pincode || form.pincode.length !== 6) {
-      e.pincode = "Enter a valid 6-digit pincode";
-    } else if (!pinDetails) {
-      e.pincode = pinError || "Check pincode serviceability first";
-    }
 
-    if (!form.address.trim() || form.address.trim().length < 10)
-      e.address = "Please enter your shipping address (min 10 characters)";
-    
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -163,9 +127,9 @@ const CheckoutPage = () => {
         customerName:  form.name,
         customerEmail: form.email,
         customerPhone: form.phone,
-        address:       form.address,
-        pincode:       form.pincode,
-        shippingCharge:paymentMethod === 'pickup' ? 0 : pinDetails.deliveryCharge,
+        address:       null,
+        pincode:       null,
+        shippingCharge:0,
         productName:   productName,
         size:          sizeSummary,
         quantity:      totalQty,
@@ -208,7 +172,7 @@ const CheckoutPage = () => {
       title: "Merchandise Checkout",
       customer: {
         ...form,
-        shippingCharge: pinDetails.deliveryCharge
+        shippingCharge: 0
       },
       onSuccess: async (data) => {
         setPaidAmount(finalTotal);
@@ -222,9 +186,9 @@ const CheckoutPage = () => {
   };
 
   const handlePayOnline = () => {
-    if (validate() && pinDetails) {
+    if (validate()) {
       setPayMode("online");
-      const deliveryCharge = pinDetails.deliveryCharge || 0;
+      const deliveryCharge = 0;
       const baseTotal = subtotal + deliveryCharge;
       const fee = computeFee("online", baseTotal, true);
       const total = baseTotal + fee;
@@ -233,14 +197,14 @@ const CheckoutPage = () => {
   };
 
   const handlePayPickup = () => {
-    if (validate() && pinDetails) {
+    if (validate()) {
       setPayMode("pickup");
       setStep("cod-confirm");
     }
   };
 
   const confirmPickupReservation = async () => {
-    const deliveryCharge = 0; // No delivery charge for pickup
+    const deliveryCharge = 0;
     const baseTotal = subtotal + deliveryCharge;
     const fee = computeFee("pickup", baseTotal, true);
     const total = baseTotal + fee;
@@ -482,33 +446,7 @@ const CheckoutPage = () => {
           serial++;
         });
 
-        const shippingCost = payData?.method === "pickup" ? 0 : (pinDetails?.deliveryCharge || 0);
-        if (shippingCost > 0) {
-          doc.setDrawColor(235, 238, 242);
-          doc.setLineWidth(0.3);
-          doc.line(15, rowY + 13, 195, rowY + 13);
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
-          doc.setTextColor(...DARK);
-          doc.text(String(serial), 19, rowY + 7);
-
-          doc.setFont("helvetica", "bold");
-          doc.text("Shipping & Handling", 28, rowY + 6);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(7.5);
-          doc.setTextColor(...GREY);
-          doc.text("DTDC Delivery Charge", 28, rowY + 11);
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
-          doc.setTextColor(...DARK);
-          doc.text("1",                               120, rowY + 7, { align: "center" });
-          doc.text("-",                               142, rowY + 7, { align: "center" });
-          doc.text(fmt(shippingCost),                 163, rowY + 7, { align: "center" });
-          doc.text(fmt(shippingCost),                 192, rowY + 7, { align: "right"  });
-          rowY += 14;
-        }
+        const shippingCost = 0;
 
         /* ════════════════════════════════════════
            SUMMARY SECTION
@@ -535,16 +473,6 @@ const CheckoutPage = () => {
         doc.setTextColor(...DARK);
         doc.setFont("helvetica", "bold");
         doc.text(fmt(fee), 192, rowY, { align: "right" });
-
-        if (shippingCost > 0) {
-          rowY += 7;
-          doc.setFont("helvetica", "normal");
-          doc.setTextColor(...GREY);
-          doc.text("Shipping", summaryX, rowY);
-          doc.setTextColor(...DARK);
-          doc.setFont("helvetica", "bold");
-          doc.text(fmt(shippingCost), 192, rowY, { align: "right" });
-        }
 
         rowY += 5;
         doc.setDrawColor(...RED);
@@ -606,7 +534,7 @@ const CheckoutPage = () => {
   const subtotal = product.price * totalQty;
 
   const getBreakdownTotal = () => {
-    const delivery = payMode === "online" ? (pinDetails?.deliveryCharge || 0) : 0;
+    const delivery = 0;
     const base = subtotal + delivery;
     const fee = computeFee(payMode, base, true);
     return base + fee;
@@ -707,7 +635,7 @@ const CheckoutPage = () => {
                 to="/merchandise"
                 className="w-full sm:flex-1 bg-[#B91C1C] hover:bg-red-800 border-2 border-transparent font-bold py-3.5 px-6 rounded-2xl transition text-white text-sm flex items-center justify-center shadow-md shadow-red-100"
               >
-                Continue Shopping
+                Browse More Products
               </Link>
             </div>
           </div>
@@ -728,7 +656,7 @@ const CheckoutPage = () => {
           <div className="lg:col-span-7 bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm">
             <h2 className="text-xl font-extrabold text-gray-900 mb-2">Complete Your Order</h2>
             <p className="text-sm text-gray-500 mb-8 border-b border-gray-100 pb-4">
-              Enter your shipping details below. Delivery will be handled via DTDC.
+              Enter your contact details below to proceed with your order.
             </p>
 
             <div className="space-y-4">
@@ -765,61 +693,6 @@ const CheckoutPage = () => {
                 />
               </Field>
 
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
-                <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
-                  errors.pincode
-                    ? "border-red-400 bg-red-50"
-                    : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
-                }`}>
-                  <span className="pl-3.5 text-gray-400 shrink-0"><HelpCircle size={16} /></span>
-                  <input
-                    className="flex-1 px-3.5 py-3.5 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-bold"
-                    placeholder="6-digit delivery pincode"
-                    value={form.pincode}
-                    onChange={handlePincodeChange}
-                    inputMode="numeric"
-                    maxLength={6}
-                  />
-                  {pinLoading && (
-                    <span className="pr-3.5 text-gray-400"><RefreshCw size={14} className="animate-spin" /></span>
-                  )}
-                </div>
-                {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
-              </div>
-
-              {/* Serviceability Banner */}
-              {pinDetails && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4 text-xs sm:text-sm">
-                  <p className="font-bold text-emerald-800 flex items-center gap-1">
-                    ✓ Delivery Available to {pinDetails.city}, {pinDetails.state}!
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 mt-3 text-emerald-700 font-medium">
-                    <div>Shipping charge: <span className="font-extrabold text-emerald-950">₹{pinDetails.deliveryCharge}</span></div>
-                    <div>Delivery est: <span className="font-extrabold text-emerald-950">{pinDetails.estimatedDelivery}</span></div>
-                  </div>
-                </div>
-              )}
-
-              {pinError && (
-                <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 mb-4 text-xs sm:text-sm">
-                  <p className="font-bold text-rose-800">✗ Delivery is not available for this location.</p>
-                  <p className="text-rose-600 mt-1.5 leading-relaxed">
-                    Please try another delivery pincode or contact support for help.
-                  </p>
-                </div>
-              )}
-
-              <Field icon={MapPin} label="Shipping Address" error={errors.address}>
-                <textarea
-                  className="flex-1 px-3.5 py-2.5 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-20"
-                  placeholder="Complete Street / Building Address"
-                  value={form.address}
-                  onChange={set("address")}
-                  autoComplete="street-address"
-                />
-              </Field>
-
               <div className="flex items-center gap-1.5 pt-2">
                 <ShieldCheck size={14} className="text-green-600 shrink-0" />
                 <p className="text-xs text-gray-400">Your details are encrypted and never shared</p>
@@ -833,12 +706,7 @@ const CheckoutPage = () => {
                   {/* Pay Online Button */}
                   <button
                     onClick={handlePayOnline}
-                    disabled={!pinDetails}
-                    className={`flex-1 font-bold py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 text-sm text-white ${
-                      pinDetails
-                        ? "bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 shadow-red-100 cursor-pointer"
-                        : "bg-gray-300 cursor-not-allowed shadow-none"
-                    }`}
+                    className="flex-1 font-bold py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 text-sm text-white bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 shadow-red-100 cursor-pointer"
                   >
                     <Lock size={15} /> Pay Online (UPI/Card)
                   </button>
@@ -846,12 +714,7 @@ const CheckoutPage = () => {
                   {/* Pay at Pickup Button */}
                   <button
                     onClick={handlePayPickup}
-                    disabled={!pinDetails}
-                    className={`flex-1 font-bold py-4 rounded-2xl transition border-2 flex items-center justify-center gap-2 text-sm ${
-                      pinDetails
-                        ? "border-gray-200 bg-white hover:bg-gray-50 text-gray-700 active:bg-gray-100 cursor-pointer"
-                        : "border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed"
-                    }`}
+                    className="flex-1 font-bold py-4 rounded-2xl transition border-2 flex items-center justify-center gap-2 text-sm border-gray-200 bg-white hover:bg-gray-50 text-gray-700 active:bg-gray-100 cursor-pointer"
                   >
                     <Store size={15} /> Pay at Pickup (Cash)
                   </button>
@@ -895,27 +758,18 @@ const CheckoutPage = () => {
 
               {/* Costs Summary */}
               <div className="space-y-3">
-                {/* Switch breakdown totals based on active hovered mode */}
                 <div className="flex justify-between items-center text-sm font-semibold">
                   <span className="text-gray-500">Items Subtotal</span>
                   <span className="text-gray-800">₹{subtotal}</span>
                 </div>
                 
                 {payMode === "online" && (
-                  <>
-                    <div className="flex justify-between items-center text-sm font-semibold">
-                      <span className="text-gray-500">Delivery charges</span>
-                      <span className="text-gray-800">
-                        {pinDetails ? `₹${pinDetails.deliveryCharge}` : <span className="text-xs text-gray-400 font-normal italic">Enter pincode first</span>}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm font-semibold">
-                      <span className="text-gray-500">Gateway fee (2%)</span>
-                      <span className="text-gray-800">
-                        {pinDetails ? `+ ₹${computeFee("online", subtotal + pinDetails.deliveryCharge, true)}` : <span className="text-xs text-gray-400 font-normal italic">Enter pincode first</span>}
-                      </span>
-                    </div>
-                  </>
+                  <div className="flex justify-between items-center text-sm font-semibold">
+                    <span className="text-gray-500">Gateway fee (2%)</span>
+                    <span className="text-gray-800">
+                      + ₹{computeFee("online", subtotal, true)}
+                    </span>
+                  </div>
                 )}
 
                 {payMode === "pickup" && (
@@ -933,7 +787,7 @@ const CheckoutPage = () => {
                     </span>
                   </div>
                   <span className="text-[#B91C1C] font-black text-xl">
-                    ₹{pinDetails ? getBreakdownTotal() : subtotal}
+                    ₹{getBreakdownTotal()}
                   </span>
                 </div>
 

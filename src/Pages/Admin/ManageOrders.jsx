@@ -6,7 +6,7 @@ import {
   Search, RefreshCw, Download, ChevronUp, ChevronDown,
   ChevronsUpDown, CheckCircle2, XCircle, PackageCheck,
   Clock, ShoppingBag, IndianRupee, ChevronDown as DropIcon,
-  Truck, Eye, X, Trash2, MapPin
+  Eye, X, Trash2
 } from "lucide-react";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -25,19 +25,6 @@ const STATUS_CFG = {
   cancelled: { label: "Cancelled", bg: "#fef2f2", text: "#b91c1c", icon: XCircle },
 };
 
-const SHIPMENT_STATUS_CFG = {
-  'Booked':                  { label: 'Booked', bg: '#f1f5f9', text: '#475569' },
-  'Picked Up':               { label: 'Picked Up', bg: '#ecfdf5', text: '#047857' },
-  'In Transit':              { label: 'In Transit', bg: '#eff6ff', text: '#1d4ed8' },
-  'Reached Destination Hub': { label: 'Reached Hub', bg: '#faf5ff', text: '#7e22ce' },
-  'Out For Delivery':        { label: 'Out for Delivery', bg: '#fff7ed', text: '#c2410c' },
-  'Delivered':               { label: 'Delivered', bg: '#f0fdf4', text: '#15803d' },
-  'Cancelled':               { label: 'Cancelled', bg: '#fef2f2', text: '#b91c1c' },
-  'Failed':                  { label: 'Failed', bg: '#fff1f2', text: '#e11d48' },
-  'Return To Origin':        { label: 'RTO', bg: '#fef3c7', text: '#d97706' },
-  'Lost':                    { label: 'Lost', bg: '#f5f5f5', text: '#737373' }
-};
-
 const PAYMENT_LABELS = {
   online: "Online", pickup: "Pay at Pickup",
   card: "Card", upi: "UPI", cod: "COD",
@@ -46,7 +33,7 @@ const PAYMENT_LABELS = {
 // ─── Skeleton row ────────────────────────────────────────────────────────────
 const SkeletonRow = () => (
   <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
-    {[140, 180, 140, 100, 100, 100, 100, 90].map((w, i) => (
+    {[140, 180, 140, 100, 100, 100, 90].map((w, i) => (
       <td key={i} style={{ padding: "13px 14px" }}>
         <div style={{
           height: 12, width: w, borderRadius: 6,
@@ -74,23 +61,8 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ─── Shipment Status Badge ───────────────────────────────────────────────────
-const ShipmentStatusBadge = ({ status }) => {
-  if (!status) return <span style={{ fontSize: 11, color: '#94a3b8' }}>N/A</span>;
-  const c = SHIPMENT_STATUS_CFG[status] || { label: status, bg: '#f1f5f9', text: '#475569' };
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center",
-      padding: "2.5px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-      background: c.bg, color: c.text, whiteSpace: "nowrap",
-    }}>
-      {c.label}
-    </span>
-  );
-};
-
 // ─── Action Dropdown ──────────────────────────────────────────────────
-const ActionDropdown = ({ order, onStatusChange, onView, onTrack, onCancelShipment, onRefreshStatus, onBookManual }) => {
+const ActionDropdown = ({ order, onStatusChange, onView }) => {
   const [open,   setOpen]   = useState(false);
   const [saving, setSaving] = useState(false);
   const ref = useRef();
@@ -115,9 +87,6 @@ const ActionDropdown = ({ order, onStatusChange, onView, onTrack, onCancelShipme
       setSaving(false);
     }
   };
-
-  const hasShipping = order.shipping && order.shipping.awb;
-  const isOnline = order.paymentMethod !== 'pickup';
 
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
@@ -155,68 +124,6 @@ const ActionDropdown = ({ order, onStatusChange, onView, onTrack, onCancelShipme
           >
             <Eye size={13} color="#64748b" /> View Details
           </button>
-
-          {isOnline && hasShipping && (
-            <>
-              <div style={{ height: 1, background: "#f1f5f9", margin: "2px 0" }} />
-              <p style={dropItemHeaderStyle}>Courier Actions</p>
-              
-              <button
-                onClick={() => { onTrack(order); setOpen(false); }}
-                style={{ ...dropItemStyle, color: "#1d4ed8" }}
-              >
-                <Truck size={13} color="#1d4ed8" /> Track Shipment
-              </button>
-
-              <button
-                onClick={() => {
-                  window.open(`${apiClient.defaults.baseURL}/shipping/label/${order.shipping.awb}`, "_blank");
-                  setOpen(false);
-                }}
-                style={dropItemStyle}
-              >
-                <Download size={13} color="#475569" /> Shipping Label
-              </button>
-
-              <button
-                onClick={() => {
-                  window.open(`${apiClient.defaults.baseURL}/shipping/manifest/${order.shipping.shipmentId}`, "_blank");
-                  setOpen(false);
-                }}
-                style={dropItemStyle}
-              >
-                <Download size={13} color="#475569" /> Manifest PDF
-              </button>
-
-              <button
-                onClick={() => { onRefreshStatus(order.shipping.awb); setOpen(false); }}
-                style={dropItemStyle}
-              >
-                <RefreshCw size={13} color="#0d9488" /> Refresh Status
-              </button>
-
-              {order.shipping.status !== 'Cancelled' && (
-                <button
-                  onClick={() => { onCancelShipment(order.id); setOpen(false); }}
-                  style={{ ...dropItemStyle, color: "#b91c1c" }}
-                >
-                  <Trash2 size={13} color="#b91c1c" /> Cancel Shipment
-                </button>
-              )}
-            </>
-          )}
-
-          {isOnline && !hasShipping && order.address && (
-            <>
-              <div style={{ height: 1, background: "#f1f5f9", margin: "2px 0" }} />
-              <button
-                onClick={() => { onBookManual(order.id); setOpen(false); }}
-                style={{ ...dropItemStyle, color: "#0369a1" }}
-              >
-                <Truck size={13} color="#0369a1" /> Generate Shipment
-              </button>
-            </>
-          )}
 
           <div style={{ height: 1, background: "#f1f5f9", margin: "2px 0" }} />
 
@@ -295,12 +202,6 @@ const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment })
             <Row label="Name"  value={order.customerName} />
             <Row label="Phone" value={`+91 ${order.customerPhone}`} />
             <Row label="Email" value={order.customerEmail} mono />
-            {order.address && (
-              <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #e2e8f0" }}>
-                <span style={{ fontSize: 11, color: "#94a3b8", display: "block", marginBottom: 2 }}>Shipping Address:</span>
-                <span style={{ fontSize: 12.5, color: "#374151", lineHeight: 1.4, display: "block" }}>{order.address}</span>
-              </div>
-            )}
           </section>
 
           {/* Order info */}
@@ -314,166 +215,6 @@ const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment })
             {order.paymentId && <Row label="Txn ID"  value={order.paymentId} mono small />}
             <Row label="Date"     value={new Date(order.createdAt).toLocaleString("en-IN")} />
           </section>
-
-          {/* Shipping / Courier Details */}
-          {order.shipping && (
-            <section style={{ ...cardSectionStyle, background: "#eff6ff", border: "1px solid #bfdbfe" }}>
-              <p style={{ ...cardSectionTitleStyle, color: "#1d4ed8" }}>Shipping Details (DTDC Mock)</p>
-              {order.shipping.awb && <Row label="AWB Number" value={order.shipping.awb} mono bold />}
-              {order.shipping.shipmentId && <Row label="Shipment ID" value={order.shipping.shipmentId} mono small />}
-              <Row label="Shipment Status" value={<ShipmentStatusBadge status={order.shipping.status || 'Pending'} />} />
-              
-              <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #bfdbfe", display: "flex", flexDirection: "column", gap: 4 }}>
-                <Row label="Pincode" value={order.shipping.pincode || "—"} />
-                <Row label="City" value={order.shipping.city || "—"} />
-                <Row label="State" value={order.shipping.state || "—"} />
-                <Row label="Delivery Charge" value={`₹${order.shipping.deliveryCharge || 0}`} bold />
-                <Row label="Est. Delivery" value={order.shipping.estimatedDeliveryText || "—"} />
-              </div>
-              
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-                <button
-                  onClick={() => window.open(`${apiClient.defaults.baseURL}/shipping/label/${order.shipping.awb}`, "_blank")}
-                  style={actionBtnStyle("#1d4ed8")}
-                >
-                  <Download size={13} /> Label PDF
-                </button>
-                
-                <button
-                  onClick={() => window.open(`${apiClient.defaults.baseURL}/shipping/manifest/${order.shipping.shipmentId}`, "_blank")}
-                  style={actionBtnStyle("#0f172a")}
-                >
-                  <Download size={13} /> Manifest PDF
-                </button>
-                
-                <button
-                  onClick={async () => {
-                    if (isRefreshing) return;
-                    setIsRefreshing(true);
-                    await onRefreshStatus(order.shipping.awb);
-                    setTimeout(() => {
-                      setIsRefreshing(false);
-                    }, 2000);
-                  }}
-                  disabled={isRefreshing}
-                  style={{
-                    ...actionBtnStyle(isRefreshing ? "#64748b" : "#0d9488"),
-                    opacity: isRefreshing ? 0.6 : 1,
-                    cursor: isRefreshing ? "not-allowed" : "pointer"
-                  }}
-                >
-                  <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
-                  {isRefreshing ? "Refreshed" : "Refresh"}
-                </button>
-
-                {order.shipping.status !== 'Cancelled' && (
-                  <button
-                    onClick={() => { onCancelShipment(order.id); }}
-                    style={actionBtnStyle("#b91c1c")}
-                  >
-                    <Trash2 size={13} /> Cancel
-                  </button>
-                )}
-              </div>
-            </section>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── Tracking Timeline Modal ────────────────────────────────────────────────
-const TrackingTimelineModal = ({ order, onClose }) => {
-  const [timeline, setTimeline] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!order || !order.shipping) return;
-    
-    apiClient.get(`/shipping/track/${order.shipping.awb}`)
-      .then(res => {
-        const details = res.data || res;
-        setTimeline(details.timeline || []);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Failed to fetch tracking details");
-        setLoading(false);
-      });
-  }, [order]);
-
-  if (!order) return null;
-
-  return (
-    <div style={modalOverlayStyle}>
-      <div style={{
-        background: "#fff", borderRadius: 18,
-        width: "100%", maxWidth: 440,
-        boxShadow: "0 20px 60px rgba(0,0,0,.2)",
-        overflow: "hidden",
-        margin: "auto",
-        maxHeight: "90dvh",
-        display: "flex",
-        flexDirection: "column",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: "1px solid #f1f5f9" }}>
-          <div>
-            <p style={{ fontWeight: 700, fontSize: 15 }}>Shipment Timeline</p>
-            <p style={{ fontFamily: "monospace", fontSize: 11, color: "#94a3b8", marginTop: 2 }}>AWB: {order.shipping.awb}</p>
-          </div>
-          <button onClick={onClose} style={closeBtnStyle}>
-            <X size={14} color="#64748b" />
-          </button>
-        </div>
-
-        <div style={{ padding: "20px 22px", overflowY: "auto", flex: 1 }}>
-          {loading ? (
-            <div style={{ textAlign: "center", padding: "30px 0" }}>
-              <RefreshCw size={24} style={{ animation: "spin .8s linear infinite", margin: "0 auto 12px", color: "#991b1b" }} />
-              <p style={{ fontSize: 13, color: "#64748b" }}>Loading dynamic tracking data...</p>
-            </div>
-          ) : error ? (
-            <div style={{ textAlign: "center", padding: "20px 0", color: "#b91c1c" }}>{error}</div>
-          ) : (
-            <div style={{ position: "relative", paddingLeft: 18, display: "flex", flexDirection: "column", gap: 18 }}>
-              {/* Stepper line */}
-              <div style={{
-                position: "absolute", left: 4, top: 8, bottom: 8,
-                width: 2, background: "#e2e8f0"
-              }} />
-
-              {timeline.map((event, idx) => {
-                const isLatest = idx === timeline.length - 1;
-                return (
-                  <div key={idx} style={{ position: "relative", display: "flex", flexDirection: "column" }}>
-                    {/* Stepper Dot */}
-                    <div style={{
-                      position: "absolute", left: -18, top: 4,
-                      width: 10, height: 10, borderRadius: "50%",
-                      background: isLatest ? "#991b1b" : "#cbd5e1",
-                      border: isLatest ? "2.5px solid #fecaca" : "none",
-                      boxSizing: "border-box"
-                    }} />
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: isLatest ? "#991b1b" : "#1e293b" }}>{event.status}</span>
-                      <span style={{ fontSize: 10, color: "#94a3b8" }}>{event.location}</span>
-                    </div>
-                    <span style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
-                      {new Date(event.date).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                    {event.description && (
-                      <span style={{ fontSize: 11.5, color: "#475569", marginTop: 4, background: "#f8fafc", padding: "4px 8px", borderRadius: 6 }}>
-                        {event.description}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -570,7 +311,6 @@ const ManageOrders = () => {
   
   // Modals state
   const [detail,  setDetail]  = useState(null);       // order details modal
-  const [trackOrder, setTrackOrder] = useState(null); // tracking modal
   
   const LIMIT = 50;
 
@@ -630,69 +370,20 @@ const ManageOrders = () => {
     }).catch(() => {});
   };
 
-  // ── Courier Actions ────────────────────────────────────────────────────────
-  const handleRefreshStatus = async (awb) => {
-    try {
-      const res = await apiClient.get(`/shipping/status/${awb}`);
-      const data = res.data || res;
-      toast.success(`🔄 Shipment status refreshed: ${data.status}`);
-      fetchOrders(true);
-      if (detail && detail.shipping && detail.shipping.awb === awb) {
-        setDetail(prev => ({
-          ...prev,
-          shipping: { ...prev.shipping, status: data.status }
-        }));
-      }
-    } catch {
-      toast.error("❌ Failed to refresh shipment status");
-    }
-  };
-
-  const handleCancelShipment = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this shipment?")) return;
-    try {
-      const res = await apiClient.post(`/shipping/cancel`, { orderId });
-      const data = res.data || res;
-      toast.warn("🚫 Shipment Cancelled");
-      fetchOrders(true);
-      
-      // Update order status to cancelled
-      handleStatusChange(orderId, 'cancelled');
-      
-      if (detail && detail.id === orderId) {
-        setDetail(null); // Close the detail modal after clicking cancel
-      }
-    } catch {
-      toast.error("❌ Failed to cancel shipment");
-    }
-  };
-
-  const handleBookManual = async (orderId) => {
-    try {
-      toast.info("Generating Mock DTDC consignment...");
-      const res = await apiClient.post(`/shipping/create`, { orderId });
-      toast.success("✅ Shipment successfully created!");
-      fetchOrders(true);
-    } catch {
-      toast.error("❌ Failed to generate shipment");
-    }
-  };
-
   // ── CSV Export ─────────────────────────────────────────────────────────────
   const exportCSV = () => {
-    const H = ["Order No","Date","Name","Phone","Email","Address","Product","Size","Qty","Total","Payment","Txn ID","Status","Courier","AWB","Shipment Status"];
+    const H = ["Order No","Date","Name","Phone","Email","Product","Size","Qty","Total","Payment","Txn ID","Status"];
     const rows = sorted.map(o => [
       o.orderNo, new Date(o.createdAt).toLocaleDateString("en-IN"),
-      o.customerName, o.customerPhone, o.customerEmail, o.address || "",
+      o.customerName, o.customerPhone, o.customerEmail,
       o.productName, o.size, o.quantity, o.totalAmount,
       PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod,
-      o.paymentId || "", o.status,
-      o.shipping?.provider || "", o.shipping?.awb || "", o.shipping?.status || ""
+      o.paymentId || "", o.status
     ]);
     const csv = [H, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
     const a = Object.assign(document.createElement("a"), {
       href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })),
-      download: `mcr-shipping-orders-${new Date().toISOString().slice(0,10)}.csv`,
+      download: `mcr-orders-${new Date().toISOString().slice(0,10)}.csv`,
     });
     a.click();
   };
@@ -725,8 +416,8 @@ const ManageOrders = () => {
       {/* Page title */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <h1 className="a-page-title">Shipping & Order Management Dashboard</h1>
-          <p style={{ fontSize: 13, color: "var(--a-muted)", marginTop: 3 }}>Manage merchandise shipments, tracking, labels and manifests via Mock DTDC</p>
+          <h1 className="a-page-title">Order Management Dashboard</h1>
+          <p style={{ fontSize: 13, color: "var(--a-muted)", marginTop: 3 }}>Manage merchandise orders and track payments</p>
         </div>
         <button
           onClick={() => fetchOrders()}
@@ -820,13 +511,11 @@ const ManageOrders = () => {
             <thead>
               <tr>
                 <TH col="orderNo">Order No / Date</TH>
-                <TH col="customerName">Customer & Shipping Address</TH>
+                <TH col="customerName">Customer</TH>
                 <TH col="productName">Product / Qty</TH>
                 <TH col="totalAmount">Amount</TH>
                 <TH col="paymentMethod">Payment</TH>
-                <th style={staticTHStyle}>Courier / AWB</th>
-                <th style={staticTHStyle}>Shipment Status</th>
-                <th style={staticTHStyle}>Est. Delivery</th>
+                <TH col="status">Status</TH>
                 <th style={staticTHStyle}>Actions</th>
               </tr>
             </thead>
@@ -836,7 +525,7 @@ const ManageOrders = () => {
                 : sorted.length === 0
                 ? (
                   <tr>
-                    <td colSpan={9} style={{ padding: "48px 24px", textAlign: "center", color: "#94a3b8" }}>
+                    <td colSpan={7} style={{ padding: "48px 24px", textAlign: "center", color: "#94a3b8" }}>
                       <ShoppingBag size={36} style={{ margin: "0 auto 10px", opacity: .3 }} />
                       <p style={{ fontSize: 13 }}>No orders found — try adjusting filters</p>
                     </td>
@@ -844,7 +533,6 @@ const ManageOrders = () => {
                 )
                 : sorted.map((order, i) => {
                   const isOnline = order.paymentMethod !== 'pickup';
-                  const hasShipping = order.shipping && order.shipping.awb;
                   return (
                     <tr key={order.id} style={{
                       borderBottom: "1px solid #f8fafc",
@@ -863,20 +551,11 @@ const ManageOrders = () => {
                         </p>
                       </td>
 
-                      {/* Customer & Address */}
+                      {/* Customer */}
                       <td style={{ padding: "12px 14px", minWidth: 200 }}>
                         <p style={{ fontWeight: 600, color: "#0f172a", fontSize: 13 }}>{order.customerName}</p>
                         <p style={{ fontSize: 11.5, color: "#64748b", marginTop: 1 }}>+91 {order.customerPhone}</p>
-                        {order.address ? (
-                          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 3, display: "flex", items: "center", gap: 3 }}>
-                            <MapPin size={10} style={{ flexShrink: 0, marginTop: 2 }} />
-                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", maxWidth: 220 }} title={order.address}>
-                              {order.address}
-                            </span>
-                          </p>
-                        ) : (
-                          <p style={{ fontSize: 11, color: "#cbd5e1", marginTop: 3 }}>No address (Pickup)</p>
-                        )}
+                        <p style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 1 }}>{order.customerEmail}</p>
                       </td>
 
                       {/* Product */}
@@ -909,42 +588,9 @@ const ManageOrders = () => {
                         )}
                       </td>
 
-                      {/* Courier / AWB */}
+                      {/* Status */}
                       <td style={{ padding: "12px 14px" }}>
-                        {isOnline ? (
-                          hasShipping ? (
-                            <>
-                              <p style={{ fontWeight: 600, color: "#334155", fontSize: 12 }}>
-                                {order.shipping.provider.toUpperCase()}
-                              </p>
-                              <p style={{ fontFamily: "monospace", fontSize: 11, color: "#1e293b", fontWeight: 700, marginTop: 1 }}>
-                                {order.shipping.awb}
-                              </p>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: 11.5, color: "#ef4444", fontWeight: 600 }}>Unassigned</span>
-                          )
-                        ) : (
-                          <span style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Self-Pickup</span>
-                        )}
-                      </td>
-
-                      {/* Shipment Status */}
-                      <td style={{ padding: "12px 14px" }}>
-                        {isOnline ? (
-                          <ShipmentStatusBadge status={order.shipping?.status} />
-                        ) : (
-                          <StatusBadge status={order.status} />
-                        )}
-                      </td>
-
-                      {/* Estimated Delivery */}
-                      <td style={{ padding: "12px 14px", whiteSpace: "nowrap", fontSize: 12, color: "#475569" }}>
-                        {hasShipping ? (
-                          new Date(order.shipping.estimatedDelivery).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
-                        ) : (
-                          <span style={{ color: "#94a3b8" }}>—</span>
-                        )}
+                        <StatusBadge status={order.status} />
                       </td>
 
                       {/* Actions */}
@@ -953,10 +599,6 @@ const ManageOrders = () => {
                           order={order}
                           onStatusChange={handleStatusChange}
                           onView={setDetail}
-                          onTrack={setTrackOrder}
-                          onCancelShipment={handleCancelShipment}
-                          onRefreshStatus={handleRefreshStatus}
-                          onBookManual={handleBookManual}
                         />
                       </td>
                     </tr>
@@ -989,16 +631,6 @@ const ManageOrders = () => {
         <OrderDetailModal
           order={detail}
           onClose={() => setDetail(null)}
-          onRefreshStatus={handleRefreshStatus}
-          onCancelShipment={handleCancelShipment}
-        />
-      )}
-
-      {/* Tracking Timeline Modal */}
-      {trackOrder && (
-        <TrackingTimelineModal
-          order={trackOrder}
-          onClose={() => setTrackOrder(null)}
         />
       )}
 

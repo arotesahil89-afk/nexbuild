@@ -11,7 +11,6 @@ import {
 const NAV = [
   { to: "/admin",          end: true,  icon: LayoutDashboard, label: "Dashboard"    },
   { to: "/admin/orders",              icon: ShoppingBag,      label: "Orders"       },
-  { to: "/admin/shipping",            icon: Truck,            label: "Shipping Master" },
   { to: "/admin/merchandise",         icon: Shirt,            label: "Merchandise"  },
   { to: "/admin/awards",              icon: Award,            label: "Awards"       },
   { to: "/admin/events",              icon: CalendarDays,     label: "Events"       },

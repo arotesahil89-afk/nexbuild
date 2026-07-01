@@ -39,8 +39,8 @@ const PaymentGatewayModal = ({
   const [payData,  setPayData]  = useState(null);
   const [paidAmount, setPaidAmount] = useState(0);
 
-  const deliveryCharge = mode === "online" ? (customer?.shippingCharge || 0) : 0;
-  const baseTotal      = amount + deliveryCharge;
+  const deliveryCharge = 0;
+  const baseTotal      = amount;
   const fee            = computeFee(mode, baseTotal, showCod);
   const total          = baseTotal + fee;
   const scrollRef = useRef(null);
@@ -320,39 +320,8 @@ const PaymentGatewayModal = ({
           serial++;
         });
 
-        // Shipping row (if online delivery)
-        if (!showCod && orderDetails?.shippingCost > 0) {
-          doc.setDrawColor(235, 238, 242);
-          doc.setLineWidth(0.3);
-          doc.line(15, rowY + 13, 195, rowY + 13);
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
-          doc.setTextColor(...DARK);
-          doc.text(String(serial), 19, rowY + 7);
-
-          doc.setFont("helvetica", "bold");
-          doc.text("Shipping & Handling", 28, rowY + 6);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(7.5);
-          doc.setTextColor(...GREY);
-          doc.text("DTDC Delivery Charge", 28, rowY + 11);
-
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
-          doc.setTextColor(...DARK);
-          doc.text("1",                               120, rowY + 7, { align: "center" });
-          doc.text("-",                               142, rowY + 7, { align: "center" });
-          doc.text(fmt(orderDetails.shippingCost),   163, rowY + 7, { align: "center" });
-          doc.text(fmt(orderDetails.shippingCost),   192, rowY + 7, { align: "right"  });
-          rowY += 14;
-        }
-
-        /* ════════════════════════════════════════
-           SUMMARY SECTION
-        ════════════════════════════════════════ */
-        const shipping    = (!showCod && orderDetails?.shippingCost) ? orderDetails.shippingCost : 0;
-        const subtotal    = paidAmount - shipping - fee;
+        const shipping    = 0;
+        const subtotal    = paidAmount - fee;
         const summaryX    = 140;
 
         rowY += 4;
@@ -372,16 +341,6 @@ const PaymentGatewayModal = ({
         doc.setTextColor(...DARK);
         doc.setFont("helvetica", "bold");
         doc.text(fmt(Number(fee.toFixed(2))), 192, rowY, { align: "right" });
-
-        if (shipping > 0) {
-          rowY += 7;
-          doc.setFont("helvetica", "normal");
-          doc.setTextColor(...GREY);
-          doc.text("Shipping", summaryX, rowY);
-          doc.setTextColor(...DARK);
-          doc.setFont("helvetica", "bold");
-          doc.text(fmt(shipping), 192, rowY, { align: "right" });
-        }
 
         rowY += 5;
         // Red total line

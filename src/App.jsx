@@ -39,7 +39,6 @@ import AdminDashboardPage  from "./Pages/Admin/AdminDashboardPage.jsx";
 import ManageAward         from "./Pages/Admin/ManageAward.jsx";
 import ManageEvents        from "./Pages/Admin/ManageEvents.jsx";
 import ManageOrders        from "./Pages/Admin/ManageOrders.jsx";
-import ManageShipping      from "./Pages/Admin/ManageShipping.jsx";
 import ManageMerchandise   from "./Pages/Admin/ManageMerchandise.jsx";
 import AdminProfile        from "./Pages/Admin/AdminProfile.jsx";
 
@@ -96,7 +95,6 @@ function App() {
         >
           <Route index           element={<AdminDashboardPage />} />
           <Route path="orders"   element={<ManageOrders />} />
-          <Route path="shipping" element={<ManageShipping />} />
           <Route path="awards"   element={<ManageAward />} />
           <Route path="events"   element={<ManageEvents />} />
           <Route path="merchandise" element={<ManageMerchandise />} />
