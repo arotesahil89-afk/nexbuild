@@ -375,8 +375,11 @@ const MerchandisePage = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(() => {
-                const hasApparelSizes = product.sizes.some(s => ["S", "M", "L", "XL", "XXL"].includes(s));
-                const sizesToRender = hasApparelSizes ? ["S", "M", "L", "XL", "XXL"] : product.sizes;
+                const defaultApparel = ["S", "M", "L", "XL", "XXL"];
+                const hasApparelSizes = product.sizes.some(s => defaultApparel.includes(s));
+                const sizesToRender = hasApparelSizes
+                  ? [...defaultApparel, ...product.sizes.filter(s => !defaultApparel.includes(s))]
+                  : product.sizes;
                 
                 return sizesToRender.map((s) => {
                   const isOffered = product.sizes.includes(s);

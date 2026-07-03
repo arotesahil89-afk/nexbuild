@@ -217,7 +217,7 @@ const CheckoutPage = () => {
 
     const txnId = "MR" + Date.now();
     setPaidAmount(total);
-    const finalData = { method: "pickup", amount: total, txnId };
+    const finalData = { method: "pickup", amount: total, txnId, deliveryMethod: "pickup" };
     setPayData(finalData);
     setStep("success");
     await submitOrderToBackend("pickup", txnId, total);
@@ -647,6 +647,26 @@ const CheckoutPage = () => {
                 : "Thank you for purchasing! Please collect your merchandise from the Ganesh Galli Mandal Office."}
             </p>
 
+            {payData.deliveryMethod === "home" ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs sm:text-sm text-blue-800 mt-4 text-left">
+                <p className="font-bold flex items-center gap-1">
+                  🚚 Home Delivery Coordinator:
+                </p>
+                <p className="mt-1 font-medium text-blue-700 leading-relaxed">
+                  After successful online payment, please contact the <strong>Mandal Coordinator (99999 99989)</strong> to coordinate shipping and delivery details.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs sm:text-sm text-amber-800 mt-4 text-left">
+                <p className="font-bold flex items-center gap-1">
+                  📍 Collect from Mandal:
+                </p>
+                <p className="mt-1 font-medium text-amber-700 leading-relaxed">
+                  No home delivery is available for this option. After paying online, please collect your items from the <strong>Ganesh Galli Mandal Office, Lalbaug, Mumbai - 400 012</strong>.
+                </p>
+              </div>
+            )}
+
             <div className="bg-amber-50/30 rounded-2xl p-5 border border-amber-100/50 mt-8 mb-8 text-left space-y-3.5">
               <div className="flex justify-between items-center text-xs text-amber-800 font-bold uppercase tracking-wider border-b border-amber-100/50 pb-2.5">
                 <span>Receipt Summary</span>
@@ -735,6 +755,35 @@ const CheckoutPage = () => {
                 />
               </Field>
 
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
+                <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
+                  errors.pincode
+                    ? "border-red-400 bg-red-50"
+                    : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
+                }`}>
+                  <span className="pl-3.5 text-gray-400 shrink-0"><HelpCircle size={16} /></span>
+                  <input
+                    className="flex-1 px-3.5 py-3.5 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-bold"
+                    placeholder="6-digit billing pincode"
+                    value={form.pincode}
+                    onChange={(e) => setForm(p => ({ ...p, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
+                    inputMode="numeric"
+                    maxLength={6}
+                  />
+                </div>
+                {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
+              </div>
+
+              <Field icon={MapPin} label="Billing Address" error={errors.address}>
+                <textarea
+                  className="flex-1 px-3.5 py-2.5 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-20"
+                  placeholder="Complete Address"
+                  value={form.address}
+                  onChange={set("address")}
+                />
+              </Field>
+
               {/* Radio buttons for delivery method */}
               <div className="mb-4 pt-1">
                 <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Receiving Option</label>
@@ -765,35 +814,6 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
-                <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
-                  errors.pincode
-                    ? "border-red-400 bg-red-50"
-                    : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
-                }`}>
-                  <span className="pl-3.5 text-gray-400 shrink-0"><HelpCircle size={16} /></span>
-                  <input
-                    className="flex-1 px-3.5 py-3.5 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-bold"
-                    placeholder="6-digit billing pincode"
-                    value={form.pincode}
-                    onChange={(e) => setForm(p => ({ ...p, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
-                    inputMode="numeric"
-                    maxLength={6}
-                  />
-                </div>
-                {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
-              </div>
-
-              <Field icon={MapPin} label="Billing Address" error={errors.address}>
-                <textarea
-                  className="flex-1 px-3.5 py-2.5 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-20"
-                  placeholder="Complete Address"
-                  value={form.address}
-                  onChange={set("address")}
-                />
-              </Field>
-
               <div className="flex items-center gap-1.5 pt-2">
                 <ShieldCheck size={14} className="text-green-600 shrink-0" />
                 <p className="text-xs text-gray-400">Your details are encrypted and never shared</p>
@@ -803,26 +823,6 @@ const CheckoutPage = () => {
             {/* Action Buttons */}
             {step === "idle" && (
               <div className="mt-8 space-y-4">
-                {deliveryMethod === "pickup" ? (
-                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs sm:text-sm text-amber-800">
-                    <p className="font-bold flex items-center gap-1">
-                      📍 Collect from Mandal:
-                    </p>
-                    <p className="mt-1 font-medium text-amber-700 leading-relaxed">
-                      No home delivery is available for this option. After paying online, please collect your items from the <strong>Ganesh Galli Mandal Office, Lalbaug, Mumbai - 400 012</strong>.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs sm:text-sm text-blue-800">
-                    <p className="font-bold flex items-center gap-1">
-                      🚚 Home Delivery Coordinator:
-                    </p>
-                    <p className="mt-1 font-medium text-blue-700 leading-relaxed">
-                      After successful online payment, please contact the <strong>Mandal Coordinator (99999 99989)</strong> to coordinate shipping and delivery details.
-                    </p>
-                  </div>
-                )}
-
                 <div className="flex flex-col gap-4">
                   {/* Pay Online Button */}
                   <button

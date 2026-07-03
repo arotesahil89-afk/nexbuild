@@ -15,7 +15,6 @@ const STATUSES = [
   { value: "pending",   label: "Pending"     },
   { value: "confirmed", label: "Confirmed"   },
   { value: "picked_up", label: "Picked Up"   },
-  { value: "cancelled", label: "Cancelled"   },
 ];
 
 const STATUS_CFG = {
@@ -129,7 +128,7 @@ const ActionDropdown = ({ order, onStatusChange, onView }) => {
 
           {/* Status options */}
           <p style={dropItemHeaderStyle}>Change Order Status</p>
-          {Object.entries(STATUS_CFG).map(([val, cfg]) => {
+          {Object.entries(STATUS_CFG).filter(([val]) => val !== "cancelled").map(([val, cfg]) => {
             const Icon = cfg.icon;
             const isActive = order.status === val;
             return (

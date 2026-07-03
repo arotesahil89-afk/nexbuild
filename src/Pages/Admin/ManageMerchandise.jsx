@@ -169,6 +169,49 @@ const ManageMerchandise = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [isTableLoading, setIsTableLoading] = useState(true);
 
+  const [newSizeName, setNewSizeName] = useState("");
+  const [newSizeStock, setNewSizeStock] = useState("50");
+
+  const sizesArr = form.sizes ? form.sizes.split(",").map(s => s.trim()).filter(Boolean) : [];
+  const stockArr = form.stock ? form.stock.split(",").map(s => s.trim()) : [];
+
+  const handleSizeStockUpdate = (sizes, stocks) => {
+    setForm((prev) => ({
+      ...prev,
+      sizes: sizes.join(", "),
+      stock: stocks.join(", ")
+    }));
+  };
+
+  const updateStockForSize = (idx, value) => {
+    const newStock = [...stockArr];
+    newStock[idx] = value;
+    handleSizeStockUpdate(sizesArr, newStock);
+  };
+
+  const removeSize = (idx) => {
+    const newSizes = [...sizesArr];
+    const newStock = [...stockArr];
+    newSizes.splice(idx, 1);
+    newStock.splice(idx, 1);
+    handleSizeStockUpdate(newSizes, newStock);
+  };
+
+  const addCustomSize = () => {
+    const cleanName = newSizeName.trim();
+    if (!cleanName) return;
+    if (sizesArr.map(s => s.toLowerCase()).includes(cleanName.toLowerCase())) {
+      toast.warning("⚠️ Size already exists!");
+      return;
+    }
+    const newSizes = [...sizesArr, cleanName];
+    const newStock = [...stockArr, newSizeStock.trim() || "50"];
+    handleSizeStockUpdate(newSizes, newStock);
+    setNewSizeName("");
+    setNewSizeStock("50");
+    toast.success(`👕 Size "${cleanName}" added!`);
+  };
+
   useEffect(() => {
     if (!loading) {
       const timer = setTimeout(() => {
@@ -257,8 +300,9 @@ const ManageMerchandise = () => {
       toast.warning("⚠️ Product ID is required!");
       return;
     }
-    if (!form.name.en.trim() || !form.name.hi.trim() || !form.name.mr.trim()) {
-      toast.warning("⚠️ Product Name in all languages is required!");
+    const nameEn = form.name.en?.trim() || "";
+    if (!nameEn) {
+      toast.warning("⚠️ English Product Name is required!");
       return;
     }
     if (!form.price) {
@@ -266,13 +310,31 @@ const ManageMerchandise = () => {
       return;
     }
 
+    // Fallbacks for missing translations
+    const nameHi = form.name.hi?.trim() || nameEn;
+    const nameMr = form.name.mr?.trim() || nameEn;
+
+    const taglineEn = form.tagline.en?.trim() || "";
+    const taglineHi = form.tagline.hi?.trim() || taglineEn;
+    const taglineMr = form.tagline.mr?.trim() || taglineEn;
+
+    const descEn = form.description.en?.trim() || "";
+    const descHi = form.description.hi?.trim() || descEn;
+    const descMr = form.description.mr?.trim() || descEn;
+
+    const colorNameEn = form.colorName.en?.trim() || "";
+    const colorNameHi = form.colorName.hi?.trim() || colorNameEn;
+    const colorNameMr = form.colorName.mr?.trim() || colorNameEn;
+
     // Process sizes and stock
     const parsedSizes = form.sizes.split(",").map(s => s.trim()).filter(Boolean);
-    const parsedStockList = form.stock.split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+    const rawStockList = form.stock ? form.stock.split(",").map(s => s.trim()) : [];
     
     const sizeStockMap = {};
     parsedSizes.forEach((s, idx) => {
-      sizeStockMap[s] = parsedStockList[idx] !== undefined ? parsedStockList[idx] : (parsedStockList[0] || 100);
+      const rawVal = rawStockList[idx];
+      const parsedVal = parseInt(rawVal, 10);
+      sizeStockMap[s] = !isNaN(parsedVal) ? parsedVal : 50;
     });
 
     // Compile gallery
@@ -282,7 +344,10 @@ const ManageMerchandise = () => {
     if (form.subImage3) gallery.push({ src: form.subImage3, view: "side" });
     if (form.subImage4) gallery.push({ src: form.subImage4, view: "side" });
 
+    const originalProduct = editId !== null ? products.find(p => p.id === editId) : {};
+
     const compiledProduct = {
+      ...originalProduct,
       id: form.id.trim(),
       type: form.type,
       price: parseFloat(form.price),
@@ -292,13 +357,13 @@ const ManageMerchandise = () => {
       rating: parseFloat(form.rating) || 4.8,
       reviews: parseInt(form.reviews, 10) || 1,
       color: form.color,
-      colorName: form.colorName,
+      colorName: { en: colorNameEn, hi: colorNameHi, mr: colorNameMr },
       image: form.image,
       gallery: gallery,
       
-      name: form.name,
-      tagline: form.tagline,
-      description: form.description,
+      name: { en: nameEn, hi: nameHi, mr: nameMr },
+      tagline: { en: taglineEn, hi: taglineHi, mr: taglineMr },
+      description: { en: descEn, hi: descHi, mr: descMr },
       
       highlights: {
         en: [form.h1.en, form.h2.en, form.h3.en, form.h4.en].filter(Boolean),
@@ -639,109 +704,99 @@ const ManageMerchandise = () => {
                 </div>
               </div>
 
-              {form.sizes.split(",").map(s => s.trim().toUpperCase()).some(s => ["S", "M", "L", "XL", "XXL"].includes(s)) ? (
-                /* Apparel Size Matrix Checklist */
-                <div className="bg-white border border-gray-200 rounded-xl p-3.5 space-y-3 shadow-sm">
-                  <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Apparel Size Matrix</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                    {["S", "M", "L", "XL", "XXL"].map((sz) => {
-                      const sizesArr = form.sizes.split(",").map(s => s.trim()).filter(Boolean);
-                      const stockArr = form.stock.split(",").map(s => s.trim()).filter(Boolean);
-                      const sizeIdx = sizesArr.indexOf(sz);
-                      const isChecked = sizeIdx !== -1;
-                      const sizeStock = isChecked ? (stockArr[sizeIdx] || "0") : "";
-
-                      const handleCheckboxToggle = () => {
-                        let newSizes = [...sizesArr];
-                        let newStock = [...stockArr];
-                        if (isChecked) {
-                          newSizes.splice(sizeIdx, 1);
-                          newStock.splice(sizeIdx, 1);
-                        } else {
-                          newSizes.push(sz);
-                          newStock.push("50");
-                        }
-                        // Sort sizes to maintain S, M, L, XL, XXL order
-                        const order = ["S", "M", "L", "XL", "XXL"];
-                        const paired = newSizes.map((name, i) => ({ name, val: newStock[i] || "50" }));
-                        paired.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
-                        
-                        setForm({
-                          ...form,
-                          sizes: paired.map(p => p.name).join(", "),
-                          stock: paired.map(p => p.val).join(", ")
-                        });
-                      };
-
-                      const handleStockChange = (e) => {
-                        let newStock = [...stockArr];
-                        if (sizeIdx !== -1) {
-                          newStock[sizeIdx] = e.target.value;
-                          setForm({ ...form, stock: newStock.join(", ") });
-                        }
-                      };
-
+              {/* Dynamic Size Matrix Grid */}
+              <div className="bg-white border border-gray-200 rounded-xl p-3.5 space-y-3 shadow-sm">
+                <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Active Size Matrix &amp; Stock</span>
+                
+                {sizesArr.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">No sizes added yet. Use presets or add custom sizes below.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                    {sizesArr.map((sz, idx) => {
+                      const stockVal = stockArr[idx] !== undefined ? stockArr[idx] : "50";
                       return (
-                        <div key={sz} className={`border rounded-xl p-2.5 flex flex-col items-center gap-1.5 transition ${
-                          isChecked ? "bg-red-50/20 border-[#B91C1C] shadow-sm" : "bg-gray-50/40 border-gray-150 opacity-50"
-                        }`}>
-                          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                        <div key={idx} className="border border-gray-150 rounded-xl p-2.5 flex flex-col items-center gap-1.5 bg-gray-50/20 relative group shadow-sm">
+                          <button
+                            type="button"
+                            onClick={() => removeSize(idx)}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-100 hover:bg-red-200 text-red-700 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm transition border-none cursor-pointer"
+                            title="Remove Size"
+                          >
+                            ×
+                          </button>
+                          <span className="font-extrabold text-xs text-gray-800 uppercase tracking-wider">{sz}</span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-[9px] text-gray-400 font-semibold mb-0.5">Stock</span>
                             <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={handleCheckboxToggle}
-                              className="accent-[#B91C1C]"
+                              type="number"
+                              min="0"
+                              value={stockVal}
+                              onChange={(e) => updateStockForSize(idx, e.target.value)}
+                              placeholder="Qty"
+                              className="w-16 text-center border border-gray-200 rounded-lg px-1 py-0.5 text-xs focus:border-[#B91C1C] outline-none"
                             />
-                            <span className="font-bold text-xs text-gray-800">{sz}</span>
-                          </label>
-                          {isChecked ? (
-                            <div className="flex flex-col items-center">
-                              <span className="text-[9px] text-gray-400 font-semibold mb-0.5">Stock</span>
-                              <input
-                                type="number"
-                                min="0"
-                                value={sizeStock}
-                                onChange={handleStockChange}
-                                placeholder="Qty"
-                                className="w-14 text-center border border-gray-200 rounded px-1 py-0.5 text-xs focus:border-[#B91C1C] outline-none"
-                              />
-                            </div>
-                          ) : (
-                            <span className="text-[9px] text-gray-400 font-bold uppercase mt-1">Not Offered</span>
-                          )}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
-                  <p className="text-[10px] text-gray-400 leading-tight">
-                    * Checking a size enables it. Unchecked sizes will be marked as <strong>Not Available / N/A</strong> on the user-facing store page.
-                  </p>
-                </div>
-              ) : (
-                /* Fallback Comma-separated Inputs (for keychain, mug, etc.) */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Sizes (Comma-separated)</label>
+                )}
+
+                {/* Add New Custom Size Inline Form */}
+                <div className="border-t border-gray-100 pt-3 mt-2 flex flex-col sm:flex-row items-end gap-3">
+                  <div className="flex-1 w-full">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Add Custom Size</label>
                     <input
                       type="text"
-                      value={form.sizes}
-                      onChange={(e) => setForm({ ...form, sizes: e.target.value })}
-                      placeholder="e.g. Standard"
-                      className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:border-[#B91C1C] outline-none bg-white"
+                      value={newSizeName}
+                      onChange={(e) => setNewSizeName(e.target.value)}
+                      placeholder="e.g. XXXL, Kids, Custom Size..."
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Stock (Comma-separated)</label>
+                  <div className="w-full sm:w-28">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Initial Stock</label>
                     <input
-                      type="text"
-                      value={form.stock}
-                      onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                      placeholder="e.g. 100"
-                      className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:border-[#B91C1C] outline-none bg-white"
+                      type="number"
+                      min="0"
+                      value={newSizeStock}
+                      onChange={(e) => setNewSizeStock(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
                     />
                   </div>
+                  <button
+                    type="button"
+                    onClick={addCustomSize}
+                    className="w-full sm:w-auto bg-gray-900 hover:bg-black text-white font-bold py-2 px-4 rounded-xl transition text-xs flex items-center justify-center shrink-0 cursor-pointer"
+                  >
+                    + Add Size
+                  </button>
                 </div>
-              )}
+              </div>
+
+              {/* Raw fallback inputs to inspect and edit comma-separated strings directly if needed */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sizes (Raw Comma-separated)</label>
+                  <input
+                    type="text"
+                    value={form.sizes}
+                    onChange={(e) => setForm({ ...form, sizes: e.target.value })}
+                    placeholder="e.g. S, M, L"
+                    className="w-full border border-gray-200 rounded-xl p-2.5 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Stock (Raw Comma-separated)</label>
+                  <input
+                    type="text"
+                    value={form.stock}
+                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    placeholder="e.g. 50, 50, 50"
+                    className="w-full border border-gray-200 rounded-xl p-2.5 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Main Product Image Section */}

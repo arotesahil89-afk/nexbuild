@@ -12,10 +12,23 @@ const useMerchandiseLoader = () => {
         // Try fetching from the backend API
         const response = await apiClient.get('/merchandise');
         if (response && response.data) {
-          setProducts(response.data);
-          localStorage.setItem("merchandise_products", JSON.stringify(response.data));
-          setLoading(false);
-          return;
+          if (Array.isArray(response.data) && response.data.length > 0) {
+            setProducts(response.data);
+            localStorage.setItem("merchandise_products", JSON.stringify(response.data));
+            setLoading(false);
+            return;
+          } else {
+            // Database is empty, seed it with defaults
+            try {
+              await apiClient.post('/merchandise/sync', { products: defaultProducts });
+              setProducts(defaultProducts);
+              localStorage.setItem("merchandise_products", JSON.stringify(defaultProducts));
+              setLoading(false);
+              return;
+            } catch (seedErr) {
+              console.warn("Failed to seed backend with default products, using local fallback:", seedErr.message);
+            }
+          }
         }
       } catch (error) {
         console.warn("Backend /merchandise API not available, falling back to localStorage:", error.message);
