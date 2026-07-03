@@ -20,6 +20,7 @@ const Field = ({ icon: Icon, label, error, children }) => (
 
 const CheckoutDetailsModal = ({ open, onClose, onContinue, summary }) => {
   const [form,   setForm]   = useState({ name: "", email: "", phone: "", pincode: "", address: "" });
+  const [deliveryMethod, setDeliveryMethod] = useState("pickup"); // pickup, home
   const [errors, setErrors] = useState({});
 
   if (!open) return null;
@@ -49,6 +50,7 @@ const CheckoutDetailsModal = ({ open, onClose, onContinue, summary }) => {
     if (validate()) {
       onContinue({
         ...form,
+        deliveryMethod,
         shippingCharge: 0
       });
     }
@@ -137,6 +139,36 @@ const CheckoutDetailsModal = ({ open, onClose, onContinue, summary }) => {
                   />
                 </Field>
 
+                {/* Radio buttons for delivery method */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Receiving Option</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryMethod("pickup")}
+                      className={`flex items-center justify-center p-2.5 border-2 rounded-xl cursor-pointer transition-all ${
+                        deliveryMethod === "pickup"
+                          ? "border-[#B91C1C] bg-red-50/10 text-gray-900 font-bold"
+                          : "border-gray-100 hover:border-gray-200 text-gray-500"
+                      }`}
+                    >
+                      <span className="text-xs">Pickup at Mandal</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryMethod("home")}
+                      className={`flex items-center justify-center p-2.5 border-2 rounded-xl cursor-pointer transition-all ${
+                        deliveryMethod === "home"
+                          ? "border-[#B91C1C] bg-red-50/10 text-gray-900 font-bold"
+                          : "border-gray-100 hover:border-gray-200 text-gray-500"
+                      }`}
+                    >
+                      <span className="text-xs">Home Delivery</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="mb-4">
                   <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
                   <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
@@ -166,9 +198,15 @@ const CheckoutDetailsModal = ({ open, onClose, onContinue, summary }) => {
                   />
                 </Field>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-4 font-medium">
-                  📍 <strong>Self-Pickup:</strong> Collect from Mandal Office, Ganesh Galli, Lalbaug, Mumbai - 400 012. No home delivery is available.
-                </div>
+                {deliveryMethod === "pickup" ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-4 font-medium">
+                    📍 <strong>Self-Pickup:</strong> Collect from Mandal Office, Ganesh Galli, Lalbaug, Mumbai - 400 012. No home delivery is available.
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800 mb-4 font-medium">
+                    🚚 <strong>Home Delivery:</strong> After payment, contact the Mandal Coordinator (99999 99989) to arrange delivery.
+                  </div>
+                )}
 
                 <div className="flex items-center gap-1.5 mt-1">
                   <ShieldCheck size={13} className="text-green-600 shrink-0" />

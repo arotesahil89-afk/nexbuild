@@ -356,23 +356,42 @@ const PaymentGatewayModal = ({
         doc.setTextColor(...RED);
         doc.text(fmt(paidAmount), 192, rowY, { align: "right" });
 
-        // Draw collection box
+        // Draw collection/delivery box depending on selection
         rowY += 10;
-        doc.setFillColor(254, 251, 238);
-        doc.setDrawColor(245, 158, 11);
-        doc.setLineWidth(0.3);
-        doc.rect(15, rowY, 180, 16, "FD");
+        const deliveryMethod = customer?.deliveryMethod || orderDetails?.deliveryMethod || "pickup";
+        if (deliveryMethod === "home") {
+          doc.setFillColor(239, 246, 255); // light blue (blue-50)
+          doc.setDrawColor(59, 130, 246);  // border blue (blue-500)
+          doc.setLineWidth(0.3);
+          doc.rect(15, rowY, 180, 16, "FD");
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.5);
-        doc.setTextColor(180, 83, 9);
-        doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(29, 78, 216); // blue-700
+          doc.text("HOME DELIVERY SERVICE REQUESTED:", 19, rowY + 5);
 
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7);
-        doc.setTextColor(120, 53, 4);
-        doc.text("Please collect your items from Mandal Office: Ganesh Galli, Lalbaug, Mumbai - 400 012.", 19, rowY + 9);
-        doc.text("Present a copy of this receipt at the counter to verify your payment and retrieve your order.", 19, rowY + 13);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(30, 58, 138); // blue-900
+          doc.text("To coordinate delivery, please contact Mandal Coordinator: +91 99999 99989.", 19, rowY + 9);
+          doc.text("Please share a copy of this digital invoice to verify your order and confirm delivery address.", 19, rowY + 13);
+        } else {
+          doc.setFillColor(254, 251, 238); // light amber
+          doc.setDrawColor(245, 158, 11);   // border amber
+          doc.setLineWidth(0.3);
+          doc.rect(15, rowY, 180, 16, "FD");
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(180, 83, 9);    // amber-800
+          doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(120, 53, 4);    // amber-950
+          doc.text("Please collect your items from Mandal Office: Ganesh Galli, Lalbaug, Mumbai - 400 012.", 19, rowY + 9);
+          doc.text("Present a copy of this receipt at the counter to verify your payment and retrieve your order.", 19, rowY + 13);
+        }
 
         /* ════════════════════════════════════════
            FOOTER NOTE
@@ -781,9 +800,15 @@ const PaymentGatewayModal = ({
                     </button>
                   )}
 
-                  <p className="text-xs text-amber-600 font-semibold">
-                    📍 Collect from Ganesh Galli Mandal, Lalbaug · 11 AM – 8 PM
-                  </p>
+                  {(customer?.deliveryMethod === "home" || orderDetails?.deliveryMethod === "home") ? (
+                    <p className="text-xs text-blue-600 font-semibold">
+                      🚚 Home Delivery Requested · Contact Mandal Coordinator (99999 99989)
+                    </p>
+                  ) : (
+                    <p className="text-xs text-amber-600 font-semibold">
+                      📍 Collect from Ganesh Galli Mandal, Lalbaug · 11 AM – 8 PM
+                    </p>
+                  )}
                 </div>
               )}
             </div>

@@ -74,6 +74,7 @@ const CheckoutPage = () => {
 
   const [step, setStep] = useState("idle"); // idle, redirecting, cod-confirm, success
   const [payMode, setPayMode] = useState("online");
+  const [deliveryMethod, setDeliveryMethod] = useState("pickup"); // pickup, home
   const [progress, setProgress] = useState(0);
   const [payData, setPayData] = useState(null);
   const [paidAmount, setPaidAmount] = useState(0);
@@ -134,6 +135,7 @@ const CheckoutPage = () => {
         address:       form.address,
         pincode:       form.pincode,
         shippingCharge:0,
+        deliveryMethod:deliveryMethod,
         productName:   productName,
         size:          sizeSummary,
         quantity:      totalQty,
@@ -180,7 +182,7 @@ const CheckoutPage = () => {
       },
       onSuccess: async (data) => {
         setPaidAmount(finalTotal);
-        const finalData = { ...data, method: "online", amount: finalTotal };
+        const finalData = { ...data, method: "online", amount: finalTotal, deliveryMethod };
         setPayData(finalData);
         setStep("success");
         await submitOrderToBackend("online", data.razorpay_payment_id, finalTotal);
@@ -491,23 +493,41 @@ const CheckoutPage = () => {
         doc.setTextColor(...RED);
         doc.text(fmt(paidAmount), 192, rowY, { align: "right" });
 
-        // Draw collection box
+        // Draw collection/delivery box depending on selection
         rowY += 10;
-        doc.setFillColor(254, 251, 238);
-        doc.setDrawColor(245, 158, 11);
-        doc.setLineWidth(0.3);
-        doc.rect(15, rowY, 180, 16, "FD");
+        if (payData?.deliveryMethod === "home") {
+          doc.setFillColor(239, 246, 255); // light blue (blue-50)
+          doc.setDrawColor(59, 130, 246);  // border blue (blue-500)
+          doc.setLineWidth(0.3);
+          doc.rect(15, rowY, 180, 16, "FD");
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.5);
-        doc.setTextColor(180, 83, 9);
-        doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(29, 78, 216); // blue-700
+          doc.text("HOME DELIVERY SERVICE REQUESTED:", 19, rowY + 5);
 
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7);
-        doc.setTextColor(120, 53, 4);
-        doc.text("Please collect your items from Mandal Office: Ganesh Galli, Lalbaug, Mumbai - 400 012.", 19, rowY + 9);
-        doc.text("Present a copy of this receipt at the counter to verify your payment and retrieve your order.", 19, rowY + 13);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(30, 58, 138); // blue-900
+          doc.text("To coordinate delivery, please contact Mandal Coordinator: +91 99999 99989.", 19, rowY + 9);
+          doc.text("Please share a copy of this digital invoice to verify your order and confirm delivery address.", 19, rowY + 13);
+        } else {
+          doc.setFillColor(254, 251, 238); // light amber
+          doc.setDrawColor(245, 158, 11);   // border amber
+          doc.setLineWidth(0.3);
+          doc.rect(15, rowY, 180, 16, "FD");
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(180, 83, 9);    // amber-800
+          doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+          doc.setTextColor(120, 53, 4);    // amber-950
+          doc.text("Please collect your items from Mandal Office: Ganesh Galli, Lalbaug, Mumbai - 400 012.", 19, rowY + 9);
+          doc.text("Present a copy of this receipt at the counter to verify your payment and retrieve your order.", 19, rowY + 13);
+        }
 
         /* ════════════════════════════════════════
            FOOTER NOTE
@@ -622,23 +642,23 @@ const CheckoutPage = () => {
               Ganpati Bappa Morya! 🙏
             </p>
             <p className="text-gray-500 text-sm mt-3 leading-relaxed">
-              {payData.method === "pickup"
-                ? "Your merchandise reservation is successful. Please pick up and pay at the Ganesh Galli Mandal Office."
-                : "Thank you for purchasing! Your official invoice has been downloaded successfully."}
+              {payData.deliveryMethod === "home"
+                ? "Thank you for purchasing! Your official invoice has been downloaded. Please contact Mandal Coordinator (99999 99989) to arrange home delivery."
+                : "Thank you for purchasing! Please collect your merchandise from the Ganesh Galli Mandal Office."}
             </p>
 
             <div className="bg-amber-50/30 rounded-2xl p-5 border border-amber-100/50 mt-8 mb-8 text-left space-y-3.5">
               <div className="flex justify-between items-center text-xs text-amber-800 font-bold uppercase tracking-wider border-b border-amber-100/50 pb-2.5">
                 <span>Receipt Summary</span>
-                <span className="text-[#B91C1C]">{payData.method === "pickup" ? "RESERVED" : "PAID"}</span>
+                <span className="text-[#B91C1C]">PAID</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 font-medium">Transaction ID</span>
                 <span className="font-bold text-gray-800 font-mono select-all">{payData.txnId || payData.razorpay_payment_id}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500 font-medium">Payment Mode</span>
-                <span className="font-bold text-gray-800">{payData.method === "pickup" ? "Pay at Pickup" : "Online Payment"}</span>
+                <span className="text-gray-500 font-medium">Delivery Mode</span>
+                <span className="font-bold text-gray-800">{payData.deliveryMethod === "home" ? "Home Delivery Requested" : "Pickup at Mandal"}</span>
               </div>
               <div className="flex justify-between text-sm pt-1 border-t border-dashed border-amber-200">
                 <span className="text-gray-950 font-bold">Total Amount</span>
@@ -715,6 +735,36 @@ const CheckoutPage = () => {
                 />
               </Field>
 
+              {/* Radio buttons for delivery method */}
+              <div className="mb-4 pt-1">
+                <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Receiving Option</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod("pickup")}
+                    className={`flex items-center justify-center p-3.5 border-2 rounded-2xl cursor-pointer transition-all ${
+                      deliveryMethod === "pickup"
+                        ? "border-[#B91C1C] bg-red-50/10 text-gray-900 font-bold"
+                        : "border-gray-100 hover:border-gray-200 text-gray-500"
+                    }`}
+                  >
+                    <span className="text-sm">Pickup at Mandal</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod("home")}
+                    className={`flex items-center justify-center p-3.5 border-2 rounded-2xl cursor-pointer transition-all ${
+                      deliveryMethod === "home"
+                        ? "border-[#B91C1C] bg-red-50/10 text-gray-900 font-bold"
+                        : "border-gray-100 hover:border-gray-200 text-gray-500"
+                    }`}
+                  >
+                    <span className="text-sm">Want delivery at home</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="mb-4">
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
                 <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
@@ -753,14 +803,25 @@ const CheckoutPage = () => {
             {/* Action Buttons */}
             {step === "idle" && (
               <div className="mt-8 space-y-4">
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs sm:text-sm text-amber-800">
-                  <p className="font-bold flex items-center gap-1">
-                    📍 Collect from Mandal:
-                  </p>
-                  <p className="mt-1 font-medium text-amber-700 leading-relaxed">
-                    No home delivery is available. After paying online, please collect your items from the <strong>Ganesh Galli Mandal Office, Lalbaug, Mumbai - 400 012</strong>.
-                  </p>
-                </div>
+                {deliveryMethod === "pickup" ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs sm:text-sm text-amber-800">
+                    <p className="font-bold flex items-center gap-1">
+                      📍 Collect from Mandal:
+                    </p>
+                    <p className="mt-1 font-medium text-amber-700 leading-relaxed">
+                      No home delivery is available for this option. After paying online, please collect your items from the <strong>Ganesh Galli Mandal Office, Lalbaug, Mumbai - 400 012</strong>.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs sm:text-sm text-blue-800">
+                    <p className="font-bold flex items-center gap-1">
+                      🚚 Home Delivery Coordinator:
+                    </p>
+                    <p className="mt-1 font-medium text-blue-700 leading-relaxed">
+                      After successful online payment, please contact the <strong>Mandal Coordinator (99999 99989)</strong> to coordinate shipping and delivery details.
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-4">
                   {/* Pay Online Button */}
@@ -768,7 +829,7 @@ const CheckoutPage = () => {
                     onClick={handlePayOnline}
                     className="w-full font-bold py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 text-sm text-white bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 shadow-red-100 cursor-pointer"
                   >
-                    <Lock size={15} /> Pay Online & Collect from Mandal
+                    <Lock size={15} /> {deliveryMethod === "pickup" ? "Pay Online & Collect from Mandal" : "Pay Online & Request Home Delivery"}
                   </button>
                 </div>
                 <p className="text-center text-[10px] text-gray-400 font-semibold">

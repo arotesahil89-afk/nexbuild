@@ -202,6 +202,8 @@ const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment })
             <Row label="Name"  value={order.customerName} />
             <Row label="Phone" value={`+91 ${order.customerPhone}`} />
             <Row label="Email" value={order.customerEmail} mono />
+            {order.address && <Row label="Address" value={order.address} />}
+            {order.pincode && <Row label="Pincode" value={order.pincode} />}
           </section>
 
           {/* Order info */}
@@ -211,6 +213,7 @@ const OrderDetailModal = ({ order, onClose, onRefreshStatus, onCancelShipment })
             <Row label="Size"     value={order.size} />
             <Row label="Unit"     value={`₹${order.unitPrice?.toLocaleString("en-IN")}`} />
             <Row label="Total"    value={`₹${order.totalAmount?.toLocaleString("en-IN")}`} bold red />
+            <Row label="Delivery"  value={order.deliveryMethod === "home" ? "Home Delivery" : "Mandal Pickup"} />
             <Row label="Payment"  value={PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod} />
             {order.paymentId && <Row label="Txn ID"  value={order.paymentId} mono small />}
             <Row label="Date"     value={new Date(order.createdAt).toLocaleString("en-IN")} />
@@ -564,6 +567,15 @@ const ManageOrders = () => {
                         <span style={{ display: "inline-block", marginTop: 3, background: "#f1f5f9", borderRadius: 5, padding: "1px 7px", fontSize: 11, fontWeight: 700, color: "#475569" }}>
                           {order.size}
                         </span>
+                        {order.deliveryMethod === "home" ? (
+                          <span style={{ display: "inline-block", marginLeft: 4, marginTop: 3, background: "#e0f2fe", borderRadius: 5, padding: "1px 7px", fontSize: 11, fontWeight: 700, color: "#0369a1" }}>
+                            🚚 Home Delivery
+                          </span>
+                        ) : (
+                          <span style={{ display: "inline-block", marginLeft: 4, marginTop: 3, background: "#fef3c7", borderRadius: 5, padding: "1px 7px", fontSize: 11, fontWeight: 700, color: "#b45309" }}>
+                            📍 Pickup
+                          </span>
+                        )}
                       </td>
 
                       {/* Amount */}
