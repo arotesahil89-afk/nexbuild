@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,6 +11,69 @@ import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { jsPDF } from "jspdf";
+
+const Confetti = () => {
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShow(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!show) return null;
+
+  const colors = ["#B91C1C", "#FBBF24", "#34D399", "#60A5FA", "#EC4899"];
+  const particles = Array.from({ length: 150 }).map((_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * -50 - 10,
+    size: Math.random() * 8 + 5,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    delay: Math.random() * 5,
+    duration: Math.random() * 3 + 2,
+    rotation: Math.random() * 360,
+  }));
+
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 999, overflow: "hidden" }}>
+      <style>{`
+        @keyframes fall {
+          0% {
+            transform: translateY(0vh) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(110vh) rotate(720deg);
+            opacity: 0.3;
+          }
+        }
+        .confetti-particle {
+          position: absolute;
+          animation: fall linear infinite;
+        }
+      `}</style>
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="confetti-particle"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}vh`,
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            borderRadius: Math.random() > 0.5 ? "50%" : "0%",
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+            transform: `rotate(${p.rotation}deg)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 const fmtINR = (n) => Number(n).toLocaleString("en-IN");
 
@@ -78,6 +141,14 @@ const CheckoutPage = () => {
   const [progress, setProgress] = useState(0);
   const [payData, setPayData] = useState(null);
   const [paidAmount, setPaidAmount] = useState(0);
+  const [createdOrder, setCreatedOrder] = useState(null);
+  const hasDownloadedRef = useRef(false);
+
+  useEffect(() => {
+    if (step === "success") {
+      window.scrollTo(0, 0);
+    }
+  }, [step]);
 
   // Parse items from search params: ?items=L:2,M:1
   useEffect(() => {
@@ -128,7 +199,7 @@ const CheckoutPage = () => {
   const submitOrderToBackend = async (paymentMethod, paymentId, finalTotal) => {
     try {
       const sizeSummary = items.map(item => `${item.size}: ${item.qty}`).join(", ");
-      await apiClient.post('/orders', {
+      const res = await apiClient.post('/orders', {
         customerName:  form.name,
         customerEmail: form.email,
         customerPhone: form.phone,
@@ -144,9 +215,11 @@ const CheckoutPage = () => {
         paymentMethod,
         paymentId,
       });
+      return res.data;
     } catch (err) {
       console.error("Database sync failed:", err);
       toast.warning("Payment complete, but database failed to save. Please show your invoice to the Mandal office.");
+      return null;
     }
   };
 
@@ -185,7 +258,8 @@ const CheckoutPage = () => {
         const finalData = { ...data, method: "online", amount: finalTotal, deliveryMethod };
         setPayData(finalData);
         setStep("success");
-        await submitOrderToBackend("online", data.razorpay_payment_id, finalTotal);
+        const orderInfo = await submitOrderToBackend("online", data.txnId, finalTotal);
+        if (orderInfo) setCreatedOrder(orderInfo);
       },
       onDismiss: () => setStep("idle"),
     });
@@ -220,7 +294,8 @@ const CheckoutPage = () => {
     const finalData = { method: "pickup", amount: total, txnId, deliveryMethod: "pickup" };
     setPayData(finalData);
     setStep("success");
-    await submitOrderToBackend("pickup", txnId, total);
+    const orderInfo = await submitOrderToBackend("pickup", txnId, total);
+    if (orderInfo) setCreatedOrder(orderInfo);
   };
 
   // Receipt Download
@@ -274,21 +349,7 @@ const CheckoutPage = () => {
         doc.text("Mumbai - 400 012", 57, 31);
         doc.text("mumbaicharaja.co  |  Est. 1928", 57, 37);
 
-        doc.setDrawColor(...GOLD);
-        doc.setLineWidth(0.6);
-        doc.rect(143, 16, 54, 18, "D");
 
-        doc.setTextColor(...WHITE);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7);
-        doc.text("ORDER INVOICE", 170, 22, { align: "center" });
-
-        const refId      = payData?.txnId || payData?.razorpay_payment_id || "PICKUP" + Date.now().toString().slice(-6);
-        const txnDisplay = ("#TXN" + refId.toUpperCase()).slice(0, 16);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...GOLD);
-        doc.text(txnDisplay, 170, 29, { align: "center" });
 
         /* ════════════════════════════════════════
            META INFO SECTION (two columns)
@@ -323,13 +384,13 @@ const CheckoutPage = () => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7.5);
         doc.setTextColor(...LGREY);
-        doc.text("ORDER ID", LC, metaY);
+        doc.text("ORDER NO", LC, metaY);
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(11);
         doc.setTextColor(...RED);
-        const orderId = "#ORD" + refId.slice(-6).toUpperCase();
-        doc.text(orderId, LC, metaY + 6);
+        const orderIdDisplay = createdOrder?.orderNo || ("#ORD" + refId.slice(-6).toUpperCase());
+        doc.text(orderIdDisplay, LC, metaY + 6);
 
         doc.setDrawColor(220, 225, 232);
         doc.setLineWidth(0.4);
@@ -415,40 +476,52 @@ const CheckoutPage = () => {
         doc.setTextColor(...RED);
         doc.text("#",           19,  tblY + 6);
         doc.text("DESCRIPTION", 28,  tblY + 6);
-        doc.text("QTY",        120,  tblY + 6, { align: "center" });
-        doc.text("SIZE",       142,  tblY + 6, { align: "center" });
-        doc.text("RATE",       163,  tblY + 6, { align: "center" });
+        doc.text("INVOICE ID / ITEM ID", 110,  tblY + 6);
         doc.text("AMOUNT",     192,  tblY + 6, { align: "right"  });
 
         let rowY = tblY + 9;
         let serial = 1;
 
+        // Expand sizes into individual items list
+        const expandedItems = [];
         items.forEach((item) => {
+          for (let i = 0; i < item.qty; i++) {
+            expandedItems.push({
+              size: item.size,
+              index: i + 1
+            });
+          }
+        });
+
+        // Determine font size and row height dynamically to avoid overflowing the A4 page
+        const rowHeight = expandedItems.length > 10 ? 8 : 13;
+        const itemFontSize = expandedItems.length > 10 ? 7.5 : 9;
+
+        expandedItems.forEach((expandedItem) => {
           doc.setDrawColor(235, 238, 242);
           doc.setLineWidth(0.3);
-          doc.line(15, rowY + 13, 195, rowY + 13);
+          doc.line(15, rowY + rowHeight, 195, rowY + rowHeight);
 
           doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
+          doc.setFontSize(itemFontSize);
           doc.setTextColor(...DARK);
-          doc.text(String(serial), 19, rowY + 7);
+          doc.text(String(serial), 19, rowY + (rowHeight * 0.5 + 1.5));
 
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(9);
+          doc.setFontSize(itemFontSize);
           doc.setTextColor(...DARK);
-          const prodName = doc.splitTextToSize(productName, 70);
-          doc.text(prodName, 28, rowY + 6);
-
+          const prodName = doc.splitTextToSize(productName, 75);
+          doc.text(prodName, 28, rowY + (rowHeight * 0.5 + 0.5));
 
           doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
+          doc.setFontSize(itemFontSize);
           doc.setTextColor(...DARK);
-          doc.text(String(item.qty),              120, rowY + 7, { align: "center" });
-          doc.text(item.size,                       142, rowY + 7, { align: "center" });
-          doc.text(fmt(product.price),           163, rowY + 7, { align: "center" });
-          doc.text(fmt(product.price * item.qty),     192, rowY + 7, { align: "right"  });
+          // E.g., MCR-20260704-004-S-01
+          const itemId = `${orderIdDisplay.replace('#', '')}-${expandedItem.size}-${String(expandedItem.index).padStart(2, '0')}`;
+          doc.text(itemId, 110, rowY + (rowHeight * 0.5 + 1.5));
+          doc.text(fmt(product.price), 192, rowY + (rowHeight * 0.5 + 1.5), { align: "right" });
 
-          rowY += 14;
+          rowY += rowHeight;
           serial++;
         });
 
@@ -520,7 +593,7 @@ const CheckoutPage = () => {
           doc.setFont("helvetica", "bold");
           doc.setFontSize(7.5);
           doc.setTextColor(180, 83, 9);    // amber-800
-          doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+          doc.text("COLLECTION POINT (SELF-PICKUP):", 19, rowY + 5);
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(7);
@@ -543,7 +616,7 @@ const CheckoutPage = () => {
         doc.text("Thank you for your support. All proceeds go to Mandal community welfare.", 15, rowY + 6);
         doc.text("Queries? Visit us at Lalbaug, Mumbai or email: info@mumbaicharaja.co", 15, rowY + 11);
 
-        doc.save(`mumbaicha-raja-invoice-${orderId}.pdf`);
+        doc.save(`mumbaicha-raja-invoice-${orderIdDisplay.replace('#', '')}.pdf`);
       };
 
       logoImg.onload  = () => generatePDF(logoImg);
@@ -554,13 +627,17 @@ const CheckoutPage = () => {
   };
 
   useEffect(() => {
-    if (step === "success" && payData && product) {
+    if (step === "success" && payData && product && createdOrder) {
+      if (hasDownloadedRef.current) return;
+      hasDownloadedRef.current = true;
       const timer = setTimeout(() => {
         downloadInvoice();
-      }, 1200);
+      }, 1000);
       return () => clearTimeout(timer);
+    } else if (step !== "success") {
+      hasDownloadedRef.current = false;
     }
-  }, [step, payData, product]);
+  }, [step, payData, product, createdOrder]);
 
   if (loading || !product || items.length === 0) {
     return (
@@ -629,6 +706,7 @@ const CheckoutPage = () => {
       {/* Render either themed success layout or the standard checkout form */}
       {step === "success" && payData ? (
         <div className="max-w-xl mx-auto px-4">
+          <Confetti />
           <div className="bg-white rounded-3xl border-2 border-red-100 shadow-xl p-6 sm:p-8 text-center relative overflow-hidden">
             {/* Gold/Red accent line at top */}
             <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-[#B91C1C] via-yellow-400 to-[#B91C1C]" />
@@ -642,9 +720,7 @@ const CheckoutPage = () => {
               Ganpati Bappa Morya! 🙏
             </p>
             <p className="text-gray-500 text-sm mt-3 leading-relaxed">
-              {payData.deliveryMethod === "home"
-                ? "Thank you for purchasing! Your official invoice has been downloaded. Please contact Mandal Coordinator (99999 99989) to arrange home delivery."
-                : "Thank you for purchasing! Please collect your merchandise from the Ganesh Galli Mandal Office."}
+              Thank you for purchasing! Your official invoice has been downloaded. Please refer to the collection or delivery details shown below.
             </p>
 
             {payData.deliveryMethod === "home" ? (
@@ -680,7 +756,17 @@ const CheckoutPage = () => {
                 <span className="text-gray-500 font-medium">Delivery Mode</span>
                 <span className="font-bold text-gray-800">{payData.deliveryMethod === "home" ? "Home Delivery Requested" : "Pickup at Mandal"}</span>
               </div>
-              <div className="flex justify-between text-sm pt-1 border-t border-dashed border-amber-200">
+              <div className="flex justify-between text-sm pt-2.5 border-t border-amber-100/50">
+                <span className="text-gray-500 font-medium">Product Amount</span>
+                <span className="font-bold text-gray-800">₹{fmtINR(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 font-medium">
+                  {payData.method === "pickup" ? "Mandal Reservation Fee" : "Convenience Fee (2%)"}
+                </span>
+                <span className="font-bold text-gray-800">₹{fmtINR(computeFee(payData.method, subtotal, true))}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-1.5 border-t border-dashed border-amber-200">
                 <span className="text-gray-950 font-bold">Total Amount</span>
                 <span className="font-black text-xl text-[#B91C1C]">₹{fmtINR(paidAmount)}</span>
               </div>

@@ -60,7 +60,6 @@ const Navbar = () => {
           { name: t("award"), path: "/awards" },
           { name: t("donation"), path: "/donate" },
           { name: "Donate Now", path: "/donate-now" },
-          { name: "Merchandise", path: "/merchandise" },
           { name: "Membership", path: "/membership" },
           { name: t("contact"), path: "/contact" },
         ],
@@ -142,6 +141,13 @@ const Navbar = () => {
             </div>
           ))}
 
+          <Link
+            to="/merchandise"
+            className="font-semibold hover:text-yellow-300 transition no-underline"
+          >
+            {t("merchandise")}
+          </Link>
+
           {/* ✅ Language Button - Only render if initialized */}
           {i18n.isInitialized && (
             <button
@@ -222,6 +228,16 @@ const Navbar = () => {
                   </AnimatePresence>
                 </li>
               ))}
+
+              <li>
+                <Link
+                  to="/merchandise"
+                  onClick={toggleMenu}
+                  className="font-semibold text-white hover:text-yellow-300 transition no-underline"
+                >
+                  {t("merchandise")}
+                </Link>
+              </li>
             </ul>
           </motion.div>
         )}

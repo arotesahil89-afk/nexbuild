@@ -276,9 +276,7 @@ const PaymentGatewayModal = ({
         doc.setTextColor(...RED);
         doc.text("#",           19,  tblY + 6);
         doc.text("DESCRIPTION", 28,  tblY + 6);
-        doc.text("QTY",        120,  tblY + 6, { align: "center" });
-        doc.text("SIZE",       142,  tblY + 6, { align: "center" });
-        doc.text("RATE",       163,  tblY + 6, { align: "center" });
+        doc.text("INVOICE ID / ITEM ID", 110,  tblY + 6);
         doc.text("AMOUNT",     192,  tblY + 6, { align: "right"  });
 
         // Rows
@@ -287,36 +285,46 @@ const PaymentGatewayModal = ({
         let rowY = tblY + 9;
         let serial = 1;
 
+        // Expand sizes into individual items list
+        const expandedItems = [];
         sizes.forEach(([sz, qty]) => {
-          // Row separator
+          for (let i = 0; i < qty; i++) {
+            expandedItems.push({
+              size: sz,
+              index: i + 1
+            });
+          }
+        });
+
+        // Determine font size and row height dynamically to avoid overflowing the A4 page
+        const rowHeight = expandedItems.length > 10 ? 8 : 13;
+        const itemFontSize = expandedItems.length > 10 ? 7.5 : 9;
+
+        expandedItems.forEach((expandedItem) => {
           doc.setDrawColor(235, 238, 242);
           doc.setLineWidth(0.3);
-          doc.line(15, rowY + 13, 195, rowY + 13);
+          doc.line(15, rowY + rowHeight, 195, rowY + rowHeight);
 
-          // Serial
           doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
+          doc.setFontSize(itemFontSize);
           doc.setTextColor(...DARK);
-          doc.text(String(serial), 19, rowY + 7);
+          doc.text(String(serial), 19, rowY + (rowHeight * 0.5 + 1.5));
 
-          // Product name (bold) + size·qty (small)
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(9);
+          doc.setFontSize(itemFontSize);
           doc.setTextColor(...DARK);
-          const prodName = doc.splitTextToSize(orderDetails.productName, 70);
-          doc.text(prodName, 28, rowY + 6);
+          const prodName = doc.splitTextToSize(orderDetails.productName, 75);
+          doc.text(prodName, 28, rowY + (rowHeight * 0.5 + 0.5));
 
-
-          // Qty / Size / Rate / Amount columns
           doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
+          doc.setFontSize(itemFontSize);
           doc.setTextColor(...DARK);
-          doc.text(String(qty),              120, rowY + 7, { align: "center" });
-          doc.text(sz,                       142, rowY + 7, { align: "center" });
-          doc.text(fmt(unitPrice),           163, rowY + 7, { align: "center" });
-          doc.text(fmt(unitPrice * qty),     192, rowY + 7, { align: "right"  });
+          // E.g., ORD123456-S-01
+          const itemId = `${orderId.replace('#', '')}-${expandedItem.size}-${String(expandedItem.index).padStart(2, '0')}`;
+          doc.text(itemId, 110, rowY + (rowHeight * 0.5 + 1.5));
+          doc.text(fmt(unitPrice), 192, rowY + (rowHeight * 0.5 + 1.5), { align: "right" });
 
-          rowY += 14;
+          rowY += rowHeight;
           serial++;
         });
 
@@ -384,7 +392,7 @@ const PaymentGatewayModal = ({
           doc.setFont("helvetica", "bold");
           doc.setFontSize(7.5);
           doc.setTextColor(180, 83, 9);    // amber-800
-          doc.text("COLLECTION POINT (SELF-PICKUP ONLY):", 19, rowY + 5);
+          doc.text("COLLECTION POINT (SELF-PICKUP):", 19, rowY + 5);
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(7);

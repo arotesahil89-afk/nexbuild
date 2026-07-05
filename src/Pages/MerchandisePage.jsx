@@ -375,7 +375,7 @@ const MerchandisePage = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(() => {
-                const defaultApparel = ["S", "M", "L", "XL", "XXL"];
+                const defaultApparel = ["S", "M", "L", "XL", "XXL", "XXXL"];
                 const hasApparelSizes = product.sizes.some(s => defaultApparel.includes(s));
                 const sizesToRender = hasApparelSizes
                   ? [...defaultApparel, ...product.sizes.filter(s => !defaultApparel.includes(s))]
@@ -513,15 +513,6 @@ const MerchandisePage = () => {
             </p>
           </div>
 
-          {/* Pickup card */}
-          <div className="mt-5 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-            <Truck size={20} className="text-amber-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-amber-800">{t("pickupTitle")}</p>
-              <p className="text-xs text-amber-700 mt-0.5">{t("pickupBody")}</p>
-            </div>
-          </div>
-
           {/* Highlights */}
           <div className="mt-6">
             <p className="text-sm font-bold text-gray-800 mb-3">{t("highlightsTitle")}</p>
@@ -568,7 +559,7 @@ const MerchandisePage = () => {
       </section>
 
       {/* ── More Products Auto Slider ── */}
-      {otherProducts.length > 0 && (
+      {false && otherProducts.length > 0 && (
         <section className="px-4 md:px-10 max-w-7xl mx-auto pb-16">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">
