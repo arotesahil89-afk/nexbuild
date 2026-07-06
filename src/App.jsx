@@ -48,6 +48,31 @@ function App() {
 
   useEffect(() => {
     trackPageView(location.pathname);
+
+    // Dynamic Page Titles
+    const p = location.pathname;
+    const base = "Mumbaicha Raja | Lalbaug Sarvajanik Utsav Mandal";
+    let title = base;
+
+    if (p === "/") title = "Home | " + base;
+    else if (p.startsWith("/about")) title = "About Us | " + base;
+    else if (p.startsWith("/contact")) title = "Contact | " + base;
+    else if (p.startsWith("/committee")) title = "Committee | " + base;
+    else if (p.startsWith("/donate-now")) title = "Donate Now | " + base;
+    else if (p.startsWith("/donate")) title = "Donate | " + base;
+    else if (p.startsWith("/events")) title = "Events | " + base;
+    else if (p.startsWith("/gallery")) title = "Gallery | " + base;
+    else if (p.startsWith("/live")) title = "Live Darshan | " + base;
+    else if (p.startsWith("/social") || p.startsWith("/education") || p.startsWith("/other-social")) title = "Social Initiatives | " + base;
+    else if (p.startsWith("/theme")) title = "Theme | " + base;
+    else if (p.startsWith("/awards")) title = "Awards | " + base;
+    else if (p.startsWith("/podcast")) title = "Podcast | " + base;
+    else if (p.includes("/checkout")) title = "Checkout | " + base;
+    else if (p.startsWith("/merchandise")) title = "Merchandise | " + base;
+    else if (p.startsWith("/membership")) title = "Membership | " + base;
+    else if (p.startsWith("/admin")) title = "Admin Dashboard | " + base;
+    
+    document.title = title;
   }, [location.pathname]);
 
   // Don't render Navbar on admin routes
