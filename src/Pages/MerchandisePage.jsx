@@ -104,7 +104,7 @@ const SizeGuideModal = ({ open, onClose, activeSize }) => (
 
 /* ─── Trust Badges Strip ─── */
 const TRUST_ITEMS = [
-  { icon: Award,      label: "96 Years Legacy",      sub: "Est. 1928, Ganesh Galli" },
+  { icon: Award,      label: "98 Years Legacy",      sub: "Est. 1928, Ganesh Galli" },
   { icon: BadgeCheck, label: "Official Store",        sub: "Verified Mandal Merchandise" },
   { icon: Users,      label: "10,000+ Devotees",      sub: "Trust the community" },
   { icon: ShieldCheck,label: "Secure Checkout",       sub: "UPI · Card · Pay-at-Pickup" },
@@ -248,11 +248,13 @@ const MerchandisePage = () => {
   };
 
   const handleOrder = () => {
-    const itemsParam = Object.entries(selectQty)
+    const selectedItems = Object.entries(selectQty)
       .filter(([_, q]) => q > 0)
-      .map(([s, q]) => `${s}:${q}`)
-      .join(",");
-    navigate(`/merchandise/${getProductSlug(product)}/checkout?items=${itemsParam}`);
+      .map(([size, qty]) => ({ size, qty }));
+      
+    navigate(`/merchandise/${getProductSlug(product)}/checkout`, { 
+      state: { items: selectedItems } 
+    });
   };
 
   const highlights = Array.isArray(product.highlights)
@@ -643,7 +645,7 @@ const MerchandisePage = () => {
             {/* Trust stats */}
             <div className="grid grid-cols-3 gap-4 mt-8 max-w-md mx-auto">
               {[
-                { num: "96",    label: "Years of\nDevotion" },
+                { num: "98",    label: "Years of\nDevotion" },
                 { num: "10L+",  label: "Annual\nVisitors" },
                 { num: "100%",  label: "Proceeds to\nCommunity" },
               ].map(({ num, label }) => (

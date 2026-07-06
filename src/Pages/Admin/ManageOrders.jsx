@@ -32,6 +32,20 @@ const PAYMENT_LABELS = {
   card: "Card", upi: "UPI", cod: "COD",
 };
 
+// ─── Amount Calculation Helper ────────────────────────────────────────────────
+const calculateOrderTotals = (order) => {
+  const dbTotal = order.totalAmount || 0;
+  const baseSubtotal = (order.unitPrice || 0) * (order.quantity || 1);
+  if (dbTotal === baseSubtotal) {
+    let fee = 0;
+    if (order.paymentMethod === 'pickup') fee = 19;
+    else fee = Math.ceil(baseSubtotal * 0.0236);
+    return { subtotal: baseSubtotal, fee, total: baseSubtotal + fee };
+  }
+  const fee = dbTotal - baseSubtotal;
+  return { subtotal: baseSubtotal, fee, total: dbTotal };
+};
+
 // ─── Skeleton row ────────────────────────────────────────────────────────────
 const SkeletonRow = () => (
   <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
@@ -380,17 +394,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
     }
   };
 
-  const getAmountBreakdown = () => {
-    const subtotal = order.totalAmount || 0;
-    let fee = 0;
-    if (order.paymentMethod === 'pickup') {
-      fee = 19;
-    } else {
-      fee = Math.round(subtotal * 0.02);
-    }
-    const total = subtotal + fee;
-    return { subtotal, fee, total };
-  };
+  const getAmountBreakdown = () => calculateOrderTotals(order);
 
   const downloadInvoicePDF = (order) => {
     try {
@@ -1318,11 +1322,7 @@ const ManageOrders = () => {
 
                       {/* Amount */}
                       <td style={{ padding: "12px 14px", fontWeight: 800, color: "#991b1b", whiteSpace: "nowrap", fontSize: 13 }}>
-                        ₹{(() => {
-                          const subtotal = order.totalAmount || 0;
-                          const fee = order.paymentMethod === 'pickup' ? 19 : Math.round(subtotal * 0.02);
-                          return (subtotal + fee).toLocaleString("en-IN");
-                        })()}
+                        ₹{calculateOrderTotals(order).total.toLocaleString("en-IN")}
                       </td>
 
                       {/* Payment */}

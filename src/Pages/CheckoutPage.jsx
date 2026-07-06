@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, User, Mail, Phone, MapPin, ShieldCheck,
@@ -80,7 +80,9 @@ const fmtINR = (n) => Number(n).toLocaleString("en-IN");
 const computeFee = (mode, amount, showCod) => {
   if (!showCod) return 0;
   if (mode === "pickup") return 19;
-  return Math.round(amount * 0.02);
+  // Standard Razorpay Domestic fee is 2% + 18% GST = 2.36%
+  // To perfectly recover the amount, we apply 2.36% on the product price.
+  return Math.ceil(amount * 0.0236);
 };
 
 /* ── Invoice/Receipt SVG generator ────────────────────── */
@@ -127,6 +129,7 @@ const CheckoutPage = () => {
   const { t, i18n } = useTranslation("merchandise");
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { products, loading } = useMerchandiseLoader();
 
@@ -162,13 +165,34 @@ const CheckoutPage = () => {
         return;
       }
 
-      const itemsStr = searchParams.get("items");
-      if (itemsStr) {
-        const parsed = itemsStr.split(",").map(part => {
-          const [size, qty] = part.split(":");
-          return { size, qty: parseInt(qty) || 1 };
+      // Try React Router state first (secure memory passing)
+      let parsedItems = location.state?.items;
+      
+      // Fallback to URL query params if state is not available (for direct links/refreshes)
+      if (!parsedItems || parsedItems.length === 0) {
+        const itemsStr = searchParams.get("items");
+        if (itemsStr) {
+          parsedItems = itemsStr.split(",").map(part => {
+            const [size, qty] = part.split(":");
+            return { size, qty: parseInt(qty) || 1 };
+          });
+        }
+      }
+
+      if (parsedItems && parsedItems.length > 0) {
+        // Enforce inventory limits
+        const cappedItems = parsedItems.map(item => {
+          let parsedQty = item.qty;
+          const stock = found.stock?.[item.size] ?? 999;
+          if (parsedQty > stock) parsedQty = stock; // Enforce max inventory limit
+          return { size: item.size, qty: parsedQty };
         }).filter(item => item.qty > 0);
-        setItems(parsed);
+        
+        if (cappedItems.length > 0) {
+          setItems(cappedItems);
+        } else {
+          navigate(`/merchandise/${slug}`);
+        }
       } else {
         navigate(`/merchandise/${slug}`);
       }
@@ -187,10 +211,12 @@ const CheckoutPage = () => {
       e.email = "Enter a valid email address";
     if (!/^[6-9]\d{9}$/.test(form.phone))
       e.phone = "Enter a valid 10-digit mobile number";
-    if (!form.pincode || !/^\d{6}$/.test(form.pincode))
-      e.pincode = "Enter a valid 6-digit pincode";
-    if (!form.address || form.address.trim().length < 5)
-      e.address = "Enter a valid address (min 5 characters)";
+    if (deliveryMethod === "home") {
+      if (!form.pincode || !/^\d{6}$/.test(form.pincode))
+        e.pincode = "Enter a valid 6-digit pincode";
+      if (!form.address || form.address.trim().length < 5)
+        e.address = "Enter a valid address (min 5 characters)";
+    }
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -257,7 +283,11 @@ const CheckoutPage = () => {
         setPaidAmount(finalTotal);
         const finalData = { ...data, method: "online", amount: finalTotal, deliveryMethod };
         setPayData(finalData);
+        
+        // Clear router state to prevent re-checkout on page refresh
+        navigate(location.pathname, { replace: true, state: {} });
         setStep("success");
+        
         const orderInfo = await submitOrderToBackend("online", data.txnId, finalTotal);
         if (orderInfo) setCreatedOrder(orderInfo);
       },
@@ -293,7 +323,11 @@ const CheckoutPage = () => {
     setPaidAmount(total);
     const finalData = { method: "pickup", amount: total, txnId, deliveryMethod: "pickup" };
     setPayData(finalData);
+    
+    // Clear router state to prevent re-checkout on page refresh
+    navigate(location.pathname, { replace: true, state: {} });
     setStep("success");
+    
     const orderInfo = await submitOrderToBackend("pickup", txnId, total);
     if (orderInfo) setCreatedOrder(orderInfo);
   };
@@ -498,6 +532,24 @@ const CheckoutPage = () => {
         const itemFontSize = expandedItems.length > 10 ? 7.5 : 9;
 
         expandedItems.forEach((expandedItem) => {
+          // Check for page break
+          if (rowY > 275) {
+            doc.addPage();
+            rowY = 20;
+            
+            // Re-print table header on new page
+            doc.setFillColor(...RED);
+            doc.rect(15, rowY, 180, 10, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.setTextColor(255, 255, 255);
+            doc.text("#", 19, rowY + 6);
+            doc.text("DESCRIPTION", 28, rowY + 6);
+            doc.text("INVOICE ID / ITEM ID", 110, rowY + 6);
+            doc.text("AMOUNT", 192, rowY + 6, { align: "right" });
+            rowY += 9;
+          }
+
           doc.setDrawColor(235, 238, 242);
           doc.setLineWidth(0.3);
           doc.line(15, rowY + rowHeight, 195, rowY + rowHeight);
@@ -530,6 +582,12 @@ const CheckoutPage = () => {
         /* ════════════════════════════════════════
            SUMMARY SECTION
         ════════════════════════════════════════ */
+        // Check page break for summary (need ~70 space)
+        if (rowY > 220) {
+          doc.addPage();
+          rowY = 20;
+        }
+
         const totalQty = items.reduce((sum, item) => sum + item.qty, 0);
         const subtotal = product.price * totalQty;
         const fee      = computeFee(payData?.method === "pickup" ? "pickup" : "online", subtotal + shippingCost, true);
@@ -548,7 +606,7 @@ const CheckoutPage = () => {
         rowY += 7;
         doc.setFont("helvetica", "normal");
         doc.setTextColor(...GREY);
-        doc.text(payData?.method === "pickup" ? "Booking Fee" : "Convenience Fee (2%)", summaryX, rowY);
+        doc.text(payData?.method === "pickup" ? "Booking Fee" : "Convenience Fee (2.36%)", summaryX, rowY);
         doc.setTextColor(...DARK);
         doc.setFont("helvetica", "bold");
         doc.text(fmt(fee), 192, rowY, { align: "right" });
@@ -762,7 +820,7 @@ const CheckoutPage = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 font-medium">
-                  {payData.method === "pickup" ? "Mandal Reservation Fee" : "Convenience Fee (2%)"}
+                  {payData.method === "pickup" ? "Mandal Reservation Fee" : "Convenience Fee (2.36%)"}
                 </span>
                 <span className="font-bold text-gray-800">₹{fmtINR(computeFee(payData.method, subtotal, true))}</span>
               </div>
@@ -841,35 +899,6 @@ const CheckoutPage = () => {
                 />
               </Field>
 
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
-                <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
-                  errors.pincode
-                    ? "border-red-400 bg-red-50"
-                    : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
-                }`}>
-                  <span className="pl-3.5 text-gray-400 shrink-0"><HelpCircle size={16} /></span>
-                  <input
-                    className="flex-1 px-3.5 py-3.5 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-bold"
-                    placeholder="6-digit billing pincode"
-                    value={form.pincode}
-                    onChange={(e) => setForm(p => ({ ...p, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
-                    inputMode="numeric"
-                    maxLength={6}
-                  />
-                </div>
-                {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
-              </div>
-
-              <Field icon={MapPin} label="Billing Address" error={errors.address}>
-                <textarea
-                  className="flex-1 px-3.5 py-2.5 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-20"
-                  placeholder="Complete Address"
-                  value={form.address}
-                  onChange={set("address")}
-                />
-              </Field>
-
               {/* Radio buttons for delivery method */}
               <div className="mb-4 pt-1">
                 <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Receiving Option</label>
@@ -899,6 +928,39 @@ const CheckoutPage = () => {
                   </button>
                 </div>
               </div>
+
+              {deliveryMethod === "home" && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Pincode</label>
+                    <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
+                      errors.pincode
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
+                    }`}>
+                      <span className="pl-3.5 text-gray-400 shrink-0"><HelpCircle size={16} /></span>
+                      <input
+                        className="flex-1 px-3.5 py-3.5 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-bold"
+                        placeholder="6-digit billing pincode"
+                        value={form.pincode}
+                        onChange={(e) => setForm(p => ({ ...p, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
+                        inputMode="numeric"
+                        maxLength={6}
+                      />
+                    </div>
+                    {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
+                  </div>
+
+                  <Field icon={MapPin} label="Billing Address" error={errors.address}>
+                    <textarea
+                      className="flex-1 px-3.5 py-2.5 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-20"
+                      placeholder="Complete Address"
+                      value={form.address}
+                      onChange={set("address")}
+                    />
+                  </Field>
+                </>
+              )}
 
               <div className="flex items-center gap-1.5 pt-2">
                 <ShieldCheck size={14} className="text-green-600 shrink-0" />
@@ -964,7 +1026,7 @@ const CheckoutPage = () => {
                 
                 {payMode === "online" && (
                   <div className="flex justify-between items-center text-sm font-semibold">
-                    <span className="text-gray-500">Gateway fee (2%)</span>
+                    <span className="text-gray-500">Gateway fee (2.36%)</span>
                     <span className="text-gray-800">
                       + ₹{computeFee("online", subtotal, true)}
                     </span>
