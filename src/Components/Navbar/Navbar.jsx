@@ -143,7 +143,7 @@ const Navbar = () => {
 
           <Link
             to="/merchandise"
-            className="font-semibold hover:text-yellow-300 transition no-underline"
+            className="font-semibold text-white hover:text-yellow-300 transition no-underline"
           >
             {t("merchandise")}
           </Link>
