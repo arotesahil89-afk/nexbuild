@@ -22,7 +22,7 @@ import MerchandisePromo from "../Components/MerchandisePromo/MerchandisePromo.js
 const Home = () => {
   return (
     <>
-      <MerchandisePromo />
+      {import.meta.env.VITE_ENABLE_COMMERCE === "true" && <MerchandisePromo />}
       <FlashBanner />
       <FlashNewsMobile />
       <SocialSidebar />
