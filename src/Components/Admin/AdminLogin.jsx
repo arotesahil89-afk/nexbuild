@@ -62,7 +62,7 @@ const AdminLogin = () => {
             margin: "0 0 14px 0",
             textShadow: "0 3px 10px rgba(0,0,0,0.7)"
           }}>
-            ९६ वर्षांचा भव्य वारसा
+            ९८ वर्षांचा भव्य वारसा
           </h2>
           <p style={{ 
             color: "#d6d3d1", 
