@@ -20,6 +20,41 @@ const AdminRoute = ({ children }) => {
     verify();
   }, []);
 
+  // Inactivity auto-logout logic
+  useEffect(() => {
+    if (status !== "ok") return;
+
+    let inactivityTimer;
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+    const handleLogout = async () => {
+      try {
+        await apiClient.post("/auth/logout");
+      } catch (err) {
+        // Ignore error if logout fails
+      }
+      localStorage.removeItem("authToken");
+      setStatus("fail");
+    };
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(handleLogout, INACTIVITY_LIMIT);
+    };
+
+    // Initialize timer
+    resetTimer();
+
+    // Setup event listeners
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(event => window.addEventListener(event, resetTimer));
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      events.forEach(event => window.removeEventListener(event, resetTimer));
+    };
+  }, [status]);
+
   if (status === "checking") return (
     <div style={{
       minHeight: "100dvh",
