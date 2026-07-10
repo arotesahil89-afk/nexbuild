@@ -40,6 +40,7 @@ import ManageAward         from "./Pages/Admin/ManageAward.jsx";
 import ManageEvents        from "./Pages/Admin/ManageEvents.jsx";
 import ManageOrders        from "./Pages/Admin/ManageOrders.jsx";
 import ManageMerchandise   from "./Pages/Admin/ManageMerchandise.jsx";
+import ManageAdmins        from "./Pages/Admin/ManageAdmins.jsx";
 import AdminProfile        from "./Pages/Admin/AdminProfile.jsx";
 
 function App() {
@@ -123,6 +124,7 @@ function App() {
           <Route path="awards"   element={<ManageAward />} />
           <Route path="events"   element={<ManageEvents />} />
           <Route path="merchandise" element={<ManageMerchandise />} />
+          <Route path="users"    element={<ManageAdmins />} />
           <Route path="profile"  element={<AdminProfile />} />
         </Route>
 

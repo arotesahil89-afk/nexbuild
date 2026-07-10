@@ -8,8 +8,7 @@ import {
 import { loadRazorpay, openRazorpayCheckout } from "../utils/loadRazorpay";
 import apiClient from "../services/apiService";
 import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+// import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 import { jsPDF } from "jspdf";
 
 const Confetti = () => {
@@ -137,6 +136,7 @@ const CheckoutPage = () => {
   const [items, setItems] = useState([]); // Array of { size, qty }
   const [form, setForm] = useState({ name: "", email: "", phone: "", pincode: "", address: "" });
   const [errors, setErrors] = useState({});
+  const [pageAlert, setPageAlert] = useState(null);
 
   const [step, setStep] = useState("idle"); // idle, redirecting, cod-confirm, success
   const [payMode, setPayMode] = useState("online");
@@ -160,7 +160,7 @@ const CheckoutPage = () => {
       if (found) {
         setProduct(found);
       } else {
-        toast.error("Product not found");
+        setPageAlert({ type: "error", text: "Product not found" });
         navigate("/merchandise");
         return;
       }
@@ -206,8 +206,8 @@ const CheckoutPage = () => {
   const validate = () => {
     const e = {};
     if (!form.name.trim() || form.name.trim().length < 2)
-      e.name = "Please enter your full name";
-    if (!/^\S+@\S+\.\S+$/.test(form.email))
+      e.name = "Please enter your name";
+    if (form.email && form.email.trim() !== "" && !/^\S+@\S+\.\S+$/.test(form.email))
       e.email = "Enter a valid email address";
     if (!/^[6-9]\d{9}$/.test(form.phone))
       e.phone = "Enter a valid 10-digit mobile number";
@@ -227,7 +227,7 @@ const CheckoutPage = () => {
       const sizeSummary = items.map(item => `${item.size}: ${item.qty}`).join(", ");
       const res = await apiClient.post('/orders', {
         customerName:  form.name,
-        customerEmail: form.email,
+        customerEmail: form.email || "no-email@example.com",
         customerPhone: form.phone,
         address:       form.address,
         pincode:       form.pincode,
@@ -244,7 +244,7 @@ const CheckoutPage = () => {
       return res.data;
     } catch (err) {
       console.error("Database sync failed:", err);
-      toast.warning("Payment complete, but database failed to save. Please show your invoice to the Mandal office.");
+      setPageAlert({ type: "warning", text: "Payment complete, but database failed to save. Please show your invoice to the Mandal office." });
       return null;
     }
   };
@@ -265,7 +265,7 @@ const CheckoutPage = () => {
 
     if (!ok) {
       setStep("idle");
-      toast.error("Failed to load Razorpay SDK. Please check your network connection.");
+      setPageAlert({ type: "error", text: "Failed to load Razorpay SDK. Please check your network connection." });
       return;
     }
 
@@ -426,6 +426,19 @@ const CheckoutPage = () => {
         const orderIdDisplay = createdOrder?.orderNo || ("#ORD" + refId.slice(-6).toUpperCase());
         doc.text(orderIdDisplay, LC, metaY + 6);
 
+        if (deliveryMethod === 'pickup' && createdOrder?.otpCode) {
+          metaY += 14;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(...LGREY);
+          doc.text("PICKUP VERIFICATION PIN", LC, metaY);
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(14);
+          doc.setTextColor(...DARK);
+          doc.text(createdOrder.otpCode, LC, metaY + 6.5);
+        }
+
         doc.setDrawColor(220, 225, 232);
         doc.setLineWidth(0.4);
         doc.line(108, 58, 108, 110);
@@ -471,7 +484,7 @@ const CheckoutPage = () => {
         doc.text(`Phone: +91 ${form?.phone || "-"}`, RC, rcY + 10.5);
         doc.text(`Email: ${form?.email || "-"}`, RC, rcY + 15);
 
-        let bottomY = Math.max(100, rcY + 20);
+        let bottomY = Math.max(metaY + 20, rcY + 20);
         if (form?.address) {
           doc.setFontSize(8);
           const addrLines = doc.splitTextToSize(`Billing Address: ${form.address}${form.pincode ? ", " + form.pincode : ""}`, 82);
@@ -719,7 +732,14 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 pt-24 md:pt-28">
-      <ToastContainer position="top-right" autoClose={3000} />
+      {pageAlert && (
+        <div className="max-w-2xl mx-auto px-4 md:px-0 mb-4 mt-2">
+          <div className={`p-4 rounded-xl shadow-sm border flex gap-3 items-start ${pageAlert.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+            <div className="flex-1 text-sm font-medium">{pageAlert.text}</div>
+            <button onClick={() => setPageAlert(null)} className="opacity-70 hover:opacity-100"><X size={18} /></button>
+          </div>
+        </div>
+      )}
 
       {/* Redirecting loader overlay */}
       {step === "redirecting" && (
@@ -888,7 +908,7 @@ const CheckoutPage = () => {
                 />
               </Field>
               
-              <Field icon={Mail} label="Email Address" error={errors.email}>
+              <Field icon={Mail} label="Email Address (Optional)" error={errors.email}>
                 <input
                   className="flex-1 px-3.5 py-3.5 bg-transparent outline-none text-sm placeholder:text-gray-400"
                   placeholder="For order confirmation & receipt"
@@ -951,7 +971,7 @@ const CheckoutPage = () => {
                     {errors.pincode && <p className="text-xs text-red-500 mt-1 pl-1">{errors.pincode}</p>}
                   </div>
 
-                  <Field icon={MapPin} label="Billing Address" error={errors.address}>
+                  <Field icon={MapPin} label="Address" error={errors.address}>
                     <textarea
                       className="flex-1 px-3.5 py-2.5 bg-transparent outline-none text-sm placeholder:text-gray-400 resize-none h-20"
                       placeholder="Complete Address"
@@ -959,12 +979,22 @@ const CheckoutPage = () => {
                       onChange={set("address")}
                     />
                   </Field>
+
+                  <div className="mt-2 mb-4 bg-[#eff6ff] p-4 rounded-xl border border-[#bfdbfe] flex gap-3 text-left">
+                    <span className="text-lg">🚚</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-[#1e3a8a] mb-1">Home Delivery Coordinator:</h4>
+                      <p className="text-xs text-[#1e40af] leading-relaxed">
+                        After successful online payment, please contact the <strong>Mandal Coordinator (99999 99989)</strong> to coordinate shipping and delivery details.
+                      </p>
+                    </div>
+                  </div>
                 </>
               )}
 
               <div className="flex items-center gap-1.5 pt-2">
-                <ShieldCheck size={14} className="text-green-600 shrink-0" />
-                <p className="text-xs text-gray-400">Your details are encrypted and never shared</p>
+                <ShieldCheck size={14} className="text-green-600 shrink-0 mt-[1px]" />
+                <p className="text-xs text-gray-400 m-0 leading-none">Your details are encrypted and never shared</p>
               </div>
             </div>
             

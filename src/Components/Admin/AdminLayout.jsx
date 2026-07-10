@@ -14,6 +14,7 @@ const NAV = [
   { to: "/admin/merchandise",         icon: Shirt,            label: "Merchandise"  },
   { to: "/admin/awards",              icon: Award,            label: "Awards"       },
   { to: "/admin/events",              icon: CalendarDays,     label: "Events"       },
+  { to: "/admin/users",               icon: Shield,           label: "User Master"  },
   { to: "/admin/profile",             icon: User,             label: "Profile"      },
 ];
 

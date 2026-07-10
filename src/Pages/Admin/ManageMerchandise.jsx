@@ -125,17 +125,6 @@ const SkeletonRow = () => (
         <div className="h-2 w-8 bg-gray-200 rounded" />
       </div>
     </td>
-    {/* Sizes & Stock */}
-    <td className="px-6 py-4">
-      <div className="space-y-1.5">
-        <div className="h-3 w-16 bg-gray-200 rounded" />
-        <div className="flex gap-1.5 mt-1">
-          <div className="h-2.5 w-8 bg-gray-200 rounded" />
-          <div className="h-2.5 w-8 bg-gray-200 rounded" />
-          <div className="h-2.5 w-8 bg-gray-200 rounded" />
-        </div>
-      </div>
-    </td>
     {/* Swatch Color */}
     <td className="px-6 py-4">
       <div className="flex items-center gap-2">
@@ -435,13 +424,13 @@ const ManageMerchandise = () => {
               />
             </div>
             
-            {/* Create Button in Top-Right of Data Table */}
+            {/* Create Button in Top-Right of Data Table (Hidden for now) */}
             <button
               onClick={() => {
                 handleResetForm();
                 setView("create");
               }}
-              className="w-full sm:w-auto bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-2 px-4 rounded-xl transition text-sm flex items-center justify-center gap-1.5 shadow-sm shadow-red-200 cursor-pointer"
+              className="hidden w-full sm:w-auto bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-2 px-4 rounded-xl transition text-sm items-center justify-center gap-1.5 shadow-sm shadow-red-200 cursor-pointer"
             >
               <Plus size={16} /> Create Product
             </button>
@@ -455,7 +444,7 @@ const ManageMerchandise = () => {
                   <th className="px-6 py-4">Product Info</th>
                   <th className="px-6 py-4">Product ID</th>
                   <th className="px-6 py-4">Price</th>
-                  <th className="px-6 py-4">Sizes &amp; Stock</th>
+
                   <th className="px-6 py-4">Swatch Color</th>
                   <th className="px-6 py-4">Rating</th>
                   <th className="px-6 py-4 text-right">Actions</th>
@@ -505,27 +494,7 @@ const ManageMerchandise = () => {
                           </div>
                         </td>
 
-                        {/* Sizes & Stock */}
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-max ${
-                              soldOut
-                                ? "bg-red-50 text-red-600"
-                                : totalStock < 20
-                                ? "bg-amber-50 text-amber-600"
-                                : "bg-green-50 text-green-600"
-                            }`}>
-                              {soldOut ? "Sold Out" : `Stock: ${totalStock}`}
-                            </span>
-                            <div className="flex gap-1 flex-wrap mt-1">
-                              {Object.entries(p.stock || {}).map(([sz, stk]) => (
-                                <span key={sz} className="text-[10px] bg-gray-150 text-gray-600 px-1 py-0.5 rounded font-semibold">
-                                  {sz}: {stk}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </td>
+
 
                         {/* Color */}
                         <td className="px-6 py-4">
@@ -557,7 +526,7 @@ const ManageMerchandise = () => {
                             <button
                               type="button"
                               onClick={() => setDeleteConfirmId(p.id)}
-                              className="w-8 h-8 bg-red-50 text-red-650 rounded-lg hover:bg-red-100 flex items-center justify-center transition border-none cursor-pointer"
+                              className="hidden w-8 h-8 bg-red-50 text-red-650 rounded-lg hover:bg-red-100 items-center justify-center transition border-none cursor-pointer"
                               title="Delete Product"
                             >
                               <Trash2 size={14} />
@@ -676,128 +645,7 @@ const ManageMerchandise = () => {
               </div>
             </div>
 
-            {/* Sizes & Stock Configuration */}
-            <div className="border border-gray-150 rounded-2xl p-4 bg-gray-50/50 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Sizes &amp; Stock Configuration</label>
-                <div className="flex gap-2 mb-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForm({ ...form, sizes: "S, M, L, XL, XXL", stock: "50, 50, 50, 50, 50" });
-                      toast.info("👕 Clothing sizes preset applied!");
-                    }}
-                    className="text-xs bg-white border hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg font-semibold shadow-sm transition cursor-pointer"
-                  >
-                    Preset: Clothing (S, M, L, XL, XXL)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForm({ ...form, sizes: "Standard", stock: "100" });
-                      toast.info("📦 Standard non-clothing size applied!");
-                    }}
-                    className="text-xs bg-white border hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg font-semibold shadow-sm transition cursor-pointer"
-                  >
-                    Preset: Non-Clothing (Standard)
-                  </button>
-                </div>
-              </div>
 
-              {/* Dynamic Size Matrix Grid */}
-              <div className="bg-white border border-gray-200 rounded-xl p-3.5 space-y-3 shadow-sm">
-                <span className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Active Size Matrix &amp; Stock</span>
-                
-                {sizesArr.length === 0 ? (
-                  <p className="text-xs text-gray-400 italic">No sizes added yet. Use presets or add custom sizes below.</p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
-                    {sizesArr.map((sz, idx) => {
-                      const stockVal = stockArr[idx] !== undefined ? stockArr[idx] : "50";
-                      return (
-                        <div key={idx} className="border border-gray-150 rounded-xl p-2.5 flex flex-col items-center gap-1.5 bg-gray-50/20 relative group shadow-sm">
-                          <button
-                            type="button"
-                            onClick={() => removeSize(idx)}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-100 hover:bg-red-200 text-red-700 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm transition border-none cursor-pointer"
-                            title="Remove Size"
-                          >
-                            ×
-                          </button>
-                          <span className="font-extrabold text-xs text-gray-800 uppercase tracking-wider">{sz}</span>
-                          <div className="flex flex-col items-center">
-                            <span className="text-[9px] text-gray-400 font-semibold mb-0.5">Stock</span>
-                            <input
-                              type="number"
-                              min="0"
-                              value={stockVal}
-                              onChange={(e) => updateStockForSize(idx, e.target.value)}
-                              placeholder="Qty"
-                              className="w-16 text-center border border-gray-200 rounded-lg px-1 py-0.5 text-xs focus:border-[#B91C1C] outline-none"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Add New Custom Size Inline Form */}
-                <div className="border-t border-gray-100 pt-3 mt-2 flex flex-col sm:flex-row items-end gap-3">
-                  <div className="flex-1 w-full">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Add Custom Size</label>
-                    <input
-                      type="text"
-                      value={newSizeName}
-                      onChange={(e) => setNewSizeName(e.target.value)}
-                      placeholder="e.g. XXXL, Kids, Custom Size..."
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
-                    />
-                  </div>
-                  <div className="w-full sm:w-28">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Initial Stock</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={newSizeStock}
-                      onChange={(e) => setNewSizeStock(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addCustomSize}
-                    className="w-full sm:w-auto bg-gray-900 hover:bg-black text-white font-bold py-2 px-4 rounded-xl transition text-xs flex items-center justify-center shrink-0 cursor-pointer"
-                  >
-                    + Add Size
-                  </button>
-                </div>
-              </div>
-
-              {/* Raw fallback inputs to inspect and edit comma-separated strings directly if needed */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sizes (Raw Comma-separated)</label>
-                  <input
-                    type="text"
-                    value={form.sizes}
-                    onChange={(e) => setForm({ ...form, sizes: e.target.value })}
-                    placeholder="e.g. S, M, L"
-                    className="w-full border border-gray-200 rounded-xl p-2.5 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Stock (Raw Comma-separated)</label>
-                  <input
-                    type="text"
-                    value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                    placeholder="e.g. 50, 50, 50"
-                    className="w-full border border-gray-200 rounded-xl p-2.5 text-xs focus:border-[#B91C1C] outline-none bg-white font-semibold"
-                  />
-                </div>
-              </div>
-            </div>
 
             {/* Main Product Image Section */}
             <div className="border border-gray-150 rounded-2xl p-4 bg-gray-50/50">
@@ -975,52 +823,6 @@ const ManageMerchandise = () => {
                   </div>
                 </div>
 
-                {/* Specs */}
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1.5">Product Specifications ({formTab.toUpperCase()})</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                      <span className="block text-[10px] text-gray-500 font-semibold mb-0.5">Material</span>
-                      <input
-                        type="text"
-                        value={form.specMaterial[formTab]}
-                        onChange={(e) => handleLangInputChange(formTab, "specMaterial", e.target.value)}
-                        placeholder="e.g. Zinc Alloy"
-                        className="w-full border border-gray-200 bg-white rounded-xl p-2 text-xs focus:border-[#B91C1C] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-500 font-semibold mb-0.5">Size/Dimension</span>
-                      <input
-                        type="text"
-                        value={form.specSize[formTab]}
-                        onChange={(e) => handleLangInputChange(formTab, "specSize", e.target.value)}
-                        placeholder="e.g. 2.5 x 1.5 inches"
-                        className="w-full border border-gray-200 bg-white rounded-xl p-2 text-xs focus:border-[#B91C1C] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-500 font-semibold mb-0.5">Weight/Capacity</span>
-                      <input
-                        type="text"
-                        value={form.specWeight[formTab]}
-                        onChange={(e) => handleLangInputChange(formTab, "specWeight", e.target.value)}
-                        placeholder="e.g. 45 Grams"
-                        className="w-full border border-gray-200 bg-white rounded-xl p-2 text-xs focus:border-[#B91C1C] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-500 font-semibold mb-0.5">Care/Finish</span>
-                      <input
-                        type="text"
-                        value={form.specCare[formTab]}
-                        onChange={(e) => handleLangInputChange(formTab, "specCare", e.target.value)}
-                        placeholder="e.g. Gold Plated / Microwave Safe"
-                        className="w-full border border-gray-200 bg-white rounded-xl p-2 text-xs focus:border-[#B91C1C] outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
 
               </div>
             </div>

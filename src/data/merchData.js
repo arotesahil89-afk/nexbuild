@@ -5,14 +5,18 @@ export const products = [
   {
     id: "mr-polo-2025",
     type: "polo",
-    price: 799,
-    oldPrice: 1099,
-    sizes: ["S", "M", "L", "XL", "XXL"],
-    stock: { S: 45, M: 12, L: 120, XL: 38, XXL: 8 },
-    rating: 4.9,
-    reviews: 412,
+    price: 300,
+    oldPrice: 500,
+    sizes: ["Standard"],
+    stock: { "Standard": 0 },
+    rating: 4.8,
+    reviews: 1,
     color: "#5e6b72", // graphite grey
-    colorName: "Heritage Grey",
+    colorName: {
+      en: "Heritage Grey",
+      mr: "हेरिटेज ग्रे",
+      hi: "हेरिटेज ग्रे"
+    },
     image: "/images/merch/tee-angle.jpg",
     gallery: [
       { src: "/images/merch/tee-angle.jpg", view: "hero" },
@@ -21,115 +25,44 @@ export const products = [
       { src: "/images/merch/tee-back-angle.jpg", view: "backAngle" },
       { src: "/images/merch/tee-detail-2.jpg", view: "flatlay" },
     ],
-    nameKey: "productName",
-    taglineKey: "tagline",
-    descKey: "descriptionBody",
-    highlights: [
-      "highlights.fabric",
-      "highlights.embroidery",
-      "highlights.trim",
-      "highlights.badge",
-    ],
-    specs: [
-      { key: "material", valueKey: "specs.materialValue" },
-      { key: "fit", valueKey: "specs.fitValue" },
-      { key: "collar", valueKey: "specs.collarValue" },
-      { key: "care", valueKey: "specs.careValue" },
-    ],
-  },
-  {
-    id: "mr-keychain-2025",
-    type: "keychain",
-    price: 199,
-    oldPrice: 299,
-    sizes: ["Standard"],
-    stock: { Standard: 150 },
-    rating: 4.8,
-    reviews: 89,
-    color: "#D4AF37", // gold
-    colorName: "24K Gold Plated",
-    image: "/images/merch/keychain.png",
-    gallery: [
-      { src: "/images/merch/keychain.png", view: "hero" },
-    ],
-    nameKey: "keychain.name",
-    taglineKey: "keychain.tagline",
-    descKey: "keychain.description",
-    highlights: [
-      "keychain.highlights.1",
-      "keychain.highlights.2",
-      "keychain.highlights.3",
-      "keychain.highlights.4",
-    ],
-    specs: [
-      { key: "material", valueKey: "keychain.specs.material" },
-      { key: "size", valueKey: "keychain.specs.size" },
-      { key: "weight", valueKey: "keychain.specs.weight" },
-      { key: "packaging", valueKey: "keychain.specs.packaging" },
-    ],
-  },
-  {
-    id: "mr-mug-2025",
-    type: "mug",
-    price: 299,
-    oldPrice: 449,
-    sizes: ["Standard"],
-    stock: { Standard: 65 },
-    rating: 4.7,
-    reviews: 142,
-    color: "#5e6b72", // graphite grey
-    colorName: "Heritage Grey",
-    image: "/images/merch/mug.png",
-    gallery: [
-      { src: "/images/merch/mug.png", view: "hero" },
-    ],
-    nameKey: "mug.name",
-    taglineKey: "mug.tagline",
-    descKey: "mug.description",
-    highlights: [
-      "mug.highlights.1",
-      "mug.highlights.2",
-      "mug.highlights.3",
-      "mug.highlights.4",
-    ],
-    specs: [
-      { key: "material", valueKey: "mug.specs.material" },
-      { key: "capacity", valueKey: "mug.specs.capacity" },
-      { key: "finish", valueKey: "mug.specs.finish" },
-      { key: "care", valueKey: "mug.specs.care" },
-    ],
-  },
-  {
-    id: "mr-bag-2025",
-    type: "bag",
-    price: 349,
-    oldPrice: 499,
-    sizes: ["Standard"],
-    stock: { Standard: 40 },
-    rating: 4.9,
-    reviews: 73,
-    color: "#F5F5DC", // natural beige
-    colorName: "Natural Beige",
-    image: "/images/merch/bag.png",
-    gallery: [
-      { src: "/images/merch/bag.png", view: "hero" },
-    ],
-    nameKey: "bag.name",
-    taglineKey: "bag.tagline",
-    descKey: "bag.description",
-    highlights: [
-      "bag.highlights.1",
-      "bag.highlights.2",
-      "bag.highlights.3",
-      "bag.highlights.4",
-    ],
-    specs: [
-      { key: "material", valueKey: "bag.specs.material" },
-      { key: "size", valueKey: "bag.specs.size" },
-      { key: "capacity", valueKey: "bag.specs.capacity" },
-      { key: "care", valueKey: "bag.specs.care" },
-    ],
-  },
+    name: {
+      en: "Mumbaicha Raja Official Polo — Heritage Grey",
+      mr: "मुंबईचा राजा ऑफिशियल पोलो — हेरिटेज ग्रे",
+      hi: "मुंबईचा राजा ऑफिशियल पोलो — हेरिटेज ग्रे"
+    },
+    tagline: {
+      en: "Limited festive stock — Ganeshotsav 2025",
+      mr: "मर्यादित फेस्टिव्ह स्टॉक — गणेशोत्सव 2025",
+      hi: "सीमित उत्सव स्टॉक — गणेशोत्सव 2025"
+    },
+    description: {
+      en: "Wear the devotion. Carry the legacy of Ganesh Galli.",
+      mr: "श्रद्धा परिधान करा. गणेश गल्लीचा वारसा सोबत बाळगा.",
+      hi: "श्रद्धा पहनें। गणेश गली की विरासत साथ रखें।"
+    },
+    highlights: {
+      en: [
+        "Premium 100% bio-washed cotton — breathable & soft",
+        "Hand-finished golden Ganpati crest embroidery",
+        "Signature yellow & white sleeve and collar trim",
+        "Iconic red 'Mumbaicha Raja' badge on the back"
+      ],
+      mr: [
+        "प्रीमियम 100% बायो-वॉश्ड कॉटन — हवेशीर आणि मऊ",
+        "हाताने तयार केलेली सोनेरी गणपती क्रेस्ट भरतकाम",
+        "खास पिवळी आणि पांढरी बाही व कॉलर ट्रिम",
+        "पाठीवर प्रतिष्ठित लाल 'मुंबईचा राजा' बॅज"
+      ],
+      hi: [
+        "प्रीमियम 100% बायो-वॉश्ड कॉटन — हवादार और मुलायम",
+        "हाथ से तैयार सुनहरी गणपति क्रेस्ट कढ़ाई",
+        "खास पीली और सफेद आस्तीन व कॉलर ट्रिम",
+        "पीठ पर प्रतिष्ठित लाल 'मुंबईचा राजा' बैज"
+      ]
+    },
+    specs: []
+  }
 ];
 
 export const featuredProduct = products[0];
+

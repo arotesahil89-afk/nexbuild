@@ -240,8 +240,8 @@ const MerchandisePage = () => {
 
     const newSelectQty = { ...selectQty, [s]: q };
     const newTotalQty = Object.values(newSelectQty).reduce((a, b) => a + b, 0);
-    if (newTotalQty > 50) {
-      toast.warning("Maximum total limit is 50 items per order.", { position: "top-center" });
+    if (newTotalQty > 100) {
+      toast.warning("Maximum total limit is 100 items per order.", { position: "top-center" });
       return;
     }
     setSelectQty(newSelectQty);
@@ -375,128 +375,85 @@ const MerchandisePage = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {(() => {
-                const defaultApparel = ["S", "M", "L", "XL", "XXL", "XXXL"];
+                const defaultApparel = ["18", "20", "22", "24", "26", "28", "30", "32", "34", "36", "38", "40", "42", "44", "46", "48", "50", "52"];
                 const hasApparelSizes = product.sizes.some(s => defaultApparel.includes(s));
                 const sizesToRender = hasApparelSizes
                   ? [...defaultApparel, ...product.sizes.filter(s => !defaultApparel.includes(s))]
                   : product.sizes;
                 
                 return sizesToRender.map((s) => {
-                  const isOffered = product.sizes.includes(s);
-                  const stock = isOffered ? (product.stock[s] ?? 0) : 0;
-                  const soldOut = stock === 0;
                   const sizeQty = selectQty[s] || 0;
-                  const isLowStock = stock > 0 && stock < LOW_STOCK_THRESHOLD;
                   const isSelected = sizeQty > 0;
-
-                  if (!isOffered) {
-                    return (
-                      <div
-                        key={s}
-                        className="flex items-center justify-between p-2.5 rounded-xl border border-gray-100 bg-gray-50/40 opacity-50 cursor-not-allowed select-none"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 min-w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center bg-gray-100 text-gray-400">
-                            {s}
-                          </span>
-                          <span className="text-[10px] text-gray-400 font-bold leading-none">
-                            Not Available
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-gray-400 font-semibold pr-1">
-                          N/A
-                        </span>
-                      </div>
-                    );
-                  }
 
                   return (
                     <div
                       key={s}
-                      className={`flex items-center justify-between p-2 rounded-xl border transition-all duration-200 ${
-                        soldOut
-                          ? "bg-gray-50/50 border-gray-100 opacity-60"
-                          : isSelected
+                      className={`flex items-center justify-between p-1 rounded-lg border transition-all duration-200 ${
+                        isSelected
                           ? "bg-red-50/40 border-[#B91C1C] shadow-sm"
                           : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
                       }`}
                     >
-                      {/* Left: Size Name & Stock Status */}
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-1 min-w-0">
                         <span
-                          className={`px-2 min-w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors shrink-0 ${
-                            soldOut
-                              ? "bg-gray-100 text-gray-400"
-                              : isSelected
+                          className={`px-1 min-w-6 h-6 rounded-md font-bold text-[10px] flex items-center justify-center transition-colors shrink-0 ${
+                            isSelected
                               ? "bg-[#B91C1C] text-white"
                               : "bg-gray-100 text-gray-700"
                           }`}
                         >
                           {s}
                         </span>
-                        <div className="flex flex-col min-w-0">
-                          {soldOut ? (
-                            <span className="text-[10px] text-red-500 font-bold leading-none">
-                              {t("soldOut")}
-                            </span>
-                          ) : isLowStock ? (
-                            <span className="text-[10px] text-orange-500 font-bold leading-none truncate">
-                              {t("left", { count: stock })}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-emerald-600 font-medium leading-none">
-                              {t("inStock")}
-                            </span>
-                          )}
-                        </div>
                       </div>
 
-                      {/* Right: Quantity Selector */}
-                      {!soldOut ? (
-                        <div
-                          className={`flex items-center border rounded-lg overflow-hidden h-7 bg-white transition-colors shrink-0 ${
-                            isSelected ? "border-[#B91C1C]/40" : "border-gray-200"
-                          }`}
+                      <div
+                        className={`flex items-center border rounded-md overflow-hidden h-6 bg-white transition-colors shrink-0 ${
+                          isSelected ? "border-[#B91C1C]/40" : "border-gray-200"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleSizeQtyChange(s, sizeQty - 1)}
+                          className="w-5 h-full hover:bg-gray-50 text-gray-500 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
                         >
-                          <button
-                            type="button"
-                            onClick={() => handleSizeQtyChange(s, sizeQty - 1)}
-                            className="w-7 h-full hover:bg-gray-50 text-gray-500 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
-                          >
-                            <Minus size={10} strokeWidth={2.5} />
-                          </button>
-                          <span
-                            className={`w-6 text-center font-bold text-xs transition-colors ${
-                              isSelected ? "text-[#B91C1C]" : "text-gray-700"
-                            }`}
-                          >
-                            {sizeQty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleSizeQtyChange(s, sizeQty + 1)}
-                            disabled={totalQty >= 50 || sizeQty >= stock}
-                            className="w-7 h-full hover:bg-gray-50 text-gray-500 disabled:opacity-30 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
-                          >
-                            <Plus size={10} strokeWidth={2.5} />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] text-gray-400 font-semibold pr-1 shrink-0">
-                          {t("soldOut")}
-                        </span>
-                      )}
+                          <Minus size={8} strokeWidth={3} />
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={sizeQty === 0 ? "" : sizeQty}
+                          placeholder="0"
+                          onChange={(e) => {
+                            let val = parseInt(e.target.value);
+                            if (isNaN(val) || val < 0) val = 0;
+                            handleSizeQtyChange(s, val);
+                          }}
+                          className={`w-6 text-center font-bold text-[10px] bg-transparent outline-none transition-colors ${
+                            isSelected ? "text-[#B91C1C]" : "text-gray-700"
+                          } [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                          style={{ MozAppearance: 'textfield' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSizeQtyChange(s, sizeQty + 1)}
+                          disabled={totalQty >= 100}
+                          className="w-5 h-full hover:bg-gray-50 text-gray-500 disabled:opacity-30 flex items-center justify-center border-none bg-transparent active:bg-gray-100 transition-colors"
+                        >
+                          <Plus size={8} strokeWidth={3} />
+                        </button>
+                      </div>
                     </div>
                   );
                 });
               })()}
             </div>
 
-            {totalQty >= 50 && (
+            {totalQty >= 100 && (
               <p className="text-xs text-orange-600 mt-2 font-semibold text-center">
-                Maximum limit of 50 total items reached
+                Maximum limit of 100 total items reached
               </p>
             )}
           </div>

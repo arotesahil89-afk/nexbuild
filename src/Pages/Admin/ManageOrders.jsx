@@ -13,15 +13,15 @@ import {
 // ─── Constants ──────────────────────────────────────────────────────────────
 const STATUSES = [
   { value: "all",                 label: "All Orders"  },
-  { value: "pending",             label: "Pending"     },
-  { value: "confirmed",           label: "Confirmed"   },
+  { value: "pending",             label: "Payment Pending" },
+  { value: "confirmed",           label: "Payment Confirm" },
   { value: "partially_picked_up", label: "Partially Picked Up" },
   { value: "picked_up",           label: "Picked Up"   },
 ];
 
 const STATUS_CFG = {
-  pending:             { label: "Pending",             bg: "#fffbeb", text: "#b45309", icon: Clock },
-  confirmed:           { label: "Confirmed",           bg: "#eff6ff", text: "#1d4ed8", icon: CheckCircle2 },
+  pending:             { label: "Payment Pending",     bg: "#fffbeb", text: "#b45309", icon: Clock },
+  confirmed:           { label: "Payment Confirm",     bg: "#eff6ff", text: "#1d4ed8", icon: CheckCircle2 },
   partially_picked_up: { label: "Partially Picked Up", bg: "#fef3c7", text: "#d97706", icon: Clock },
   picked_up:           { label: "Picked Up",           bg: "#f0fdf4", text: "#15803d", icon: PackageCheck },
   cancelled:           { label: "Cancelled",           bg: "#fef2f2", text: "#b91c1c", icon: XCircle },
@@ -309,34 +309,18 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
     return item.status === 'picked_up' && wasPending;
   });
 
-  const handleSaveOrRequestOtp = async () => {
-    // If no new pickups, we can just save changes directly (e.g. updating notes or returning items to pending)
+  const handleSaveDelivery = async () => {
+    // If no new pickups, we can just save changes directly
     if (!anyNewPickups) {
       await performStatusUpdate();
       return;
     }
 
-    if (!otpSent) {
-      setUpdating(true);
-      try {
-        const res = await apiClient.post(`/orders/${order.id}/send-otp`);
-        setOtpSent(true);
-        if (res.data?.otp) {
-          setDevOtpHint(res.data.otp);
-        }
-        toast.success(`📩 OTP Sent! Verification Code is: ${res.data?.otp || '123456'}`);
-      } catch (err) {
-        toast.error("❌ Failed to send OTP verification code");
-      } finally {
-        setUpdating(false);
-      }
-    } else {
-      if (!otpCode || otpCode.length !== 6) {
-        toast.error("⚠️ Please enter a valid 6-digit OTP code");
-        return;
-      }
-      await performStatusUpdate(otpCode);
+    if (!otpCode || otpCode.length !== 6) {
+      toast.error("⚠️ Please enter the 6-digit Verification PIN from the Customer's Invoice");
+      return;
     }
+    await performStatusUpdate(otpCode);
   };
 
   const performStatusUpdate = async (otpVal = undefined) => {
@@ -896,27 +880,25 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
                   })}
                 </div>
 
-                {otpSent && (
+                {anyNewPickups && (
                   <div style={{ marginTop: 12, padding: 12, background: "#f8fafc", borderRadius: 8, border: "1px solid #cbd5e1" }}>
-                    <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Enter 6-Digit Verification OTP (Static: 123456)</label>
+                    <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Enter 6-Digit PIN (From Customer's Invoice)</label>
                     <input
                       type="text"
                       maxLength={6}
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="Enter 6-digit OTP (e.g. 123456)"
+                      placeholder="e.g. 842105"
                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, textAlign: "center", letterSpacing: "0.2em", fontWeight: 700 }}
                     />
-                    {devOtpHint && (
-                      <p style={{ marginTop: 6, fontSize: 11, color: "#d97706", fontWeight: 600 }}>
-                        🔑 Dev Hint (Static / Generated OTP): <strong>123456</strong> or <strong>{devOtpHint}</strong>
-                      </p>
-                    )}
+                    <p style={{ marginTop: 6, fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>
+                      Ask the customer for the PIN printed on their PDF Invoice.
+                    </p>
                   </div>
                 )}
 
                 <button
-                  onClick={handleSaveOrRequestOtp}
+                  onClick={handleSaveDelivery}
                   disabled={updating || !hasChanges}
                   style={{
                     width: "100%", marginTop: 12, padding: "8px 12px", borderRadius: 8,
@@ -925,21 +907,10 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
                     opacity: updating || !hasChanges ? 0.6 : 1, transition: "opacity 0.15s"
                   }}
                 >
-                  {updating ? "Processing..." : (otpSent ? "Verify OTP & Confirm Pickup" : "Save Delivery Changes")}
+                  {updating ? "Processing..." : (anyNewPickups ? "Verify PIN & Confirm Pickup" : "Save Delivery Changes")}
                 </button>
 
-                {otpSent && (
-                  <button
-                    onClick={() => { setOtpSent(false); setOtpCode(""); setDevOtpHint(""); }}
-                    style={{
-                      width: "100%", marginTop: 6, padding: "6px 12px", borderRadius: 8,
-                      background: "transparent", color: "#64748b", border: "1px solid #cbd5e1", fontSize: 12, fontWeight: 600,
-                      cursor: "pointer"
-                    }}
-                  >
-                    Cancel Verification
-                  </button>
-                )}
+
               </section>
             )}
           </div>
@@ -1047,7 +1018,11 @@ const ManageOrders = () => {
     try {
       const [ordersRes, statsRes] = await Promise.all([
         apiClient.get("/orders", {
-          params: { status: filter !== "all" ? filter : undefined, search: search || undefined, page, limit: LIMIT },
+          params: { 
+            status: ["home", "pickup"].includes(filter) ? undefined : (filter !== "all" ? filter : undefined), 
+            deliveryMethod: ["home", "pickup"].includes(filter) ? filter : undefined,
+            search: search || undefined, page, limit: LIMIT 
+          },
         }),
         apiClient.get("/orders/stats")
       ]);
@@ -1070,12 +1045,18 @@ const ManageOrders = () => {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  // ── Sort (client-side on current page) ────────────────────────────────────
-  const sorted = [...orders].sort((a, b) => {
-    let av = a[sortCol] ?? "", bv = b[sortCol] ?? "";
-    if (typeof av === "string") { av = av.toLowerCase(); bv = bv.toLowerCase(); }
-    return av < bv ? (sortDir === "asc" ? -1 : 1) : av > bv ? (sortDir === "asc" ? 1 : -1) : 0;
-  });
+  // ── Sort and filter (client-side on current page for delivery fallback) ──
+  const sorted = [...orders]
+    .filter(o => {
+      if (filter === "home") return o.deliveryMethod === "home";
+      if (filter === "pickup") return o.deliveryMethod === "pickup" || !o.deliveryMethod;
+      return true;
+    })
+    .sort((a, b) => {
+      let av = a[sortCol] ?? "", bv = b[sortCol] ?? "";
+      if (typeof av === "string") { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+      return av < bv ? (sortDir === "asc" ? -1 : 1) : av > bv ? (sortDir === "asc" ? 1 : -1) : 0;
+    });
 
   const onSort = (col) => {
     if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -1219,6 +1200,33 @@ const ManageOrders = () => {
                 </button>
               );
             })}
+            
+            <div style={{ width: 1, height: 20, background: "#cbd5e1", margin: "0 4px" }} />
+            
+            <button
+              className="filter-pill"
+              onClick={() => { setFilter("home"); setPage(1); }}
+              style={{
+                padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 600,
+                border: "none", cursor: "pointer", transition: "all .15s",
+                background: filter === "home" ? "#991b1b" : "#f1f5f9",
+                color: filter === "home" ? "#fff" : "#64748b",
+              }}
+            >
+              Home Delivery
+            </button>
+            <button
+              className="filter-pill"
+              onClick={() => { setFilter("pickup"); setPage(1); }}
+              style={{
+                padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 600,
+                border: "none", cursor: "pointer", transition: "all .15s",
+                background: filter === "pickup" ? "#991b1b" : "#f1f5f9",
+                color: filter === "pickup" ? "#fff" : "#64748b",
+              }}
+            >
+              Pickup
+            </button>
           </div>
 
           {/* CSV */}
