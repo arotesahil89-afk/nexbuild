@@ -214,7 +214,24 @@ const ManageAdmins = () => {
               <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Password {view === "edit" && "(Leave blank to keep current)"}</label>
               <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full border rounded-xl p-2.5 text-sm focus:border-[#B91C1C] outline-none" required={view === "create"} />
             </div>
-            
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Role</label>
+              <select
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                className="w-full border rounded-xl p-2.5 text-sm bg-white focus:border-[#B91C1C] outline-none"
+              >
+                <option value="admin">Admin — Full access</option>
+                <option value="ecommerce">E-commerce — Dashboard &amp; Orders only</option>
+              </select>
+              <p className="text-[11px] text-gray-400 mt-1">
+                {form.role === "ecommerce"
+                  ? "Can access Dashboard and Order Management only."
+                  : "Full access to all sections."}
+              </p>
+            </div>
+
             <div className="flex gap-2 pt-4">
               <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl">
                 {view === "edit" ? "Update User" : "Save User"}

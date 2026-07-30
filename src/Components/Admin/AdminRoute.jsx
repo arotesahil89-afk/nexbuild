@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../../services/apiService";
 import { Navigate } from "react-router-dom";
+import { AdminContext } from "./adminContext";
 
 const AdminRoute = ({ children }) => {
   const [status, setStatus] = useState("checking"); // "checking" | "ok" | "fail"
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const verify = async () => {
       try {
         const token = localStorage.getItem("authToken");
         if (!token) { setStatus("fail"); return; }
-        await apiClient.get("/auth/verify");
+        const res = await apiClient.get("/auth/verify");
+        setProfile(res?.data || res);
         setStatus("ok");
       } catch {
         localStorage.removeItem("authToken");
@@ -73,7 +76,11 @@ const AdminRoute = ({ children }) => {
 
   if (status === "fail") return <Navigate to="/admin-login" replace />;
 
-  return children;
+  return (
+    <AdminContext.Provider value={{ profile, role: profile?.role || "admin" }}>
+      {children}
+    </AdminContext.Provider>
+  );
 };
 
 export default AdminRoute;

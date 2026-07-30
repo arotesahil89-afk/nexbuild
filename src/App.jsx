@@ -42,10 +42,44 @@ import ManageOrders        from "./Pages/Admin/ManageOrders.jsx";
 import ManageMerchandise   from "./Pages/Admin/ManageMerchandise.jsx";
 import ManageAdmins        from "./Pages/Admin/ManageAdmins.jsx";
 import AdminProfile        from "./Pages/Admin/AdminProfile.jsx";
+import { useAdmin, canAccess } from "./Components/Admin/adminContext.js";
+import { Navigate as RRNavigate } from "react-router-dom";
+
+// Blocks a route when the signed-in role can't access that section.
+const RequireSection = ({ section, children }) => {
+  const { role } = useAdmin();
+  return canAccess(section, role) ? children : <RRNavigate to="/admin" replace />;
+};
 
 function App() {
   const location = useLocation();
   const { i18n } = useTranslation();
+
+  useEffect(() => {
+    trackPageView(location.pathname);
+
+    // Prevent context menu (right-click / long-press save menu) on images
+    const handleContextMenu = (e) => {
+      if (e.target && (e.target.tagName === 'IMG' || e.target.closest('img'))) {
+        e.preventDefault();
+      }
+    };
+
+    // Prevent image drag-and-drop save
+    const handleDragStart = (e) => {
+      if (e.target && (e.target.tagName === 'IMG' || e.target.closest('img'))) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('dragstart', handleDragStart);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('dragstart', handleDragStart);
+    };
+  }, []);
 
   useEffect(() => {
     trackPageView(location.pathname);
@@ -121,10 +155,10 @@ function App() {
         >
           <Route index           element={<AdminDashboardPage />} />
           <Route path="orders"   element={<ManageOrders />} />
-          <Route path="awards"   element={<ManageAward />} />
-          <Route path="events"   element={<ManageEvents />} />
-          <Route path="merchandise" element={<ManageMerchandise />} />
-          <Route path="users"    element={<ManageAdmins />} />
+          <Route path="awards"   element={<RequireSection section="awards"><ManageAward /></RequireSection>} />
+          <Route path="events"   element={<RequireSection section="events"><ManageEvents /></RequireSection>} />
+          <Route path="merchandise" element={<RequireSection section="merchandise"><ManageMerchandise /></RequireSection>} />
+          <Route path="users"    element={<RequireSection section="users"><ManageAdmins /></RequireSection>} />
           <Route path="profile"  element={<AdminProfile />} />
         </Route>
 

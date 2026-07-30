@@ -7,7 +7,7 @@ import {
   Search, RefreshCw, Download, ChevronUp, ChevronDown,
   ChevronsUpDown, CheckCircle2, XCircle, PackageCheck,
   Clock, ShoppingBag, IndianRupee, ChevronDown as DropIcon,
-  Eye, X, Trash2
+  Eye, X, Trash2, Truck, Home
 } from "lucide-react";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -63,16 +63,21 @@ const SkeletonRow = () => (
 );
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status, deliveryMethod }) => {
   const c = STATUS_CFG[status] || STATUS_CFG.pending;
   const Icon = c.icon;
+  let label = c.label;
+  if (deliveryMethod === "home") {
+    if (status === "picked_up") label = "Delivered";
+    else if (status === "partially_picked_up") label = "Partially Delivered";
+  }
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
       padding: "3px 9px", borderRadius: 99, fontSize: 11, fontWeight: 600,
       background: c.bg, color: c.text, whiteSpace: "nowrap",
     }}>
-      <Icon size={11} />{c.label}
+      <Icon size={11} />{label}
     </span>
   );
 };
@@ -96,7 +101,12 @@ const ActionDropdown = ({ order, onStatusChange, onView }) => {
     try {
       await apiClient.patch(`/orders/${order.id}/status`, { status });
       onStatusChange(order.id, status);
-      toast.success(`✅ Status → ${STATUS_CFG[status]?.label}`);
+      let label = STATUS_CFG[status]?.label;
+      if (order.deliveryMethod === 'home') {
+        if (status === 'picked_up') label = 'Delivered';
+        else if (status === 'partially_picked_up') label = 'Partially Delivered';
+      }
+      toast.success(`✅ Status → ${label}`);
     } catch {
       toast.error("❌ Failed to update status");
     } finally {
@@ -148,6 +158,11 @@ const ActionDropdown = ({ order, onStatusChange, onView }) => {
           {Object.entries(STATUS_CFG).filter(([val]) => val !== "cancelled").map(([val, cfg]) => {
             const Icon = cfg.icon;
             const isActive = order.status === val;
+            let label = cfg.label;
+            if (order.deliveryMethod === 'home') {
+              if (val === 'picked_up') label = 'Delivered';
+              else if (val === 'partially_picked_up') label = 'Partially Delivered';
+            }
             return (
               <button
                 key={val}
@@ -162,7 +177,7 @@ const ActionDropdown = ({ order, onStatusChange, onView }) => {
                 }}
               >
                 <Icon size={13} color={cfg.text} />
-                {cfg.label}
+                {label}
                 {isActive && <span style={{ marginLeft: "auto", fontSize: 10, color: cfg.text }}>✓</span>}
               </button>
             );
@@ -309,6 +324,23 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
     return item.status === 'picked_up' && wasPending;
   });
 
+  const handleSendOtp = async () => {
+    setUpdating(true);
+    try {
+      const res = await apiClient.post(`/orders/${order.id}/send-otp`);
+      toast.success("✅ SMS OTP sent to customer successfully!");
+      setOtpSent(true);
+      if (res.data && res.data.otp) {
+        setDevOtpHint(res.data.otp);
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.error || "Failed to send OTP";
+      toast.error(`❌ ${errMsg}`);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleSaveDelivery = async () => {
     // If no new pickups, we can just save changes directly
     if (!anyNewPickups) {
@@ -316,8 +348,13 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
       return;
     }
 
+    if (!otpSent) {
+      toast.error("⚠️ Please send the verification OTP first");
+      return;
+    }
+
     if (!otpCode || otpCode.length !== 6) {
-      toast.error("⚠️ Please enter the 6-digit Verification PIN from the Customer's Invoice");
+      toast.error("⚠️ Please enter the 6-digit verification code");
       return;
     }
     await performStatusUpdate(otpCode);
@@ -739,7 +776,9 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
               <p style={cardSectionTitleStyle}>Customer Details</p>
               <Row label="Name"  value={order.customerName} />
               <Row label="Phone" value={`+91 ${order.customerPhone}`} />
-              <Row label="Email" value={order.customerEmail} mono />
+              {order.customerEmail && order.customerEmail !== 'no-email@example.com' && (
+                <Row label="Email" value={order.customerEmail} mono />
+              )}
               {order.address && <Row label="Address" value={order.address} />}
               {order.pincode && <Row label="Pincode" value={order.pincode} />}
             </section>
@@ -848,7 +887,9 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
             {/* Individual Items Checklist */}
             {localItems.length > 0 && (
               <section style={cardSectionStyle}>
-                <p style={cardSectionTitleStyle}>Items Checklist (Partial Pickup)</p>
+                <p style={cardSectionTitleStyle}>
+                  {order.deliveryMethod === 'home' ? "Items Checklist (Partial Delivery)" : "Items Checklist (Partial Pickup)"}
+                </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
                   {localItems.map((item) => {
                     const wasAlreadyGiven = getOriginalStatus(item.id) === 'picked_up';
@@ -873,7 +914,11 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
                           background: wasAlreadyGiven ? '#f0fdf4' : (item.status === 'picked_up' ? '#eff6ff' : '#fffbeb'),
                           padding: "2px 8px", borderRadius: 99
                         }}>
-                          {wasAlreadyGiven ? 'Already Given' : (item.status === 'picked_up' ? 'To Give' : 'Pending')}
+                          {wasAlreadyGiven 
+                            ? (order.deliveryMethod === 'home' ? 'Already Delivered' : 'Already Given') 
+                            : (item.status === 'picked_up' 
+                               ? (order.deliveryMethod === 'home' ? 'To Deliver' : 'To Give') 
+                               : 'Pending')}
                         </span>
                       </div>
                     );
@@ -881,33 +926,70 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
                 </div>
 
                 {anyNewPickups && (
-                  <div style={{ marginTop: 12, padding: 12, background: "#f8fafc", borderRadius: 8, border: "1px solid #cbd5e1" }}>
-                    <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Enter 6-Digit PIN (From Customer's Invoice)</label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="e.g. 842105"
-                      style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, textAlign: "center", letterSpacing: "0.2em", fontWeight: 700 }}
-                    />
-                    <p style={{ marginTop: 6, fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>
-                      Ask the customer for the PIN printed on their PDF Invoice.
-                    </p>
+                  <div style={{ marginTop: 12, padding: 12, background: "#f8fafc", borderRadius: 8, border: "1px solid #cbd5e1", display: "flex", flexDirection: "column", gap: 10 }}>
+                    {!otpSent ? (
+                      <div>
+                        <p style={{ fontSize: 12, color: "#475569", marginBottom: 8, fontWeight: 500 }}>
+                          {order.deliveryMethod === 'home' 
+                            ? `Verification is required for delivery. Send a 6-digit verification code to the customer's phone (+91 ${order.customerPhone}).` 
+                            : `Verification is required for pickup. Send a 6-digit verification code to the customer's phone (+91 ${order.customerPhone}).`}
+                        </p>
+                        <button
+                          onClick={handleSendOtp}
+                          disabled={updating}
+                          style={{
+                            width: "100%", padding: "8px 12px", borderRadius: 6,
+                            background: "#0f172a", color: "#fff", border: "none", fontSize: 12, fontWeight: 700,
+                            cursor: updating ? "not-allowed" : "pointer"
+                          }}
+                        >
+                          {updating ? "Sending OTP..." : "📲 Send SMS OTP"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Enter 6-Digit SMS OTP</label>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                          placeholder="e.g. 842105"
+                          style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 13, textAlign: "center", letterSpacing: "0.2em", fontWeight: 700, background: "#fff" }}
+                        />
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                          <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500, margin: 0 }}>
+                            OTP has been sent to +91 {order.customerPhone}.
+                          </p>
+                          <button
+                            onClick={handleSendOtp}
+                            disabled={updating}
+                            style={{ background: "none", border: "none", color: "#2563eb", fontSize: 11, fontWeight: 600, cursor: "pointer", padding: 0 }}
+                          >
+                            Resend OTP
+                          </button>
+                        </div>
+                        {devOtpHint && (
+                          <div style={{ marginTop: 8, padding: "6px 10px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 6, fontSize: 11, color: "#b45309", fontWeight: 600 }}>
+                            💡 Dev Mode OTP Hint: <strong style={{ fontFamily: "monospace", fontSize: 12 }}>{devOtpHint}</strong> or master <strong style={{ fontFamily: "monospace", fontSize: 12 }}>123456</strong>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 <button
                   onClick={handleSaveDelivery}
-                  disabled={updating || !hasChanges}
+                  disabled={updating || !hasChanges || (anyNewPickups && !otpSent)}
                   style={{
                     width: "100%", marginTop: 12, padding: "8px 12px", borderRadius: 8,
                     background: "#991b1b", color: "#fff", border: "none", fontSize: 12.5, fontWeight: 700,
-                    cursor: updating || !hasChanges ? "not-allowed" : "pointer",
-                    opacity: updating || !hasChanges ? 0.6 : 1, transition: "opacity 0.15s"
+                    cursor: updating || !hasChanges || (anyNewPickups && !otpSent) ? "not-allowed" : "pointer",
+                    opacity: updating || !hasChanges || (anyNewPickups && !otpSent) ? 0.6 : 1, transition: "opacity 0.15s"
                   }}
                 >
-                  {updating ? "Processing..." : (anyNewPickups ? "Verify PIN & Confirm Pickup" : "Save Delivery Changes")}
+                  {updating ? "Processing..." : (anyNewPickups ? (order.deliveryMethod === 'home' ? "Verify OTP & Confirm Delivery" : "Verify OTP & Confirm Pickup") : "Save Delivery Changes")}
                 </button>
 
 
@@ -961,31 +1043,104 @@ const Row = ({ label, value, mono, bold, red, small }) => (
   </div>
 );
 
-// ─── Stat Card ───────────────────────────────────────────────────────────────
-const StatCard = ({ icon: Icon, label, value, color, loading }) => (
-  <div style={{
-    display: "flex", alignItems: "center", gap: 12,
-    background: "#fff", border: "1px solid #e2e8f0",
-    borderRadius: 12, padding: "14px 16px", boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-  }}>
-    <div style={{ width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, ...iconStyle(color) }}>
-      <Icon size={18} />
-    </div>
-    <div>
-      <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>{label}</p>
-      <p style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", lineHeight: 1.2 }}>
-        {loading ? <span style={{ fontSize: 12, color: "#cbd5e1" }}>—</span> : value}
-      </p>
-    </div>
-  </div>
-);
+// --- Animated Counter and Simple Stat Box Helpers ---------------------------
+const AnimatedCounter = ({ value, duration = 400 }) => {
+  const [count, setCount] = useState(0);
 
-const iconStyle = (c) => ({
-  red:   { background: "#fef2f2", color: "#991b1b" },
-  green: { background: "#f0fdf4", color: "#15803d" },
-  amber: { background: "#fffbeb", color: "#b45309" },
-  blue:  { background: "#eff6ff", color: "#1d4ed8" },
-}[c] || {});
+  useEffect(() => {
+    if (value === undefined || value === null) return;
+    const isCurrency = typeof value === 'string' && value.includes('₹');
+    const numericStr = typeof value === 'string' 
+      ? value.replace(/[^\d]/g, '') 
+      : String(value);
+    const end = parseInt(numericStr, 10);
+    
+    if (isNaN(end) || end === 0) {
+      setCount(value);
+      return;
+    }
+
+    let startTime = null;
+    let animationFrameId = null;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const progressRatio = Math.min(progress / duration, 1);
+      const currentCount = Math.floor(progressRatio * end);
+      
+      if (isCurrency) {
+        setCount(`₹${currentCount.toLocaleString('en-IN')}`);
+      } else {
+        setCount(currentCount);
+      }
+
+      if (progress < duration) {
+        animationFrameId = requestAnimationFrame(animate);
+      } else {
+        setCount(value);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [value, duration]);
+
+  return <span>{count}</span>;
+};
+
+const SimpleStatBox = ({ label, value, color, loading }) => {
+  const borderColors = {
+    blue: "#bfdbfe",
+    green: "#bbf7d0",
+    amber: "#fde68a",
+    purple: "#ddd6fe",
+    gray: "#e2e8f0"
+  };
+  const textColors = {
+    blue: "#1d4ed8",
+    green: "#15803d",
+    amber: "#b45309",
+    purple: "#7c3aed",
+    gray: "#374151"
+  };
+  const bgColors = {
+    blue: "#eff6ff",
+    green: "#f0fdf4",
+    amber: "#fffbeb",
+    purple: "#faf5ff",
+    gray: "#f8fafc"
+  };
+  
+  const borderColor = borderColors[color] || borderColors.gray;
+  const textColor = textColors[color] || textColors.gray;
+  const bgColor = bgColors[color] || bgColors.gray;
+
+  return (
+    <div style={{
+      flex: "1 1 auto",
+      minWidth: "90px",
+      background: bgColor,
+      border: `1.5px solid ${borderColor}`,
+      borderRadius: "8px",
+      padding: "5px 8px",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0px",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.03)"
+    }}>
+      <span style={{ fontSize: "9px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: "1.2" }}>
+        {label}
+      </span>
+      <span style={{ fontSize: "16px", fontWeight: "800", color: textColor, lineHeight: "1.2" }}>
+        {loading ? "—" : <AnimatedCounter value={value} />}
+      </span>
+    </div>
+  );
+};
+
 
 // ─── Sort icon ────────────────────────────────────────────────────────────────
 const SortIcon = ({ col, sortCol, dir }) =>
@@ -999,64 +1154,125 @@ const SortIcon = ({ col, sortCol, dir }) =>
 const ManageOrders = () => {
   const [orders,  setOrders]  = useState([]);
   const [total,   setTotal]   = useState(0);
-  const [stats,   setStats]   = useState({ total: 0, revenue: 0, pending: 0, pickedup: 0 });
+  const [stats,   setStats]   = useState({ total: 0, revenue: 0, pending: 0, confirmed: 0, pickedup: 0, homeDelivery: 0 });
   const [loading, setLoading] = useState(true);
   const [search,  setSearch]  = useState("");
-  const [filter,  setFilter]  = useState("all");
+  const [selectedStatuses, setSelectedStatuses] = useState(["all"]);
+  const [selectedDeliveries, setSelectedDeliveries] = useState(["all"]);
+  const [dateFilter, setDateFilter] = useState("all"); // all, today, yesterday, custom
+  const [customDate, setCustomDate] = useState("");    // YYYY-MM-DD for custom picker
   const [sortCol, setSortCol] = useState("createdAt");
   const [sortDir, setSortDir] = useState("desc");
   const [page,    setPage]    = useState(1);
+  const [allOrdersForStats, setAllOrdersForStats] = useState([]);
+  const [statsLoading, setStatsLoading] = useState(true);
   
   // Modals state
   const [detail,  setDetail]  = useState(null);       // order details modal
   
   const LIMIT = 50;
 
+  const handleStatusToggle = (val) => {
+    setPage(1);
+    if (val === "all") {
+      setSelectedStatuses(["all"]);
+      return;
+    }
+    setSelectedStatuses((prev) => {
+      const withoutAll = prev.filter(x => x !== "all");
+      const exists = withoutAll.includes(val);
+      const next = exists 
+        ? withoutAll.filter(x => x !== val)
+        : [...withoutAll, val];
+      return next.length === 0 ? ["all"] : next;
+    });
+  };
+
+  const handleDeliveryToggle = (val) => {
+    setPage(1);
+    if (val === "all") {
+      setSelectedDeliveries(["all"]);
+      return;
+    }
+    setSelectedDeliveries((prev) => {
+      const withoutAll = prev.filter(x => x !== "all");
+      const exists = withoutAll.includes(val);
+      const next = exists 
+        ? withoutAll.filter(x => x !== val)
+        : [...withoutAll, val];
+      return next.length === 0 ? ["all"] : next;
+    });
+  };
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
-  const fetchOrders = useCallback(async (silent = false) => {
+  const fetchOrders = useCallback(async (silent = false, forceStats = false) => {
     if (!silent) setLoading(true);
     try {
-      const [ordersRes, statsRes] = await Promise.all([
+      const promises = [
         apiClient.get("/orders", {
           params: { 
-            status: ["home", "pickup"].includes(filter) ? undefined : (filter !== "all" ? filter : undefined), 
-            deliveryMethod: ["home", "pickup"].includes(filter) ? filter : undefined,
+            status: selectedStatuses.includes("all") ? undefined : selectedStatuses.join(","), 
+            deliveryMethod: selectedDeliveries.includes("all") ? undefined : selectedDeliveries.join(","),
+            dateFilter,
+            customDate: dateFilter === "custom" ? customDate : undefined,
             search: search || undefined, page, limit: LIMIT 
           },
         }),
         apiClient.get("/orders/stats")
-      ]);
-      const o = ordersRes?.data || ordersRes;
-      const s = statsRes?.data || statsRes;
+      ];
+
+      if (forceStats) {
+        promises.push(apiClient.get("/orders", { params: { limit: 10000 } }));
+      }
+
+      const results = await Promise.all(promises);
+      const o = results[0]?.data || results[0];
+      const s = results[1]?.data || results[1];
       setOrders(o.orders || []);
       setTotal(o.total  || 0);
       setStats({
-        total: s.total || 0,
-        revenue: s.revenue || 0,
-        pending: s.pending || 0,
-        pickedup: s.pickedup || 0
+        total:       s.total    || 0,
+        revenue:     s.revenue  || 0,
+        pending:     s.pending  || 0,
+        confirmed:   s.confirmed || 0,
+        pickedup:    s.pickedup || 0,
+        homeDelivery: s.homeDelivery || 0,
       });
+
+      if (forceStats && results[2]) {
+        const fullOrders = results[2]?.data?.orders || results[2]?.orders || [];
+        setAllOrdersForStats(fullOrders);
+        setStatsLoading(false);
+      }
     } catch {
       if (!silent) toast.error("⚠️ Failed to load orders");
     } finally {
       setLoading(false);
     }
-  }, [filter, search, page]);
+  }, [selectedStatuses, selectedDeliveries, dateFilter, customDate, search, page]);
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useEffect(() => {
+    fetchOrders(false, allOrdersForStats.length === 0);
+  }, [fetchOrders, allOrdersForStats.length]);
 
-  // ── Sort and filter (client-side on current page for delivery fallback) ──
+  // ── Sort (all filters are now applied server-side) ──
   const sorted = [...orders]
-    .filter(o => {
-      if (filter === "home") return o.deliveryMethod === "home";
-      if (filter === "pickup") return o.deliveryMethod === "pickup" || !o.deliveryMethod;
-      return true;
-    })
     .sort((a, b) => {
       let av = a[sortCol] ?? "", bv = b[sortCol] ?? "";
       if (typeof av === "string") { av = av.toLowerCase(); bv = bv.toLowerCase(); }
       return av < bv ? (sortDir === "asc" ? -1 : 1) : av > bv ? (sortDir === "asc" ? 1 : -1) : 0;
     });
+
+  // Breakdown by delivery type
+  const homeOrders   = allOrdersForStats.filter(o => o.deliveryMethod === "home");
+  const pickupOrders = allOrdersForStats.filter(o => o.deliveryMethod !== "home");
+  const homePending   = homeOrders.filter(o => o.status === "pending").length;
+  const homeConfirmed = homeOrders.filter(o => o.status === "confirmed").length;
+  const homePickedUp  = homeOrders.filter(o => o.status === "picked_up" || o.status === "partially_picked_up").length;
+  const pickupPending   = pickupOrders.filter(o => o.status === "pending").length;
+  const pickupConfirmed = pickupOrders.filter(o => o.status === "confirmed").length;
+  const pickupPickedUp  = pickupOrders.filter(o => o.status === "picked_up" || o.status === "partially_picked_up").length;
+  const fmt = (n) => `₹${n.toLocaleString("en-IN")}`;
 
   const onSort = (col) => {
     if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -1071,15 +1287,23 @@ const ManageOrders = () => {
       ...(notes !== undefined ? { notes } : {}),
       ...(items !== undefined ? { items } : {})
     } : o));
-    // Load updated stats
-    apiClient.get("/orders/stats").then(res => {
-      const s = res?.data || res;
+    // Load updated stats and full stats orders list
+    Promise.all([
+      apiClient.get("/orders/stats"),
+      apiClient.get("/orders", { params: { limit: 10000 } })
+    ]).then(([resStats, resOrders]) => {
+      const s = resStats?.data || resStats;
       setStats({
-        total: s.total || 0,
-        revenue: s.revenue || 0,
-        pending: s.pending || 0,
-        pickedup: s.pickedup || 0
+        total:       s.total    || 0,
+        revenue:     s.revenue  || 0,
+        pending:     s.pending  || 0,
+        confirmed:   s.confirmed || 0,
+        pickedup:    s.pickedup || 0,
+        homeDelivery: s.homeDelivery || 0,
       });
+      const fullOrders = resOrders?.data?.orders || resOrders?.orders || [];
+      setAllOrdersForStats(fullOrders);
+      setStatsLoading(false);
     }).catch(() => {});
   };
 
@@ -1091,7 +1315,12 @@ const ManageOrders = () => {
       o.customerName, o.customerPhone, o.customerEmail,
       o.productName, o.size, o.quantity, o.totalAmount,
       PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod,
-      o.paymentId || "", o.status
+      o.paymentId || "",
+      o.deliveryMethod === 'home' && o.status === 'picked_up' 
+        ? 'Delivered' 
+        : o.deliveryMethod === 'home' && o.status === 'partially_picked_up' 
+        ? 'Partially Delivered' 
+        : STATUS_CFG[o.status]?.label || o.status
     ]);
     const csv = [H, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
     const a = Object.assign(document.createElement("a"), {
@@ -1127,124 +1356,135 @@ const ManageOrders = () => {
         .order-row:hover { background: #f8fafc !important; }
       `}</style>
 
-      {/* Page title */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <h1 className="a-page-title">Order Management Dashboard</h1>
-          <p style={{ fontSize: 13, color: "var(--a-muted)", marginTop: 3 }}>Manage merchandise orders and track payments</p>
+          <h1 className="a-page-title" style={{ margin: 0 }}>Order Management</h1>
+          <p style={{ fontSize: 12.5, color: "#64748b", marginTop: 2 }}>Live breakdown across all merchandise orders</p>
         </div>
-        <button
-          onClick={() => fetchOrders()}
-          className="orders-reload"
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "8px 14px", borderRadius: 8,
-            background: "#fef2f2", border: "1.5px solid #fecaca",
-            fontSize: 12.5, fontWeight: 700, color: "#991b1b",
-            cursor: "pointer", transition: "background .15s",
-          }}
-        >
-          <RefreshCw size={13} style={{ animation: loading ? "spin .7s linear infinite" : "none" }} />
-          Reload Orders
-        </button>
-      </div>
-
-      {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
-        <StatCard icon={ShoppingBag}  label="Total Orders"  value={stats.total}    color="red"   loading={loading} />
-        <StatCard icon={IndianRupee}  label="Revenue"       value={`₹${stats.revenue.toLocaleString("en-IN")}`} color="green" loading={loading} />
-        <StatCard icon={Clock}        label="Pending Orders" value={stats.pending}  color="amber" loading={loading} />
-        <StatCard icon={PackageCheck} label="Picked Up / Shipped" value={stats.pickedup} color="blue"  loading={loading} />
-      </div>
-
-      {/* Filter bar */}
-      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "12px 14px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-          {/* Search */}
-          <div style={{ position: "relative", flex: "1 1 220px" }}>
-            <Search size={14} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-            <input
-              type="text"
-              placeholder="Search name, phone, email, order no, address…"
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
-              style={{
-                width: "100%", paddingLeft: 33, paddingRight: 12, paddingTop: 8, paddingBottom: 8,
-                border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 13,
-                outline: "none", boxSizing: "border-box",
-                transition: "border-color .15s",
-              }}
-              onFocus={e => e.target.style.borderColor = "#991b1b"}
-              onBlur={e  => e.target.style.borderColor = "#e2e8f0"}
-            />
-          </div>
-
-          {/* Status pills */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {STATUSES.map(s => {
-              const cfg = STATUS_CFG[s.value];
-              const active = filter === s.value;
-              return (
-                <button
-                  key={s.value}
-                  className="filter-pill"
-                  onClick={() => { setFilter(s.value); setPage(1); }}
-                  style={{
-                    padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-                    border: "none", cursor: "pointer", transition: "all .15s",
-                    background: active ? "#991b1b" : (cfg ? cfg.bg : "#f1f5f9"),
-                    color: active ? "#fff" : (cfg ? cfg.text : "#64748b"),
-                  }}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
-            
-            <div style={{ width: 1, height: 20, background: "#cbd5e1", margin: "0 4px" }} />
-            
-            <button
-              className="filter-pill"
-              onClick={() => { setFilter("home"); setPage(1); }}
-              style={{
-                padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-                border: "none", cursor: "pointer", transition: "all .15s",
-                background: filter === "home" ? "#991b1b" : "#f1f5f9",
-                color: filter === "home" ? "#fff" : "#64748b",
-              }}
-            >
-              Home Delivery
-            </button>
-            <button
-              className="filter-pill"
-              onClick={() => { setFilter("pickup"); setPage(1); }}
-              style={{
-                padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 600,
-                border: "none", cursor: "pointer", transition: "all .15s",
-                background: filter === "pickup" ? "#991b1b" : "#f1f5f9",
-                color: filter === "pickup" ? "#fff" : "#64748b",
-              }}
-            >
-              Pickup
-            </button>
-          </div>
-
-          {/* CSV */}
-          <button
-            onClick={exportCSV}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "8px 13px", borderRadius: 8,
-              background: "#0f172a", border: "none",
-              fontSize: 12, fontWeight: 600, color: "#fff",
-              cursor: "pointer", transition: "opacity .15s", marginLeft: "auto",
-            }}
-          >
-            <Download size={13} /> Export CSV
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={exportCSV} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 8, background: "#0f172a", border: "none", fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+            <Download size={12}/> Export CSV
+          </button>
+          <button onClick={() => fetchOrders(false, true)} className="orders-reload" style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 8, background: "#fef2f2", border: "1.5px solid #fecaca", fontSize: 12, fontWeight: 700, color: "#991b1b", cursor: "pointer" }}>
+            <RefreshCw size={12} style={{ animation: loading ? "spin .7s linear infinite" : "none" }}/> Reload
           </button>
         </div>
       </div>
 
+      {/* Summary grid of simple boxes (Single line, scrollable if overflowing) */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "nowrap", overflowX: "auto", paddingBottom: "6px", marginBottom: "4px" }}>
+        <SimpleStatBox label="Total Orders" value={stats.total} color="gray" loading={statsLoading} />
+        <SimpleStatBox label="Total Revenue" value={fmt(stats.revenue)} color="green" loading={statsLoading} />
+        
+        <SimpleStatBox label="Home: Total" value={homeOrders.length} color="blue" loading={statsLoading} />
+        <SimpleStatBox label="Home: Pending" value={homePending} color="amber" loading={statsLoading} />
+        <SimpleStatBox label="Home: Confirmed" value={homeConfirmed} color="blue" loading={statsLoading} />
+        <SimpleStatBox label="Home: Delivered" value={homePickedUp} color="green" loading={statsLoading} />
+
+        <SimpleStatBox label="Pickup: Total" value={pickupOrders.length} color="purple" loading={statsLoading} />
+        <SimpleStatBox label="Pickup: Pending" value={pickupPending} color="amber" loading={statsLoading} />
+        <SimpleStatBox label="Pickup: Confirmed" value={pickupConfirmed} color="blue" loading={statsLoading} />
+        <SimpleStatBox label="Pickup: Picked Up" value={pickupPickedUp} color="green" loading={statsLoading} />
+      </div>
+
+      {/* Filter panel (All items in one single line, scrollable) */}
+      <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "8px 12px", boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "nowrap", overflowX: "auto", paddingBottom: "2px" }}>
+          
+          {/* Search box */}
+          <div style={{ position: "relative", flex: "0 0 200px", minWidth: "150px" }}>
+            <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+            <input type="text" placeholder="Search name, phone..." value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              style={{ width: "100%", paddingLeft: 28, paddingRight: 10, paddingTop: 6, paddingBottom: 6,
+                border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 12, outline: "none",
+                boxSizing: "border-box", background: "#f8fafc", transition: "border-color .15s" }}
+              onFocus={e => { e.target.style.borderColor = "#991b1b"; e.target.style.background = "#fff"; }}
+              onBlur={e  => { e.target.style.borderColor = "#e2e8f0"; e.target.style.background = "#f8fafc"; }}
+            />
+          </div>
+
+          <div style={{ width: 1, height: 18, background: "#cbd5e1", flexShrink: 0 }} />
+
+          {/* Status filters */}
+          <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
+            <span style={{ fontSize: "9px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".05em", marginRight: "2px" }}>Status</span>
+            {STATUSES.map(s => {
+              const cfg = STATUS_CFG[s.value];
+              const active = selectedStatuses.includes(s.value);
+              return (
+                <button key={s.value} className="filter-pill" onClick={() => handleStatusToggle(s.value)}
+                  style={{ padding: "3px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600,
+                    border: active ? "none" : "1.5px solid #e8e8e8", cursor: "pointer",
+                    background: active ? "#991b1b" : (cfg ? cfg.bg : "#f8fafc"),
+                    color: active ? "#fff" : (cfg ? cfg.text : "#64748b"),
+                    boxShadow: active ? "0 2px 4px rgba(153,27,27,.2)" : "none" }}>{s.label}</button>
+              );
+            })}
+          </div>
+
+          <div style={{ width: 1, height: 18, background: "#cbd5e1", flexShrink: 0 }} />
+
+          {/* Delivery filters */}
+          <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
+            <span style={{ fontSize: "9px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".05em", marginRight: "2px" }}>Delivery</span>
+            {[
+              { v: "all", l: "All Delivery" },
+              { v: "home", l: "🏠 Home" },
+              { v: "pickup", l: "🏪 Pickup" }
+            ].map(d => {
+              const active = selectedDeliveries.includes(d.v);
+              return (
+                <button key={d.v} className="filter-pill" onClick={() => handleDeliveryToggle(d.v)}
+                  style={{ padding: "3px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600,
+                    border: active ? "none" : "1.5px solid #e8e8e8", cursor: "pointer",
+                    background: active ? "#991b1b" : "#f8fafc",
+                    color: active ? "#fff" : "#475569",
+                    boxShadow: active ? "0 2px 4px rgba(153,27,27,.2)" : "none" }}>{d.l}</button>
+              );
+            })}
+          </div>
+
+          <div style={{ width: 1, height: 18, background: "#cbd5e1", flexShrink: 0 }} />
+
+          {/* Date filters */}
+          <div style={{ display: "flex", gap: "4px", flexShrink: 0, alignItems: "center" }}>
+            <span style={{ fontSize: "9px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".05em", marginRight: "2px" }}>Date</span>
+            {[{ v: "all", l: "All" }, { v: "today", l: "Today" }, { v: "yesterday", l: "Yesterday" }].map(d => (
+              <button key={d.v} className="filter-pill" onClick={() => { setDateFilter(d.v); setCustomDate(""); setPage(1); }}
+                style={{ padding: "3px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600,
+                  border: dateFilter === d.v && !customDate ? "none" : "1.5px solid #e8e8e8", cursor: "pointer",
+                  background: dateFilter === d.v && !customDate ? "#0f172a" : "#f8fafc",
+                  color: dateFilter === d.v && !customDate ? "#fff" : "#475569" }}>{d.l}</button>
+            ))}
+          </div>
+
+          {/* Custom Date Pick */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 4, flexShrink: 0,
+            background: customDate ? "#f0f9ff" : "#f8fafc",
+            border: `1.5px solid ${customDate ? "#38bdf8" : "#e2e8f0"}`,
+            borderRadius: 8, padding: "2px 8px",
+          }}>
+            <input type="date" value={customDate} max={new Date().toISOString().slice(0,10)}
+              onChange={e => { setCustomDate(e.target.value); setDateFilter("custom"); setPage(1); }}
+              style={{ border: "none", background: "transparent", outline: "none", fontSize: 11, fontWeight: 600, color: "#0f172a", cursor: "pointer" }}
+            />
+            {customDate && (
+              <button onClick={() => { setCustomDate(""); setDateFilter("all"); }}
+                style={{ border: "none", background: "none", cursor: "pointer", color: "#94a3b8", padding: 0, display: "flex" }}>
+                <X size={11} />
+              </button>
+            )}
+          </div>
+
+          <span style={{ fontSize: 11, color: "#94a3b8", whiteSpace: "nowrap", marginLeft: "auto", marginRight: "4px" }}>
+            {sorted.length} Order{sorted.length !== 1 ? "s" : ""}
+          </span>
+
+        </div>
+      </div>
       {/* DataTable */}
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
@@ -1352,7 +1592,7 @@ const ManageOrders = () => {
 
                       {/* Status */}
                       <td style={{ padding: "12px 14px" }}>
-                        <StatusBadge status={order.status} />
+                        <StatusBadge status={order.status} deliveryMethod={order.deliveryMethod} />
                       </td>
 
                       {/* Actions */}

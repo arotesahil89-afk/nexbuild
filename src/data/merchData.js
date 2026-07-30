@@ -5,8 +5,7 @@ export const products = [
   {
     id: "mr-polo-2025",
     type: "polo",
-    price: 300,
-    oldPrice: 500,
+    price: 330,
     sizes: ["Standard"],
     stock: { "Standard": 0 },
     rating: 4.8,

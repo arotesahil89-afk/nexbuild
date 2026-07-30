@@ -1,25 +1,28 @@
 import React, { useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import apiClient from "../../services/apiService";
+import { useAdmin, canAccess } from "./adminContext";
 import "./admin.css";
 import {
   LayoutDashboard, Award, CalendarDays, ShoppingBag,
   LogOut, Menu, User, ChevronRight, Shield, Truck, Shirt,
 } from "lucide-react";
 
-// ─── Nav items definition ───────────────────────────────────────────────────
+// ─── Nav items definition (section keys drive role gating) ──────────────────
 const NAV = [
-  { to: "/admin",          end: true,  icon: LayoutDashboard, label: "Dashboard"    },
-  { to: "/admin/orders",              icon: ShoppingBag,      label: "Orders"       },
-  { to: "/admin/merchandise",         icon: Shirt,            label: "Merchandise"  },
-  { to: "/admin/awards",              icon: Award,            label: "Awards"       },
-  { to: "/admin/events",              icon: CalendarDays,     label: "Events"       },
-  { to: "/admin/users",               icon: Shield,           label: "User Master"  },
-  { to: "/admin/profile",             icon: User,             label: "Profile"      },
+  { to: "/admin",          end: true,  icon: LayoutDashboard, label: "Dashboard",   section: "dashboard"   },
+  { to: "/admin/orders",              icon: ShoppingBag,      label: "Orders",      section: "orders"      },
+  { to: "/admin/merchandise",         icon: Shirt,            label: "Merchandise", section: "merchandise" },
+  { to: "/admin/awards",              icon: Award,            label: "Awards",      section: "awards"      },
+  { to: "/admin/events",              icon: CalendarDays,     label: "Events",      section: "events"      },
+  { to: "/admin/users",               icon: Shield,           label: "User Master", section: "users"       },
+  { to: "/admin/profile",             icon: User,             label: "Profile",     section: "profile"     },
 ];
 
 // ─── Sidebar ────────────────────────────────────────────────────────────────
 const Sidebar = ({ open, onClose }) => {
+  const { role } = useAdmin();
+  const items = NAV.filter((n) => canAccess(n.section, role));
 
   return (
     <>
@@ -67,7 +70,7 @@ const Sidebar = ({ open, onClose }) => {
           <p style={{ color: "#57534e", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".08em", padding: "0 8px", marginBottom: 6 }}>
             Menu
           </p>
-          {NAV.map(({ to, end, icon: Icon, label }) => (
+          {items.map(({ to, end, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -96,6 +99,7 @@ const Sidebar = ({ open, onClose }) => {
 const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { profile } = useAdmin();
   const [loggingOut, setLoggingOut] = useState(false);
 
   // Build breadcrumb from path
@@ -173,7 +177,14 @@ const Header = ({ onMenuClick }) => {
           }}>
             <User size={15} color="#fff" />
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }} className="hide-xs">Admin</span>
+          <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }} className="hide-xs">
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", textTransform: "capitalize" }}>
+              {profile?.name || profile?.email?.split("@")[0] || "Admin"}
+            </span>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--a-primary)" }}>
+              {profile?.role || "admin"}
+            </span>
+          </span>
         </NavLink>
 
         <button

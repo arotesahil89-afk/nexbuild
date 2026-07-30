@@ -377,11 +377,7 @@ const MerchandisePage = () => {
 
             <div className="grid grid-cols-3 gap-1.5">
               {(() => {
-                const defaultApparel = ["18", "20", "22", "24", "26", "28", "30", "32", "34", "36", "38", "40", "42", "44", "46", "48", "50", "52"];
-                const hasApparelSizes = product.sizes.some(s => defaultApparel.includes(s));
-                const sizesToRender = hasApparelSizes
-                  ? [...defaultApparel, ...product.sizes.filter(s => !defaultApparel.includes(s))]
-                  : product.sizes;
+                const sizesToRender = ["18", "20", "22", "24", "26", "28", "30", "32", "34", "36", "38", "40", "42", "44", "46", "48", "50", "52"];
                 
                 return sizesToRender.map((s) => {
                   const sizeQty = selectQty[s] || 0;

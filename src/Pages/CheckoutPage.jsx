@@ -3,13 +3,14 @@ import { useParams, useNavigate, useSearchParams, useLocation, Link } from "reac
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, User, Mail, Phone, MapPin, ShieldCheck,
-  ChevronRight, HelpCircle, RefreshCw, ShoppingBag, Store, Lock, CheckCircle2, Download
+  ChevronRight, HelpCircle, RefreshCw, ShoppingBag, Store, Lock, CheckCircle2, Download, X
 } from "lucide-react";
 import { loadRazorpay, openRazorpayCheckout } from "../utils/loadRazorpay";
 import apiClient from "../services/apiService";
 import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 // import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 import { jsPDF } from "jspdf";
+import { downloadMarathiReceipt } from "../utils/marathiReceipt";
 
 const Confetti = () => {
   const [show, setShow] = useState(true);
@@ -140,6 +141,10 @@ const CheckoutPage = () => {
 
   const [step, setStep] = useState("idle"); // idle, redirecting, cod-confirm, success
   const [payMode, setPayMode] = useState("online");
+  const [payGateway, setPayGateway] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("gateway") === "razorpay" ? "razorpay" : "ccavenue";
+  }); // ccavenue (primary), razorpay (backup)
   const [deliveryMethod, setDeliveryMethod] = useState("pickup"); // pickup, home
   const [progress, setProgress] = useState(0);
   const [payData, setPayData] = useState(null);
@@ -155,6 +160,71 @@ const CheckoutPage = () => {
 
   // Parse items from search params: ?items=L:2,M:1
   useEffect(() => {
+    const statusParam = searchParams.get("status");
+    if (statusParam === "success" && products.length > 0) {
+      const orderNo = searchParams.get("orderNo");
+      const amount = parseFloat(searchParams.get("amount")) || 0;
+      const txnId = searchParams.get("txnId");
+      const deliveryMethodParam = searchParams.get("deliveryMethod") || "pickup";
+      const customerName = searchParams.get("customerName") || "";
+      const customerPhone = searchParams.get("customerPhone") || "";
+      const customerEmail = searchParams.get("customerEmail") || "";
+      const sizeStr = searchParams.get("size") || "";
+      const quantityVal = parseInt(searchParams.get("quantity")) || 1;
+      const otpCodeParam = searchParams.get("otpCode") || "";
+
+      // Reconstruct items from size string: "L: 2, M: 1"
+      const parsedItems = [];
+      if (sizeStr) {
+        const parts = sizeStr.split(',').map(p => p.trim());
+        parts.forEach(part => {
+          const match = part.match(/^([^:]+):\s*(\d+)$/);
+          if (match) {
+            parsedItems.push({ size: match[1].trim(), qty: parseInt(match[2].trim()) || 1 });
+          } else {
+            parsedItems.push({ size: sizeStr, qty: quantityVal });
+          }
+        });
+      }
+
+      const found = products.find(p => getProductSlug(p) === slug || p.id === slug);
+      if (found) {
+        setProduct(found);
+      }
+
+      setCreatedOrder({
+        orderNo,
+        customerName,
+        customerPhone,
+        customerEmail,
+        size: sizeStr,
+        quantity: quantityVal,
+        otpCode: otpCodeParam || null
+      });
+      setPayData({
+        method: "ccavenue",
+        amount,
+        txnId,
+        deliveryMethod: deliveryMethodParam
+      });
+      setPaidAmount(amount);
+      setItems(parsedItems);
+      setDeliveryMethod(deliveryMethodParam);
+      setForm({
+        name: customerName,
+        phone: customerPhone,
+        email: customerEmail,
+        pincode: "",
+        address: ""
+      });
+      setStep("success");
+      return;
+    } else if (statusParam === "failure") {
+      const message = searchParams.get("message") || "Payment was unsuccessful";
+      setPageAlert({ type: "error", text: `Payment failed: ${message}` });
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+
     if (products.length > 0) {
       const found = products.find(p => getProductSlug(p) === slug || p.id === slug);
       if (found) {
@@ -203,8 +273,21 @@ const CheckoutPage = () => {
   const formatPhone = (e) =>
     setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }));
 
+  const MAX_ORDER_QTY = 100; // must match backend createOrderSchema (quantity.max)
+
   const validate = () => {
     const e = {};
+
+    // Block orders above the per-order limit BEFORE payment, so the customer
+    // is never charged for an order the backend would reject (400).
+    const qtyNow = items.reduce((sum, it) => sum + it.qty, 0);
+    if (qtyNow > MAX_ORDER_QTY) {
+      setPageAlert({
+        type: "error",
+        text: `Maximum ${MAX_ORDER_QTY} pieces per order. Please reduce the quantity (currently ${qtyNow}) or place a second order.`,
+      });
+      return false;
+    }
     if (!form.name.trim() || form.name.trim().length < 2)
       e.name = "Please enter your name";
     if (form.email && form.email.trim() !== "" && !/^\S+@\S+\.\S+$/.test(form.email))
@@ -233,6 +316,7 @@ const CheckoutPage = () => {
         pincode:       form.pincode,
         shippingCharge:0,
         deliveryMethod:deliveryMethod,
+        productId:     product.id,
         productName:   productName,
         size:          sizeSummary,
         quantity:      totalQty,
@@ -298,11 +382,86 @@ const CheckoutPage = () => {
   const handlePayOnline = () => {
     if (validate()) {
       setPayMode("online");
+      const currentQty = items.reduce((sum, item) => sum + item.qty, 0);
+      const currentSubtotal = (product?.price || 0) * currentQty;
       const deliveryCharge = 0;
-      const baseTotal = subtotal + deliveryCharge;
+      const baseTotal = currentSubtotal + deliveryCharge;
       const fee = computeFee("online", baseTotal, true);
       const total = baseTotal + fee;
       startOnlinePayment(total);
+    }
+  };
+
+  const handlePayCCAvenue = async () => {
+    if (validate()) {
+      setPayMode("ccavenue");
+      setStep("redirecting");
+      setProgress(0);
+
+      let p = 0;
+      const iv = setInterval(() => {
+        p += Math.random() * 15 + 10;
+        setProgress(Math.min(p, 90));
+      }, 100);
+
+      try {
+        const currentQty = items.reduce((sum, item) => sum + item.qty, 0);
+        const currentSubtotal = (product?.price || 0) * currentQty;
+        const sizeSummary = items.map(item => `${item.size}: ${item.qty}`).join(", ");
+        const deliveryCharge = 0;
+        const baseTotal = currentSubtotal + deliveryCharge;
+        const fee = computeFee("online", baseTotal, true);
+        const finalTotal = baseTotal + fee;
+
+        const res = await apiClient.post('/orders/ccavenue-initiate', {
+          customerName:  form.name,
+          customerEmail: form.email || "no-email@example.com",
+          customerPhone: form.phone,
+          address:       form.address || "",
+          pincode:       form.pincode || "",
+          shippingCharge:0,
+          deliveryMethod:deliveryMethod,
+          productId:     product.id,
+          productName:   productName,
+          size:          sizeSummary,
+          quantity:      currentQty,
+          unitPrice:     product?.price || 0,
+          totalAmount:   finalTotal,
+          paymentMethod: 'ccavenue',
+        });
+
+        clearInterval(iv);
+        setProgress(100);
+
+        if (res.success && res.encRequest && res.accessCode && res.actionUrl) {
+          const formEl = document.createElement("form");
+          formEl.method = "POST";
+          formEl.action = res.actionUrl;
+
+          const encRequestInput = document.createElement("input");
+          encRequestInput.type = "hidden";
+          encRequestInput.name = "encRequest";
+          encRequestInput.value = res.encRequest;
+          formEl.appendChild(encRequestInput);
+
+          const accessCodeInput = document.createElement("input");
+          accessCodeInput.type = "hidden";
+          accessCodeInput.name = "access_code";
+          accessCodeInput.value = res.accessCode;
+          formEl.appendChild(accessCodeInput);
+
+          document.body.appendChild(formEl);
+          formEl.submit();
+        } else {
+          setStep("idle");
+          setPageAlert({ type: "error", text: "Failed to initiate payment. Please try again." });
+        }
+      } catch (err) {
+        clearInterval(iv);
+        setStep("idle");
+        console.error("CCAvenue initiation failed:", err);
+        setPageAlert({ type: "error", text: err.message || "Failed to connect to gateway. Please try again." });
+      }
     }
   };
 
@@ -465,7 +624,9 @@ const CheckoutPage = () => {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9.5);
         doc.setTextColor(...DARK);
-        doc.text("Razorpay Online (UPI/Card)", RC, rcY + 5.5);
+        const paymentLabel = payData?.method === "ccavenue" ? "CCAvenue Online (UPI/Card/Netbanking)" :
+                             payData?.method === "pickup" ? "Pay at Pickup (Cash)" : "Razorpay Online (UPI/Card)";
+        doc.text(paymentLabel, RC, rcY + 5.5);
 
         rcY += 13;
         doc.setFont("helvetica", "bold");
@@ -857,6 +1018,21 @@ const CheckoutPage = () => {
               >
                 <Download size={16} /> Download Invoice
               </button>
+              <button
+                onClick={() =>
+                  downloadMarathiReceipt({
+                    receiptNo: payData.orderNo?.replace(/\D/g, "").slice(-4) || "1",
+                    customerName: payData.customerName || form.name || "",
+                    amount: subtotal,
+                    txnId: payData.txnId || payData.razorpay_payment_id || "",
+                    productName: productName || "शतक महोत्सवी निधीकरिता",
+                    quantity: payData.quantity || 1,
+                  })
+                }
+                className="w-full sm:flex-1 bg-red-50 hover:bg-red-100 border border-red-200 font-bold py-3.5 px-6 rounded-2xl transition text-red-900 text-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download size={16} /> पावती डाउनलोड करा
+              </button>
               <Link
                 to="/merchandise"
                 className="w-full sm:flex-1 bg-[#B91C1C] hover:bg-red-800 border-2 border-transparent font-bold py-3.5 px-6 rounded-2xl transition text-white text-sm flex items-center justify-center shadow-md shadow-red-100"
@@ -949,6 +1125,8 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
+
+
               {deliveryMethod === "home" && (
                 <>
                   <div className="mb-4">
@@ -1004,14 +1182,16 @@ const CheckoutPage = () => {
                 <div className="flex flex-col gap-4">
                   {/* Pay Online Button */}
                   <button
-                    onClick={handlePayOnline}
+                    onClick={payGateway === "ccavenue" ? handlePayCCAvenue : handlePayOnline}
                     className="w-full font-bold py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 text-sm text-white bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 shadow-red-100 cursor-pointer"
                   >
                     <Lock size={15} /> {deliveryMethod === "pickup" ? "Pay Online & Collect from Mandal" : "Pay Online & Request Home Delivery"}
                   </button>
                 </div>
                 <p className="text-center text-[10px] text-gray-400 font-semibold">
-                  🔒 Secured by Razorpay · PCI-DSS Compliant
+                  {payGateway === "ccavenue" 
+                    ? "🔒 Secured by CCAvenue · PCI-DSS Compliant"
+                    : "🔒 Secured by Razorpay · PCI-DSS Compliant"}
                 </p>
               </div>
             )}
