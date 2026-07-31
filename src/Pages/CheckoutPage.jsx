@@ -201,11 +201,26 @@ const CheckoutPage = () => {
         quantity: quantityVal,
         otpCode: otpCodeParam || null
       });
+      const bankRefNo = searchParams.get("bankRefNo") || "";
+      const paymentMode = searchParams.get("paymentMode") || "";
+      const cardName = searchParams.get("cardName") || "";
+      const orderStatus = searchParams.get("orderStatus") || "Success";
+
       setPayData({
         method: "ccavenue",
         amount,
         txnId,
-        deliveryMethod: deliveryMethodParam
+        orderNo,
+        bankRefNo,
+        paymentMode,
+        cardName,
+        orderStatus,
+        deliveryMethod: deliveryMethodParam,
+        customerName,
+        customerPhone,
+        customerEmail,
+        size: sizeStr,
+        quantity: quantityVal
       });
       setPaidAmount(amount);
       setItems(parsedItems);
@@ -434,6 +449,30 @@ const CheckoutPage = () => {
         setProgress(100);
 
         if (res.success && res.encRequest && res.accessCode && res.actionUrl) {
+          try {
+            sessionStorage.setItem("ccavenue_last_request", JSON.stringify({
+              actionUrl: res.actionUrl,
+              accessCode: res.accessCode,
+              encRequest: res.encRequest,
+              requestParams: res.requestParams || "",
+              sentData: {
+                customerName: form.name,
+                customerPhone: form.phone,
+                customerEmail: form.email,
+                deliveryMethod: deliveryMethod,
+                productId: product.id,
+                productName: productName,
+                size: sizeSummary,
+                quantity: currentQty,
+                unitPrice: product?.price || 0,
+                totalAmount: finalTotal,
+                paymentMethod: 'ccavenue',
+              }
+            }));
+          } catch (e) {
+            console.error("Failed to save ccavenue_last_request to sessionStorage:", e);
+          }
+
           const formEl = document.createElement("form");
           formEl.method = "POST";
           formEl.action = res.actionUrl;
@@ -858,18 +897,30 @@ const CheckoutPage = () => {
     }
   };
 
+  const handleDownloadPavati = () => {
+    downloadMarathiReceipt({
+      receiptNo: (payData?.orderNo || createdOrder?.orderNo)?.replace(/\D/g, "").slice(-4) || "1",
+      customerName: payData?.customerName || createdOrder?.customerName || form.name || "",
+      amount: subtotal,
+      txnId: payData?.txnId || payData?.razorpay_payment_id || "",
+      productName: productName || "शतक महोत्सवी निधीकरिता",
+      quantity: payData?.quantity || createdOrder?.quantity || 1,
+    });
+  };
+
   useEffect(() => {
-    if (step === "success" && payData && product && createdOrder) {
+    if (step === "success" && payData && product) {
       if (hasDownloadedRef.current) return;
       hasDownloadedRef.current = true;
       const timer = setTimeout(() => {
-        downloadInvoice();
+        // downloadInvoice(); // English invoice auto-download commented out
+        handleDownloadPavati(); // Auto-download Marathi Pavati on success
       }, 1000);
       return () => clearTimeout(timer);
     } else if (step !== "success") {
       hasDownloadedRef.current = false;
     }
-  }, [step, payData, product, createdOrder]);
+  }, [step, payData, product]);
 
   if (loading || !product || items.length === 0) {
     return (
@@ -959,7 +1010,7 @@ const CheckoutPage = () => {
               Ganpati Bappa Morya! 🙏
             </p>
             <p className="text-gray-500 text-sm mt-3 leading-relaxed">
-              Thank you for purchasing! Your official invoice has been downloaded. Please refer to the collection or delivery details shown below.
+              Thank you for purchasing! Your official Pavati (पावती) has been downloaded. Please refer to the collection or delivery details shown below.
             </p>
 
             {payData.deliveryMethod === "home" ? (
@@ -1007,28 +1058,23 @@ const CheckoutPage = () => {
               </div>
               <div className="flex justify-between text-sm pt-1.5 border-t border-dashed border-amber-200">
                 <span className="text-gray-950 font-bold">Total Amount</span>
-                <span className="font-black text-xl text-[#B91C1C]">₹{fmtINR(paidAmount)}</span>
+                <span className="font-black text-xl text-[#B91C1C]">
+                  ₹{fmtINR(subtotal + computeFee(payData.method, subtotal, true))}
+                </span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
+              {/* English Download Invoice button — commented out
               <button
                 onClick={downloadInvoice}
                 className="w-full sm:flex-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 font-bold py-3.5 px-6 rounded-2xl transition text-amber-900 text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download size={16} /> Download Invoice
               </button>
+              */}
               <button
-                onClick={() =>
-                  downloadMarathiReceipt({
-                    receiptNo: payData.orderNo?.replace(/\D/g, "").slice(-4) || "1",
-                    customerName: payData.customerName || form.name || "",
-                    amount: subtotal,
-                    txnId: payData.txnId || payData.razorpay_payment_id || "",
-                    productName: productName || "शतक महोत्सवी निधीकरिता",
-                    quantity: payData.quantity || 1,
-                  })
-                }
+                onClick={handleDownloadPavati}
                 className="w-full sm:flex-1 bg-red-50 hover:bg-red-100 border border-red-200 font-bold py-3.5 px-6 rounded-2xl transition text-red-900 text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download size={16} /> पावती डाउनलोड करा
@@ -1039,6 +1085,66 @@ const CheckoutPage = () => {
               >
                 Browse More Products
               </Link>
+            </div>
+
+            {/* Technical CCAvenue Payload & Callback Response Details for Tech Support */}
+            <div className="mt-8 text-left bg-slate-950 text-slate-100 rounded-2xl p-5 border border-slate-800 text-xs font-mono shadow-inner">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
+                <span className="font-bold text-amber-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  ⚙️ CCAvenue Payload & Callback Logs (For Technical Team)
+                </span>
+                <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                  {payData.orderStatus || "SUCCESS"}
+                </span>
+              </div>
+
+              {/* 1. Initiated Request Payload (Sent to CCAvenue Gateway) */}
+              <div className="mb-4">
+                <div className="text-slate-400 font-bold mb-1.5 text-[11px] uppercase tracking-wide flex justify-between">
+                  <span>1. Sent Request Payload (POST to CCAvenue):</span>
+                  <span className="text-slate-500 font-normal">action: initiateTransaction</span>
+                </div>
+                <pre className="bg-slate-900 p-3.5 rounded-xl overflow-x-auto text-[11px] leading-relaxed text-emerald-300 border border-slate-800/80 select-all">
+{(() => {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("ccavenue_last_request") || "{}");
+    return JSON.stringify({
+      gateway_url: saved.actionUrl || "https://secure.ccavenue.com/transaction/transaction.do?command=initiateTransaction",
+      access_code: saved.accessCode || "ATMD94NG82BY53DMYB",
+      requestParams_plain: saved.requestParams || `merchant_id=...&order_id=${payData.orderNo || searchParams.get("orderNo") || ""}&amount=${paidAmount || subtotal + computeFee(payData.method, subtotal, true)}&currency=INR&redirect_url=...`,
+      encRequest: saved.encRequest || "[encrypted string]",
+      sentData: saved.sentData || {}
+    }, null, 2);
+  } catch (e) {
+    return "Error reading request payload";
+  }
+})()}
+                </pre>
+              </div>
+
+              {/* 2. Received Callback Response Payload (Redirect from CCAvenue) */}
+              <div>
+                <div className="text-slate-400 font-bold mb-1.5 text-[11px] uppercase tracking-wide flex justify-between">
+                  <span>2. Received Callback Response (Redirected from CCAvenue):</span>
+                  <span className="text-slate-500 font-normal">status: {payData.orderStatus || "Success"}</span>
+                </div>
+                <pre className="bg-slate-900 p-3.5 rounded-xl overflow-x-auto text-[11px] leading-relaxed text-amber-300 border border-slate-800/80 select-all">
+{JSON.stringify({
+  order_id: payData.orderNo || searchParams.get("orderNo") || "",
+  order_status: payData.orderStatus || searchParams.get("orderStatus") || "Success",
+  tracking_id: payData.txnId || searchParams.get("txnId") || "",
+  bank_ref_no: payData.bankRefNo || searchParams.get("bankRefNo") || "",
+  payment_mode: payData.paymentMode || searchParams.get("paymentMode") || "",
+  card_name: payData.cardName || searchParams.get("cardName") || "",
+  amount: payData.amount || searchParams.get("amount") || "",
+  customer_name: payData.customerName || searchParams.get("customerName") || "",
+  customer_phone: payData.customerPhone || searchParams.get("customerPhone") || "",
+  customer_email: payData.customerEmail || searchParams.get("customerEmail") || "",
+  quantity: payData.quantity || searchParams.get("quantity") || 1,
+  size: payData.size || searchParams.get("size") || ""
+}, null, 2)}
+                </pre>
+              </div>
             </div>
           </div>
         </div>
