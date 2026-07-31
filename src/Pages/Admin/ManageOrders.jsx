@@ -416,6 +416,8 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
     }
   };
 
+  const getAmountBreakdown = () => calculateOrderTotals(order);
+
   const handleDownloadPavati = (ord) => {
     try {
       const targetOrder = ord || order;
