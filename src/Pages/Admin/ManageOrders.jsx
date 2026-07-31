@@ -3,6 +3,7 @@ import apiClient from "../../services/apiService";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { jsPDF } from "jspdf";
+import { downloadMarathiReceipt } from "../../utils/marathiReceipt";
 import {
   Search, RefreshCw, Download, ChevronUp, ChevronDown,
   ChevronsUpDown, CheckCircle2, XCircle, PackageCheck,
@@ -415,7 +416,27 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
     }
   };
 
-  const getAmountBreakdown = () => calculateOrderTotals(order);
+  const handleDownloadPavati = (ord) => {
+    try {
+      const targetOrder = ord || order;
+      if (!targetOrder) return;
+      const unitPrice = targetOrder.unitPrice || 330;
+      const quantity = targetOrder.quantity || 1;
+      const subtotal = unitPrice * quantity;
+      downloadMarathiReceipt({
+        receiptNo: targetOrder.orderNo?.replace(/\D/g, "").slice(-4) || "1",
+        customerName: targetOrder.customerName || "",
+        amount: subtotal,
+        txnId: targetOrder.paymentId || targetOrder.id || "",
+        productName: targetOrder.productName || "शतक महोत्सवी निधीकरिता",
+        quantity: quantity,
+      });
+      toast.success("पावती यशस्वीरित्या डाउनलोड झाली!");
+    } catch (err) {
+      console.error("Failed to download Pavati:", err);
+      toast.error("Failed to generate Pavati PDF");
+    }
+  };
 
   const downloadInvoicePDF = (order) => {
     try {
@@ -801,6 +822,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
             {/* Actions Section */}
             <section style={cardSectionStyle}>
               <p style={cardSectionTitleStyle}>Documents</p>
+              {/* English Download Invoice PDF — commented out
               <button
                 onClick={() => downloadInvoicePDF(order)}
                 style={{
@@ -811,6 +833,18 @@ const OrderDetailModal = ({ order, onClose, onStatusChange }) => {
                 }}
               >
                 <Download size={14} /> Download Invoice PDF
+              </button>
+              */}
+              <button
+                onClick={() => handleDownloadPavati(order)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  width: "100%", padding: "10px 14px", borderRadius: 8,
+                  background: "#8b1a1a", color: "#fff", border: "none", fontSize: 13, fontWeight: 700,
+                  cursor: "pointer", transition: "opacity .15s", marginTop: 4
+                }}
+              >
+                <Download size={14} /> पावती डाउनलोड करा (Download Pavati)
               </button>
             </section>
 

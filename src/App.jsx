@@ -27,6 +27,7 @@ import MerchandisePage         from "./Pages/MerchandisePage.jsx";
 import CheckoutPage            from "./Pages/CheckoutPage.jsx";
 import DonationDrivePage       from "./Pages/DonationDrivePage.jsx";
 import MembershipPage          from "./Pages/MembershipPage.jsx";
+import PavatiDownloadPage        from "./Pages/PavatiDownloadPage.jsx";
 
 // ── Public UI components ──────────────────────────────────────────────────────
 import Navbar   from "./Components/Navbar/Navbar.jsx";
@@ -140,6 +141,7 @@ function App() {
         <Route path="/merchandise/:slug/checkout" element={<CheckoutPage />} />
         <Route path="/donate-now"      element={<DonationDrivePage lang={i18n.language} />} />
         <Route path="/membership"      element={<MembershipPage lang={i18n.language} />} />
+        <Route path="/pavati/:id"      element={<PavatiDownloadPage />} />
 
         {/* ── Admin login (standalone, no layout) ── */}
         <Route path="/admin-login" element={<AdminLogin />} />
