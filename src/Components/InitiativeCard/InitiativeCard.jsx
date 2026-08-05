@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation, Autoplay } from "swiper/modules";
+import { FileText, ExternalLink } from "lucide-react";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
@@ -9,7 +10,7 @@ import "swiper/css/navigation";
 const FALLBACK_IMAGE = "/images/aboutImg.jpg";
 const SECONDARY_FALLBACK = "/images/introbg.jpg";
 
-const InitiativeCard = ({ title, description, images = [] }) => {
+const InitiativeCard = ({ title, description, images = [], pdfUrl, pdfTitle }) => {
   const [expanded, setExpanded] = useState(false);
   const toggleDescription = () => setExpanded(!expanded);
   const { t } = useTranslation("social");
@@ -22,10 +23,21 @@ const InitiativeCard = ({ title, description, images = [] }) => {
     e.currentTarget.src = FALLBACK_IMAGE;
   };
 
+  const handleCardClick = () => {
+    if (pdfUrl) {
+      window.open(pdfUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
   const renderBanner = () => {
     if (!images || images.length === 0) {
       return (
-        <div className="relative aspect-[4/3] rounded-t-lg overflow-hidden bg-gradient-to-br from-red-950 via-red-900 to-red-800 flex items-center justify-center p-1">
+        <div
+          onClick={handleCardClick}
+          className={`relative aspect-[4/3] rounded-t-lg overflow-hidden bg-gradient-to-br from-red-950 via-red-900 to-red-800 flex items-center justify-center p-1 ${
+            pdfUrl ? "cursor-pointer group" : ""
+          }`}
+        >
           <img
             src={FALLBACK_IMAGE}
             alt={title || "Mandal Initiative"}
@@ -33,7 +45,7 @@ const InitiativeCard = ({ title, description, images = [] }) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = SECONDARY_FALLBACK;
             }}
-            className="w-full h-full object-contain rounded-t-lg opacity-90 transition-transform duration-500 hover:scale-105"
+            className="w-full h-full object-contain rounded-t-lg opacity-90 transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-3 pointer-events-none">
             <span className="text-[11px] font-bold tracking-wide text-yellow-300 bg-black/60 px-2.5 py-1 rounded-full border border-yellow-400/30 backdrop-blur-xs">
@@ -46,13 +58,23 @@ const InitiativeCard = ({ title, description, images = [] }) => {
 
     if (images.length === 1) {
       return (
-        <div className="relative aspect-[4/3] rounded-t-lg overflow-hidden bg-gray-50 flex items-center justify-center p-1">
+        <div
+          onClick={handleCardClick}
+          className={`relative aspect-[4/3] rounded-t-lg overflow-hidden bg-gray-50 flex items-center justify-center p-1 ${
+            pdfUrl ? "cursor-pointer group" : ""
+          }`}
+        >
           <img
             src={images[0]}
             alt={title}
             onError={handleImageError}
-            className="w-full h-full object-contain rounded-t-lg transition-transform duration-500 hover:scale-105"
+            className="w-full h-full object-contain rounded-t-lg transition-transform duration-500 group-hover:scale-105"
           />
+          {pdfUrl && (
+            <div className="absolute bottom-2 right-2 bg-red-700/90 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow flex items-center gap-1 backdrop-blur-xs">
+              <FileText size={12} /> PDF पहा
+            </div>
+          )}
         </div>
       );
     }
@@ -67,12 +89,12 @@ const InitiativeCard = ({ title, description, images = [] }) => {
           className="aspect-[4/3] rounded-t-lg bg-gray-50"
         >
           {images.map((img, idx) => (
-            <SwiperSlide key={idx} className="flex items-center justify-center p-1">
+            <SwiperSlide key={idx} className="flex items-center justify-center p-1" onClick={handleCardClick}>
               <img
                 src={img}
                 alt={`Slide ${idx}`}
                 onError={handleImageError}
-                className="w-full h-full object-contain rounded-t-lg"
+                className="w-full h-full object-contain rounded-t-lg cursor-pointer"
               />
             </SwiperSlide>
           ))}
@@ -95,23 +117,40 @@ const InitiativeCard = ({ title, description, images = [] }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm max-w-[320px] mx-auto overflow-hidden hover:shadow-lg transition duration-300">
-      {renderBanner()}
+    <div className="bg-white rounded-lg shadow-sm max-w-[320px] mx-auto overflow-hidden hover:shadow-lg transition duration-300 flex flex-col justify-between">
+      <div>
+        {renderBanner()}
 
-      <div className="p-3">
-        <h2 className="text-base font-semibold text-[#b91c1c] mb-1">{title}</h2>
-        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-          {expanded ? description : shortText + (showToggle ? "..." : "")}
-        </p>
-        {showToggle && (
-          <button
-            onClick={toggleDescription}
-            className="mt-2 inline-block bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs hover:bg-red-200 transition"
-          >
-            {expanded ? t("readLess") : t("readMore")}
-          </button>
-        )}
+        <div className="p-3">
+          <h2 className="text-base font-semibold text-[#b91c1c] mb-1">{title}</h2>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+            {expanded ? description : shortText + (showToggle ? "..." : "")}
+          </p>
+          {showToggle && (
+            <button
+              onClick={toggleDescription}
+              className="mt-2 inline-block bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs hover:bg-red-200 transition"
+            >
+              {expanded ? t("readLess") : t("readMore")}
+            </button>
+          )}
+        </div>
       </div>
+
+      {pdfUrl && (
+        <div className="p-3 pt-0">
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 w-full bg-[#b91c1c] text-white py-2.5 px-3 rounded-lg text-xs font-bold shadow hover:bg-red-800 transition active:scale-98"
+          >
+            <FileText size={15} />
+            <span className="truncate">{pdfTitle || "गुणगौरव सोहळा - १ ली ते १२ वी - २०२६ (PDF)"}</span>
+            <ExternalLink size={13} className="shrink-0" />
+          </a>
+        </div>
+      )}
     </div>
   );
 };
