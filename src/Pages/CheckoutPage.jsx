@@ -913,9 +913,9 @@ const CheckoutPage = () => {
     if (step === "success" && payData && product) {
       // Trigger MSG91 SMS Order Confirmation (Guaranteed ONCE via storage lock)
       const orderNoToSend = payData?.orderNo || createdOrder?.orderNo || payData?.txnId;
-      const phoneToSend   = payData?.customerPhone || createdOrder?.customerPhone || form.phone;
-      const nameToSend    = payData?.customerName || createdOrder?.customerName || form.name;
-      const amountToSend  = payData?.amount || paidAmount || subtotal;
+      const phoneToSend   = payData?.customerPhone || createdOrder?.customerPhone;
+      const nameToSend    = payData?.customerName || createdOrder?.customerName;
+      const amountToSend  = payData?.amount || paidAmount || 0;
       const txnIdToSend   = payData?.txnId || "";
 
       if (orderNoToSend && phoneToSend) {
@@ -938,7 +938,7 @@ const CheckoutPage = () => {
     } else if (step !== "success") {
       hasDownloadedRef.current = false;
     }
-  }, [step, payData, product, createdOrder, paidAmount, subtotal, form]);
+  }, [step, payData, product, createdOrder, paidAmount]);
 
   if (loading || !product || items.length === 0) {
     return (
