@@ -188,7 +188,11 @@ const CheckoutPage = () => {
         });
       }
 
-      const found = products.find(p => getProductSlug(p) === slug || p.id === slug);
+      if (parsedItems.length === 0) {
+        parsedItems.push({ size: sizeStr || "Regular", qty: quantityVal || 1 });
+      }
+
+      const found = products.find(p => getProductSlug(p) === slug || p.id === slug) || products[0];
       if (found) {
         setProduct(found);
       }
@@ -910,8 +914,8 @@ const CheckoutPage = () => {
   };
 
   useEffect(() => {
-    if (step === "success" && payData && product) {
-      // Trigger MSG91 SMS Order Confirmation (Guaranteed ONCE via storage lock)
+    if (step === "success" && payData) {
+      // Non-blocking fire-and-forget MSG91 SMS trigger (Never blocks rendering)
       const orderNoToSend = payData?.orderNo || createdOrder?.orderNo || payData?.txnId;
       const phoneToSend   = payData?.customerPhone || createdOrder?.customerPhone;
       const nameToSend    = payData?.customerName || createdOrder?.customerName;
@@ -925,7 +929,7 @@ const CheckoutPage = () => {
           customerName: nameToSend,
           amount: amountToSend,
           txnId: txnIdToSend
-        });
+        }).catch(err => console.warn("[SMS Async Warning]", err));
       }
 
       if (hasDownloadedRef.current) return;
@@ -940,7 +944,8 @@ const CheckoutPage = () => {
     }
   }, [step, payData, product, createdOrder, paidAmount]);
 
-  if (loading || !product || items.length === 0) {
+  // Bypass loading check if order step is already in success state
+  if (step !== "success" && (loading || !product || items.length === 0)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500 font-semibold">
         <RefreshCw size={24} className="animate-spin mr-2 text-[#B91C1C]" />
