@@ -105,7 +105,7 @@ const SizeGuideModal = ({ open, onClose, activeSize }) => (
 /* ─── Trust Badges Strip ─── */
 const TRUST_ITEMS = [
   { icon: Award,      label: "98 Years Legacy",      sub: "Est. 1928, Ganesh Galli" },
-  { icon: BadgeCheck, label: "Official Store",        sub: "Verified Mandal Merchandise" },
+  { icon: BadgeCheck, label: "Official Collection",   sub: "Verified Mandal Merchandise" },
   { icon: Users,      label: "10,000+ Devotees",      sub: "Trust the community" },
   { icon: ShieldCheck,label: "Secure Checkout",       sub: "UPI · Card · Pay-at-Pickup" },
 ];
@@ -221,7 +221,7 @@ const MerchandisePage = () => {
   }, [product]);
 
   if (loading || !product) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500 font-semibold">Loading store...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500 font-semibold">Loading collection...</div>;
   }
 
   const name = product.nameKey ? t(product.nameKey) : (product.name?.[i18n.language] || product.name?.en || "");
@@ -328,20 +328,10 @@ const MerchandisePage = () => {
           </span>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">{name}</h1>
-          <p className="text-gray-500 mt-2 text-sm sm:text-base">{tagline}</p>
-
-          {/* Rating */}
-          <div className="flex items-center gap-2 mt-3">
-            <div className="flex text-yellow-400">
-              {[0,1,2,3,4].map((i) => <Star key={i} size={15} fill="currentColor" strokeWidth={0} />)}
-            </div>
-            <span className="text-sm text-gray-500">
-              {t("rating", { rating: product.rating, count: product.reviews })}
-            </span>
-          </div>
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">{tagline}</p>
 
           {/* Price */}
-          <div className="mt-5 flex items-end gap-3">
+          <div className="mt-3 flex items-end gap-3">
             <span className="text-4xl font-extrabold text-[#B91C1C]">₹{product.price}</span>
             {product.oldPrice && <span className="text-lg text-gray-400 line-through mb-1">₹{product.oldPrice}</span>}
             {discount > 0 && (
@@ -353,13 +343,15 @@ const MerchandisePage = () => {
           <p className="text-xs text-gray-400 mt-1">{t("priceNote")}</p>
 
           {/* Color swatch */}
-          <div className="mt-5 flex items-center gap-3">
-            <span
-              className="w-8 h-8 rounded-full border-2 border-[#B91C1C] ring-2 ring-offset-2 ring-red-100"
-              style={{ backgroundColor: product.color }}
-            />
-            <span className="text-sm font-medium text-gray-600">{colorName}</span>
-          </div>
+          {colorName && (
+            <div className="mt-5 flex items-center gap-3">
+              <span
+                className="w-8 h-8 rounded-full border-2 border-[#B91C1C] ring-2 ring-offset-2 ring-red-100"
+                style={{ backgroundColor: product.color }}
+              />
+              <span className="text-sm font-medium text-gray-600">{colorName}</span>
+            </div>
+          )}
 
           {/* ── Size selector ── */}
           <div className="mt-6">
@@ -461,7 +453,7 @@ const MerchandisePage = () => {
               disabled={totalQty === 0}
               className="w-full bg-[#B91C1C] hover:bg-red-800 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-200 flex items-center justify-center gap-2 text-base"
             >
-              <ShoppingBag size={20} /> {totalQty > 0 ? `${t("buyNow")} (${totalQty}) — ₹${orderTotal.toLocaleString("en-IN")}` : "Select Quantity"}
+              <Sparkles size={20} /> {totalQty > 0 ? `${t("buyNow")} (${totalQty}) — ₹${orderTotal.toLocaleString("en-IN")}` : "Select Quantity"}
             </button>
             <p className="text-xs text-gray-400 mt-2.5 flex items-center justify-center gap-1.5">
               <ShieldCheck size={13} className="text-green-600" /> {t("secureNote")}
@@ -502,9 +494,10 @@ const MerchandisePage = () => {
             {(product.specs || []).map((spec, i) => {
               const label = spec.key;
               const value = spec.valueKey ? t(spec.valueKey) : (spec.value?.[i18n.language] || spec.value?.en || "");
+              const displayLabel = t(`specs.${label.toLowerCase()}`, label);
               return (
                 <div key={label} className={`grid grid-cols-3 text-sm ${i % 2 ? "bg-white" : "bg-gray-50"}`}>
-                  <span className="px-4 py-3 font-semibold text-gray-600">{t(`specs.${label}`) || label}</span>
+                  <span className="px-4 py-3 font-semibold text-gray-600">{displayLabel}</span>
                   <span className="px-4 py-3 col-span-2 text-gray-800">{value}</span>
                 </div>
               );
@@ -637,7 +630,7 @@ const MerchandisePage = () => {
             disabled={totalQty === 0}
             className="flex-shrink-0 bg-[#B91C1C] hover:bg-red-800 active:bg-red-900 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-red-200 flex items-center gap-2 transition"
           >
-            <ShoppingBag size={18} /> {t("buyNow")}
+            <Sparkles size={18} /> {t("buyNow")}
           </button>
         </div>
       </div>

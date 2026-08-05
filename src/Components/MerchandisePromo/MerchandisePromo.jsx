@@ -34,8 +34,8 @@ const MerchandisePromo = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { products, loading } = useMerchandiseLoader();
 
-  // Find the official polo product (mr-polo-2025)
-  const polo = products.find(p => p.id === "mr-polo-2025") || products[0];
+  // Find the official T-shirt product
+  const polo = products.find(p => p.id === "mr-tshirt-2025") || products[0];
 
   useEffect(() => {
     // Small delay before showing modal for better UX feel
@@ -123,20 +123,12 @@ const MerchandisePromo = () => {
                 <h2 className="merch-promo-title">{name}</h2>
                 <p className="merch-promo-desc">{tagline}</p>
 
-                {/* Pricing and Review */}
+                {/* Pricing */}
                 <div className="merch-promo-price-review">
                   <div className="merch-promo-price">
                     <span className="merch-promo-price-new">₹{polo.price}</span>
                     {polo.oldPrice && <span className="merch-promo-price-old">₹{polo.oldPrice}</span>}
                     {discount > 0 && <span className="merch-promo-discount">{discount}% OFF</span>}
-                  </div>
-                  <div className="merch-promo-rating">
-                    <div className="merch-promo-stars">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} fill="#eab308" stroke="none" />
-                      ))}
-                    </div>
-                    <span className="merch-promo-rating-text">{polo.rating || 4.9} ({polo.reviews || 412}+)</span>
                   </div>
                 </div>
 

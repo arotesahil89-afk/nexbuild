@@ -11,6 +11,7 @@ import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 // import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 import { jsPDF } from "jspdf";
 import { downloadMarathiReceipt } from "../utils/marathiReceipt";
+import { sendOrderConfirmationSmsMsg91 } from "../services/msg91SmsService";
 
 const Confetti = () => {
   const [show, setShow] = useState(true);
@@ -910,6 +911,23 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     if (step === "success" && payData && product) {
+      // Trigger MSG91 SMS Order Confirmation (Guaranteed ONCE via storage lock)
+      const orderNoToSend = payData?.orderNo || createdOrder?.orderNo || payData?.txnId;
+      const phoneToSend   = payData?.customerPhone || createdOrder?.customerPhone || form.phone;
+      const nameToSend    = payData?.customerName || createdOrder?.customerName || form.name;
+      const amountToSend  = payData?.amount || paidAmount || subtotal;
+      const txnIdToSend   = payData?.txnId || "";
+
+      if (orderNoToSend && phoneToSend) {
+        sendOrderConfirmationSmsMsg91({
+          orderNo: orderNoToSend,
+          customerPhone: phoneToSend,
+          customerName: nameToSend,
+          amount: amountToSend,
+          txnId: txnIdToSend
+        });
+      }
+
       if (hasDownloadedRef.current) return;
       hasDownloadedRef.current = true;
       const timer = setTimeout(() => {
@@ -920,7 +938,7 @@ const CheckoutPage = () => {
     } else if (step !== "success") {
       hasDownloadedRef.current = false;
     }
-  }, [step, payData, product]);
+  }, [step, payData, product, createdOrder, paidAmount, subtotal, form]);
 
   if (loading || !product || items.length === 0) {
     return (

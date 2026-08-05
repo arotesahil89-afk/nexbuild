@@ -7,11 +7,11 @@ const EducationalInitiativesPage = () => {
 
   // 🔽 Descending sort for latest year first
   const rawYears = t("years", { returnObjects: true });
-  const years = rawYears.sort((a, b) => b - a);
+  const years = Array.isArray(rawYears) ? [...rawYears].sort((a, b) => Number(b) - Number(a)) : ["2026"];
   const data = t("data", { returnObjects: true });
 
-  // 🎯 Select latest year by default
-  const [selectedYear, setSelectedYear] = useState(years[0]);
+  // 🎯 Select latest year (2026) by default
+  const [selectedYear, setSelectedYear] = useState(years[0] || "2026");
 
   const initiatives = data[selectedYear] || [];
 
