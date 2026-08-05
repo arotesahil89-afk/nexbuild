@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
   Star, Check, ShieldCheck, Truck, Plus, Minus, ShoppingBag, X,
-  ChevronRight, Heart, Sparkles, Ruler, AlertCircle, Award,
+  ChevronRight, Heart, Sparkles, AlertCircle, Award,
   Users, BadgeCheck, Phone,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
@@ -18,89 +18,6 @@ import useMerchandiseLoader from "../loaders/useMerchandiseLoader";
 
 const MAX_QTY = 5;
 const LOW_STOCK_THRESHOLD = 50;
-
-/* ─── Size Guide Modal ─── */
-const SIZE_CHART = [
-  { size: "S",   chest: "36–38\"", length: "27\"", shoulder: "16.5\"" },
-  { size: "M",   chest: "38–40\"", length: "28\"", shoulder: "17.5\"" },
-  { size: "L",   chest: "40–42\"", length: "29\"", shoulder: "18.5\"" },
-  { size: "XL",  chest: "42–44\"", length: "30\"", shoulder: "19.5\"" },
-  { size: "XXL", chest: "44–46\"", length: "31\"", shoulder: "20.5\"" },
-];
-
-const SizeGuideModal = ({ open, onClose, activeSize }) => (
-  <AnimatePresence>
-    {open && (
-      <motion.div
-        className="fixed inset-0 z-[110] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
-        <motion.div
-          className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Handle bar for mobile */}
-          <div className="flex justify-center pt-3 sm:hidden">
-            <div className="w-10 h-1 bg-gray-200 rounded-full" />
-          </div>
-
-          <div className="flex items-center justify-between px-5 py-4">
-            <div className="flex items-center gap-2">
-              <Ruler size={18} className="text-[#B91C1C]" />
-              <h3 className="font-bold text-gray-900">Size Guide</h3>
-            </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
-              <X size={16} />
-            </button>
-          </div>
-
-          {/* Table */}
-          <div className="mx-5 mb-5 rounded-xl overflow-hidden border border-gray-100">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#B91C1C] text-white text-xs uppercase tracking-wide">
-                  <th className="py-2.5 px-3 text-left font-semibold">Size</th>
-                  <th className="py-2.5 px-3 text-center font-semibold">Chest</th>
-                  <th className="py-2.5 px-3 text-center font-semibold">Length</th>
-                  <th className="py-2.5 px-3 text-center font-semibold">Shoulder</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SIZE_CHART.map((row, i) => (
-                  <tr
-                    key={row.size}
-                    className={`${i % 2 === 0 ? "bg-white" : "bg-gray-50"} ${
-                      row.size === activeSize ? "bg-red-50 font-semibold" : ""
-                    }`}
-                  >
-                    <td className="py-2.5 px-3 font-bold text-gray-900 flex items-center gap-1.5">
-                      {row.size}
-                      {row.size === activeSize && (
-                        <span className="text-[9px] bg-[#B91C1C] text-white px-1.5 py-0.5 rounded-full">Selected</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3 text-center text-gray-600">{row.chest}</td>
-                    <td className="py-2.5 px-3 text-center text-gray-600">{row.length}</td>
-                    <td className="py-2.5 px-3 text-center text-gray-600">{row.shoulder}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <p className="text-center text-xs text-gray-400 mb-5">Tip: If between sizes, size up for a relaxed fit</p>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
 
 /* ─── Trust Badges Strip ─── */
 const TRUST_ITEMS = [
@@ -355,16 +272,8 @@ const MerchandisePage = () => {
 
           {/* ── Size selector ── */}
           <div className="mt-6">
-            <div className="flex items-center justify-between mb-3.5">
+            <div className="mb-3.5">
               <span className="text-sm font-bold text-gray-800">{t("selectSize")}</span>
-              {product.sizes.length > 1 && (
-                <button
-                  onClick={() => setSizeGuide(true)}
-                  className="text-xs text-[#B91C1C] font-semibold flex items-center gap-1 hover:underline"
-                >
-                  <Ruler size={13} /> {t("sizeGuide")}
-                </button>
-              )}
             </div>
 
             <div className="grid grid-cols-3 gap-1.5">
@@ -634,15 +543,6 @@ const MerchandisePage = () => {
           </button>
         </div>
       </div>
-
-      {/* ── Modals ── */}
-      <SizeGuideModal
-        open={sizeGuideOpen}
-        onClose={() => setSizeGuide(false)}
-        activeSize={Object.keys(selectQty).find(s => selectQty[s] > 0) || "L"}
-      />
-
-
 
       <ToastContainer />
     </div>

@@ -146,7 +146,7 @@ const InitiativeCard = ({ title, description, images = [], pdfUrl, pdfTitle }) =
             className="flex items-center justify-center gap-1.5 w-full bg-[#b91c1c] text-white py-2.5 px-3 rounded-lg text-xs font-bold shadow hover:bg-red-800 transition active:scale-98"
           >
             <FileText size={15} />
-            <span className="truncate">{pdfTitle || "गुणगौरव सोहळा - १ ली ते १२ वी - २०२६ (PDF)"}</span>
+            <span className="truncate">{pdfTitle || "गुणवंत विद्यार्थी यादी-२०२६"}</span>
             <ExternalLink size={13} className="shrink-0" />
           </a>
         </div>
