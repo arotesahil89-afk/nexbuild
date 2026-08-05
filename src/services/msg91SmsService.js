@@ -1,12 +1,7 @@
-import apiClient from "./apiService";
-
 /**
  * Sends Order Confirmation SMS to Customer via Secure Backend Endpoint.
  * 
- * SECURITY & IDEMPOTENCY ARCHITECTURE:
- * 1. ZERO Secret Keys in Frontend: Private MSG91 Auth Key resides ONLY on the Backend Server (.env).
- * 2. Deduplication Lock: Checks localStorage/sessionStorage so refreshing the success page NEVER triggers duplicate SMS.
- * 3. Prepares 91 country code for Indian 10-digit mobile numbers.
+ * Uses native fetch to eliminate module circular dependencies and hoisting issues.
  * 
  * @param {Object} params
  * @param {string} params.orderNo        - Unique Order Number
@@ -30,7 +25,7 @@ export const sendOrderConfirmationSmsMsg91 = async ({
 
   // 1. FRONTEND DEDUPLICATION LOCK: Check if SMS for this order was already triggered
   const lockKey = `msg91_sms_sent_${orderNo}`;
-  const alreadySent = localStorage.getItem(lockKey) || sessionStorage.getItem(lockKey);
+  const alreadySent = typeof window !== "undefined" && (localStorage.getItem(lockKey) || sessionStorage.getItem(lockKey));
 
   if (alreadySent) {
     console.log(`[MSG91 SMS] Order #${orderNo} SMS was already sent previously at ${alreadySent}. Skipping duplicate trigger.`);
@@ -40,8 +35,10 @@ export const sendOrderConfirmationSmsMsg91 = async ({
   // Set deduplication lock immediately to prevent duplicate requests on rapid page refreshes
   const timestamp = new Date().toISOString();
   try {
-    localStorage.setItem(lockKey, timestamp);
-    sessionStorage.setItem(lockKey, timestamp);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(lockKey, timestamp);
+      sessionStorage.setItem(lockKey, timestamp);
+    }
   } catch (e) {
     console.warn("[MSG91 SMS] Storage lock warning:", e);
   }
@@ -54,26 +51,30 @@ export const sendOrderConfirmationSmsMsg91 = async ({
 
   console.log(`[MSG91 SMS] Dispatching SMS request for Order #${orderNo} to backend...`);
 
-  // 3. Delegate to Secure Backend Endpoint (API key remains hidden on backend server)
+  // 3. Delegate to Secure Backend Endpoint via native fetch (no circular imports)
   try {
-    const response = await apiClient.post("/orders/send-sms", {
-      orderNo,
-      customerPhone: cleanedPhone,
-      customerName,
-      amount,
-      txnId
+    const baseUrl = import.meta.env.VITE_API_URL || "https://mumbaicha-raja-backend.onrender.com/api";
+    const response = await fetch(`${baseUrl}/orders/send-sms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderNo,
+        customerPhone: cleanedPhone,
+        customerName,
+        amount,
+        txnId
+      })
     });
 
-    console.log("[MSG91 SMS] Backend Response:", response.data || response);
+    const data = await response.json().catch(() => ({}));
+    console.log("[MSG91 SMS] Backend Response:", data);
     return {
       success: true,
-      data: response.data,
-      message: response.data?.message || "SMS dispatched successfully via secure backend."
+      data,
+      message: data?.message || "SMS dispatched successfully via secure backend."
     };
   } catch (error) {
     console.warn("[MSG91 SMS Backend Warning] Backend API call fallback:", error?.message);
-    
-    // Client-side fallback logging if backend is in offline standalone mode
     return {
       success: true,
       message: "MSG91 SMS provisioned (Secure Backend API mode).",
