@@ -8,9 +8,10 @@
     "2025": {
       "title": "रामेश्वरम मंदिर थीम",
       "description": "उपरोक्त मंडल की ओर से वर्ष 2025 के लिए तमिलनाडु स्थित ‘रामनाथस्वामी मंदिर’ (रामेश्वरम) की सजावट प्रस्तुत करने का निर्णय लिया गया है।",
-  "videoTitle": "पिछले वर्ष की थीम वीडियो – महाकालेश्वर मंदिर",
-      
-      "videos": ["https://www.youtube.com/embed/oKsisg-vj28?si=sZIselKUxZiy5w2A"]
+      "videoTitle": "पिछले वर्ष की थीम वीडियो – महाकालेश्वर मंदिर",
+      "videos": [
+        "https://www.youtube.com/embed/oKsisg-vj28?si=sZIselKUxZiy5w2A"
+      ]
     },
     "2024": {
       "title": "उज्जैन महाकाल थीम",
@@ -22,6 +23,13 @@
       ],
       "videos": [
         "https://www.youtube.com/embed/lUT-jEY145Y?si=odGbuE7X5aYx7gbF"
+      ]
+    },
+    "2026": {
+      "title": "गणेश गली में अवतरित होगी वैष्णवों की वारी",
+      "description": "उपरोक्त मंडल की ओर से वर्ष २०२६ के लिए ‘गणेश गली में अवतरित होगी वैष्णवों की वारी’ यह झांकी प्रस्तुत की गई है।",
+      "videos": [
+        "https://www.youtube.com/embed/MjQXnFhAL-Y"
       ]
     }
   }

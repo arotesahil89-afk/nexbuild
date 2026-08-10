@@ -12,7 +12,6 @@
   "qrNote": "Scan UPI and donate directly",
   "description": "You can contribute in the form of donations for various social initiatives organized by the festival committee",
   "button": "Donate Now",
-
   "breadHome": "Home",
   "breadDonate": "Donate",
   "pageTitle": "Support Mumbaicha Raja",
@@ -22,15 +21,21 @@
   "customPlaceholder": "Enter custom amount",
   "taxTitle": "80G Tax Exemption Available",
   "taxBody": "Donations qualify for deduction under Section 80G. Your tax receipt will be emailed automatically after payment.",
-  "trust1Label": "Official Mandal", "trust1Sub": "Est. 1928",
-  "trust2Label": "Secure Payment",  "trust2Sub": "Razorpay · SSL",
-  "trust3Label": "Transparent Use", "trust3Sub": "Annual audit",
+  "trust1Label": "Official Mandal",
+  "trust1Sub": "Est. 1928",
+  "trust2Label": "Secure Payment",
+  "trust2Sub": "Razorpay · SSL",
+  "trust3Label": "Transparent Use",
+  "trust3Sub": "Annual audit",
   "formTitle": "Your Details",
   "formSubtitle": "Receipt & confirmation sent to your email",
   "donatingLabel": "Donating",
-  "labelName": "Full Name",        "placeholderName": "As it should appear on receipt",
-  "labelPhone": "Mobile Number",   "placeholderPhone": "10-digit mobile",
-  "labelEmail": "Email Address",   "placeholderEmail": "For receipt & 80G certificate",
+  "labelName": "Full Name",
+  "placeholderName": "As it should appear on receipt",
+  "labelPhone": "Mobile Number",
+  "placeholderPhone": "10-digit mobile",
+  "labelEmail": "Email Address",
+  "placeholderEmail": "For receipt & 80G certificate",
   "secureNote": "Your details are encrypted and never shared",
   "reviewBtn": "Review Donation",
   "confirmTitle": "Confirm Donation",
@@ -42,7 +47,9 @@
   "razorpayNote": "Powered by Razorpay · PCI-DSS Level 1 · 256-bit SSL",
   "doneTitle": "Donation Received! 🙏",
   "doneThanks": "Thank you, {{name}}! Your ₹{{amount}} donation to {{cause}} makes a real difference. Ganpati Bappa Morya!",
-  "doneAmount": "Amount", "doneReceipt": "Sent to {{email}}", "done80g": "Emailed within 24 hours",
+  "doneAmount": "Amount",
+  "doneReceipt": "Sent to {{email}}",
+  "done80g": "Emailed within 24 hours",
   "doAgainBtn": "Make Another Donation",
   "errorName": "Enter your full name",
   "errorEmail": "Enter a valid email address",
@@ -50,15 +57,37 @@
   "errorAmountEmpty": "Enter a donation amount",
   "errorAmountMax": "Maximum single donation is ₹5,00,000",
   "causes": {
-    "ganeshotsav": { "title": "Ganeshotsav",    "desc": "Idol, decoration & events" },
-    "medical":     { "title": "Medical Aid",     "desc": "Health camps" },
-    "education":   { "title": "Education",       "desc": "Student scholarships" },
-    "disaster":    { "title": "Disaster Relief", "desc": "Flood & calamity support" },
-    "annadaan":    { "title": "Annadaan",        "desc": "Free meal drives" },
-    "eco":         { "title": "Eco-Ganpati",     "desc": "Environment & plantation" }
+    "ganeshotsav": {
+      "title": "Ganeshotsav",
+      "desc": "Idol, decoration & events"
+    },
+    "medical": {
+      "title": "Medical Aid",
+      "desc": "Health camps"
+    },
+    "education": {
+      "title": "Education",
+      "desc": "Student scholarships"
+    },
+    "disaster": {
+      "title": "Disaster Relief",
+      "desc": "Flood & calamity support"
+    },
+    "annadaan": {
+      "title": "Annadaan",
+      "desc": "Free meal drives"
+    },
+    "eco": {
+      "title": "Eco-Ganpati",
+      "desc": "Environment & plantation"
+    }
   },
   "presets": {
-    "51": "Blessings", "101": "Devotion", "501": "Sewa",
-    "1001": "Shraddha", "2100": "Aashirwad", "5100": "Mahadan"
+    "51": "Blessings",
+    "101": "Devotion",
+    "501": "Sewa",
+    "1001": "Shraddha",
+    "2100": "Aashirwad",
+    "5100": "Mahadan"
   }
 }

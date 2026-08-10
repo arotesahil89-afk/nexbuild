@@ -7,8 +7,9 @@
     "2025": {
       "title": "Rameshwaram Temple theme",
       "description": "On behalf of the above committee, it has been decided to present a Decoration of the 'Ramanathaswamy Temple' (Rameswaram) located in Tamil Nadu for the year 2025.",
-      
-      "videos": ["https://www.youtube.com/embed/oKsisg-vj28?si=sZIselKUxZiy5w2A"]
+      "videos": [
+        "https://www.youtube.com/embed/oKsisg-vj28?si=sZIselKUxZiy5w2A"
+      ]
     },
     "2024": {
       "title": "Ujjain Mahakal Theme",
@@ -20,6 +21,13 @@
       ],
       "videos": [
         "https://www.youtube.com/embed/lUT-jEY145Y?si=odGbuE7X5aYx7gbF"
+      ]
+    },
+    "2026": {
+      "title": "Vaishnavas' Wari Arrives in Ganesh Galli",
+      "description": "On behalf of the above-mentioned Mandal, the tableau ‘Vaishnavas' Wari Arrives in Ganesh Galli’ has been presented for the year 2026.",
+      "videos": [
+        "https://www.youtube.com/embed/MjQXnFhAL-Y"
       ]
     }
   }

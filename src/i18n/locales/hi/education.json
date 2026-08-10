@@ -4,7 +4,13 @@
   "description": "छात्रों के लिए शैक्षिक सहायता और मार्गदर्शन की पहल।",
   "readMore": "और पढ़ें",
   "readLess": "कम पढ़ें",
-  "years": ["2022", "2023", "2024", "2025", "2026"],
+  "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026"
+  ],
   "data": {
     "2026": [
       {
@@ -19,33 +25,32 @@
     ],
     "2025": [
       {
-  "title": "प्राथमिक, माध्यमिक और उच्च माध्यमिक विद्यार्थी सम्मान समारोह - 2025",
-  "description": "उपरोक्त उत्सव मंडल की ओर से शैक्षणिक उपक्रम के अंतर्गत शनिवार, 2 अगस्त 2025 को डॉ. शिरोडकर हाई स्कूल सभागार में क्षेत्र के सदस्य विद्यार्थियों को अधिकतम प्रोत्साहन देने के उद्देश्य से वर्ष 2024 - 2025 में प्राथमिक, माध्यमिक और उच्च माध्यमिक परीक्षाओं में विशेष उत्कृष्टता प्राप्त करने वाले विद्यार्थियों का गुणगौरव समारोह उत्साहपूर्वक संपन्न हुआ। सभी प्रतिभाशाली विद्यार्थियों को विशेष सराहना और उनके आगे की यात्रा के लिए शुभकामनाएं!",
-  "images": [
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_1.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_2.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_3.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_4.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_5.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_6.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_7.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_8.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_9.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_10.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
-  ]
-},
-{
+        "title": "प्राथमिक, माध्यमिक और उच्च माध्यमिक विद्यार्थी सम्मान समारोह - 2025",
+        "description": "उपरोक्त उत्सव मंडल की ओर से शैक्षणिक उपक्रम के अंतर्गत शनिवार, 2 अगस्त 2025 को डॉ. शिरोडकर हाई स्कूल सभागार में क्षेत्र के सदस्य विद्यार्थियों को अधिकतम प्रोत्साहन देने के उद्देश्य से वर्ष 2024 - 2025 में प्राथमिक, माध्यमिक और उच्च माध्यमिक परीक्षाओं में विशेष उत्कृष्टता प्राप्त करने वाले विद्यार्थियों का गुणगौरव समारोह उत्साहपूर्वक संपन्न हुआ। सभी प्रतिभाशाली विद्यार्थियों को विशेष सराहना और उनके आगे की यात्रा के लिए शुभकामनाएं!",
+        "images": [
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_1.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_2.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_3.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_4.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_5.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_6.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_7.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_8.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_9.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_10.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
+        ]
+      },
+      {
         "title": "योग एवं लाठी-काठी प्रशिक्षण शिविर",
         "description": "जन आग्रह पर वयस्क वर्ग के लिए योग एवं लाठी-काठी प्रशिक्षण शिविर आयोजित किया गया।",
         "images": [
           "images/pic1.jpeg",
           "images/pic3.jpeg"
         ]
-      }
-,
+      },
       {
         "title": "कंप्यूटर प्रशिक्षण केंद्र",
         "description": "लालबाग सार्वजनिक उत्सव मंडल गणेश गल्ली-मुंबईचा राजा की ओर से शनिवार, 1 फरवरी 2025 को शैक्षिक पहल के अंतर्गत कंप्यूटर प्रशिक्षण केंद्र का उद्घाटन हुआ। आज की शैक्षिक प्रतिस्पर्धा के युग में छात्रों को आगे रखने के उद्देश्य से यह उपक्रम शुरू किया गया है। कृपया इसका लाभ लें और मंडल का आभार व्यक्त करें।",

@@ -4,147 +4,467 @@
     {
       "title": "Executive Committee",
       "members": [
-  { "name": "Mr. Omkar Prabhakar Tawde (Kiran Tawde)", "role": "President" },
-  { "name": "Mr. Dagdu (Dada) Sakpal (MLA)", "role": "Vice President" },
-  { "name": "Mr. Nandkumar Bagwe", "role": "Vice President" },
-  { "name": "Mr. Sanjay Tu. Sawant", "role": "Vice President" },
-  { "name": "Mr. Nandkumar Tawde", "role": "Vice President" },
-  { "name": "Mr. Sandeep Bagwe", "role": "Vice President" },
-  { "name": "Mr. Viraj Madkholkar", "role": "Vice President" },
-  { "name": "Mr. Siddhesh Korgaonkar", "role": "Vice President" },
-  { "name": "Mr. Ganesh Karavde", "role": "Vice President" },
-  { "name": "Mr. Milind Surve", "role": "Vice President" },
-
-  { "name": "Mr. Swapnil Suresh Parab", "role": "General Secretary" },
-
-  { "name": "Mr. Advait Pedhamkar", "role": "Joint Secretary" },
-  { "name": "Mr. Sanjit Sawant", "role": "Joint Secretary" },
-  { "name": "Mr. Nishant Kanvinde", "role": "Joint Secretary" },
-  { "name": "Mr. Yogesh Desai", "role": "Joint Secretary" },
-  { "name": "Mr. Alankar Satardekar", "role": "Joint Secretary" },
-  { "name": "Mr. Manish Naik", "role": "Joint Secretary" },
-  { "name": "Mr. Amey Naik", "role": "Joint Secretary" },
-
-  { "name": "Mr. Nikhil Shankar Nanche", "role": "Treasurer" },
-
-  { "name": "Mr. Sandeep Sawant", "role": "Assistant Treasurer" },
-  { "name": "Mr. Nitesh Kalidas Mahadeshwar", "role": "Assistant Treasurer" },
-  { "name": "Mr. Siddhesh Sawant", "role": "Assistant Treasurer" },
-  { "name": "Mr. Abhishek Shivlekar", "role": "Assistant Treasurer" },
-
-  { "name": "Mr. Shubham Devlekar", "role": "Executive Member" },
-  { "name": "Mr. Aniket Iswalkar", "role": "Executive Member" },
-  { "name": "Mr. Nitin Narvekar", "role": "Executive Member" },
-  { "name": "Mr. Santosh Pandey", "role": "Executive Member" },
-  { "name": "Mr. Harshad Panchal", "role": "Executive Member" },
-  { "name": "Mr. Ajinkya Nakashe", "role": "Executive Member" },
-  { "name": "Mr. Amey Loke", "role": "Executive Member" },
-  { "name": "Mr. Sahil Kandalgavkar", "role": "Executive Member" },
-  { "name": "Mr. Omkar Parab", "role": "Executive Member" },
-  { "name": "Mr. Mayank Khandare", "role": "Executive Member" },
-  { "name": "Mr. Prashant Bobhate", "role": "Executive Member" },
-  { "name": "Mr. Pranil Bagwe", "role": "Executive Member" }
-]
-
+        {
+          "name": "Mr. Kiran Prabhakar Tawde",
+          "role": "President"
+        },
+        {
+          "name": "Mr. Dagdu (Dada) Sakpal (MLA)",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Nandkumar Bagwe",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Sanjay Tu. Sawant",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Nandkumar Tawde",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Sandeep Bagwe",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Viraj Madkholkar",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Siddhesh Korgaonkar",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Ganesh Karavde",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Milind Surve",
+          "role": "Vice President"
+        },
+        {
+          "name": "Mr. Swapnil Suresh Parab",
+          "role": "General Secretary"
+        },
+        {
+          "name": "Mr. Advait Pedhamkar",
+          "role": "Joint Secretary"
+        },
+        {
+          "name": "Mr. Sanjit Sawant",
+          "role": "Joint Secretary"
+        },
+        {
+          "name": "Mr. Nishant Kanvinde",
+          "role": "Joint Secretary"
+        },
+        {
+          "name": "Mr. Yogesh Desai",
+          "role": "Joint Secretary"
+        },
+        {
+          "name": "Mr. Alankar Satardekar",
+          "role": "Joint Secretary"
+        },
+        {
+          "name": "Mr. Manish Naik",
+          "role": "Joint Secretary"
+        },
+        {
+          "name": "Mr. Amey Naik",
+          "role": "Joint Secretary"
+        },
+        {
+          "name": "Mr. Nikhil Shankar Nanche",
+          "role": "Treasurer"
+        },
+        {
+          "name": "Mr. Sandeep Sawant",
+          "role": "Assistant Treasurer"
+        },
+        {
+          "name": "Mr. Nitesh Kalidas Mahadeshwar",
+          "role": "Assistant Treasurer"
+        },
+        {
+          "name": "Mr. Siddhesh Sawant",
+          "role": "Assistant Treasurer"
+        },
+        {
+          "name": "Mr. Abhishek Shivlekar",
+          "role": "Assistant Treasurer"
+        },
+        {
+          "name": "Mr. Shubham Devlekar",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Aniket Iswalkar",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Nitin Narvekar",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Santosh Pandey",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Harshad Panchal",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Ajinkya Nakashe",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Amey Loke",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Sahil Kandalgavkar",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Omkar Parab",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Mayank Khandare",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Prashant Bobhate",
+          "role": "Executive Member"
+        },
+        {
+          "name": "Mr. Pranil Bagwe",
+          "role": "Executive Member"
+        }
+      ]
     },
     {
       "title": "Subcommittees",
       "members": [
-
         {
           "name": "Advait Pedhamkar (Committee Head)",
           "role": "Media Committee"
         },
-        { "name": "Mandar Pednekar", "role": "Media Committee" },
-        { "name": "Mandar Shetye", "role": "Media Committee" },
-        { "name": "Omkar Lad", "role": "Media Committee" },
-        { "name": "Aniket Kolte", "role": "Media Committee" },
-        { "name": "Rahul Chavan", "role": "Media Committee" },
-        { "name": "Vikram Baranwal", "role": "Media Committee" },
-        { "name": "Yogesh Sawant", "role": "Media Committee" },
-        { "name": "Omkar Dhuri", "role": "Media Committee" },
-        { "name": "Shubham Bandal", "role": "Media Committee" },
-        { "name": "Kunal Sawant", "role": "Media Committee" },
-        { "name": "Kunal Pawar", "role": "Media Committee" },
-        { "name": "Suraj Kerkar", "role": "Media Committee" },
-        { "name": "Sarth Amdaskar", "role": "Media Committee" },
-        { "name": "Aryan mahadeshwar", "role": "Media Committee" },
-        { "name": "Soham ghadigaonkar", "role": "Media Committee" },
-        { "name": "Vedant Parab", "role": "Media Committee" },
-        
-
-
-        { "name": "Prathamesh Munge", "role": "Volunteer Head" },
-  { "name": "Rahul Tulsakar", "role": "Volunteer Head" },
-  { "name": "Aniruddha Padwal", "role": "Volunteer Head" },
-  { "name": "Atul Kandalgavkar", "role": "Volunteer Head" },
-  { "name": "Sachin Shinde", "role": "Volunteer Head" },
-  { "name": "Nitin Dalvi", "role": "Volunteer Head" },
-  { "name": "Bhushan Bagwe", "role": "Volunteer Head" },
-  { "name": "Prathamesh Parab", "role": "Volunteer Head" },
-  { "name": "Gaurav Shirke", "role": "Volunteer Head" },
-  { "name": "Amol Revdekar", "role": "Volunteer Head" },
-  { "name": "Yogesh Pardhiye", "role": "Volunteer Head" },
-  { "name": "Ashish Bashte", "role": "Volunteer Head" },
-  { "name": "Swapnil Chavan", "role": "Volunteer Head" },
-  { "name": "Sunil Loke", "role": "Volunteer Head" },
-  { "name": "Kishor Solanki", "role": "Volunteer Head" },
-  { "name": "Akshay Shitut", "role": "Volunteer Head" },
-  { "name": "Swaraj Bandkar", "role": "Volunteer Head" },
-  { "name": "Mandar Patil", "role": "Volunteer Head" },
-  { "name": "Subodh Pansare", "role": "Volunteer Head" },
-  { "name": "Ashutosh Raut", "role": "Volunteer Head" },
-  { "name": "Mrunal Dukhande", "role": "Volunteer Head" },
-  { "name": "Sameer Dhawale", "role": "Volunteer Head" },
-  { "name": "Vishal Shinde", "role": "Volunteer Head" },
-  { "name": "Akash Dambare", "role": "Volunteer Head" },
-  { "name": "Praveen Palekar", "role": "Volunteer Head" },
-  { "name": "Aniruddha Kolekar", "role": "Volunteer Head" },
-  { "name": "Saurabh Monde", "role": "Volunteer Head" },
-
-  { "name": "Vedant Sawant", "role": "Office Head" },
-  { "name": "Sahil Lad", "role": "Office Head" },
-  { "name": "Padmaraj Kadam", "role": "Office Head" },
-  { "name": "Bhuvanesh Parab", "role": "Office Head" },
-  { "name": "Akash Sharma", "role": "Office Head" },
-  { "name": "Anal Parkar", "role": "Office Head" },
-  { "name": "Shambhu Jawal", "role": "Office Head" },
-  { "name": "Akshay Nerurkar", "role": "Office Head" },
-  { "name": "Ayush Sawant", "role": "Office Head" },
-  { "name": "Vijay Valke", "role": "Office Head" },
-  { "name": "Vaibhav Patkar", "role": "Office Head" },
-  { "name": "Sumit Ambolkar", "role": "Office Head" },
-
-  { "name": "Siddhesh Korgaonkar (Committee Head)", "role": "Educational Committee" },
-  { "name": "Tejas More", "role": "Educational Committee" },
-  { "name": "Abhishek Desai", "role": "Educational Committee" },
-  { "name": "Charul Golatkar", "role": "Educational Committee" },
-  { "name": "Pratik Parab", "role": "Educational Committee" },
-  { "name": "Rohit Shivlekar", "role": "Educational Committee" },
-  { "name": "Advait Lad", "role": "Educational Committee" },
-  { "name": "Siddhesh Parab", "role": "Educational Committee" },
-  { "name": "Vedant Sawant", "role": "Educational Committee" },
-
-        
-
+        {
+          "name": "Mandar Pednekar",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Mandar Shetye",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Omkar Lad",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Aniket Kolte",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Rahul Chavan",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Vikram Baranwal",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Yogesh Sawant",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Omkar Dhuri",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Shubham Bandal",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Kunal Sawant",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Kunal Pawar",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Suraj Kerkar",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Sarth Amdaskar",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Aryan mahadeshwar",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Soham ghadigaonkar",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Vedant Parab",
+          "role": "Media Committee"
+        },
+        {
+          "name": "Prathamesh Munge",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Rahul Tulsakar",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Aniruddha Padwal",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Atul Kandalgavkar",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Sachin Shinde",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Nitin Dalvi",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Bhushan Bagwe",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Prathamesh Parab",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Gaurav Shirke",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Amol Revdekar",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Yogesh Pardhiye",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Ashish Bashte",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Swapnil Chavan",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Sunil Loke",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Kishor Solanki",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Akshay Shitut",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Swaraj Bandkar",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Mandar Patil",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Subodh Pansare",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Ashutosh Raut",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Mrunal Dukhande",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Sameer Dhawale",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Vishal Shinde",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Akash Dambare",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Praveen Palekar",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Aniruddha Kolekar",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Saurabh Monde",
+          "role": "Volunteer Head"
+        },
+        {
+          "name": "Vedant Sawant",
+          "role": "Office Head"
+        },
+        {
+          "name": "Sahil Lad",
+          "role": "Office Head"
+        },
+        {
+          "name": "Padmaraj Kadam",
+          "role": "Office Head"
+        },
+        {
+          "name": "Bhuvanesh Parab",
+          "role": "Office Head"
+        },
+        {
+          "name": "Akash Sharma",
+          "role": "Office Head"
+        },
+        {
+          "name": "Anal Parkar",
+          "role": "Office Head"
+        },
+        {
+          "name": "Shambhu Jawal",
+          "role": "Office Head"
+        },
+        {
+          "name": "Akshay Nerurkar",
+          "role": "Office Head"
+        },
+        {
+          "name": "Ayush Sawant",
+          "role": "Office Head"
+        },
+        {
+          "name": "Vijay Valke",
+          "role": "Office Head"
+        },
+        {
+          "name": "Vaibhav Patkar",
+          "role": "Office Head"
+        },
+        {
+          "name": "Sumit Ambolkar",
+          "role": "Office Head"
+        },
+        {
+          "name": "Siddhesh Korgaonkar (Committee Head)",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Tejas More",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Abhishek Desai",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Charul Golatkar",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Pratik Parab",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Rohit Shivlekar",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Advait Lad",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Siddhesh Parab",
+          "role": "Educational Committee"
+        },
+        {
+          "name": "Vedant Sawant",
+          "role": "Educational Committee"
+        },
         {
           "name": "Nandkumar Tawde (Committee Head)",
           "role": "T-shirt Committee"
         },
-        { "name": "Siddhesh Sawant", "role": "T-shirt Committee" },
-        { "name": "Gaurav Sawant", "role": "T-shirt Committee" },
-        { "name": "Abhishek Shivlekar", "role": "T-shirt Committee" },
-        { "name": "Manish Naik", "role": "T-shirt Committee" },
-        { "name": "Ashish Baste", "role": "T-shirt Committee" },
-        { "name": "Rohan Shinde", "role": "T-shirt Committee" },
-        { "name": "Saurabh Mode", "role": "T-shirt Committee" },
-        { "name": "Kunal Kantariya", "role": "T-shirt Committee" },
-        { "name": "Raj Pawar", "role": "T-shirt Committee" },
-        { "name": "Sahil Mahendrakar", "role": "T-shirt Committee" },
-        { "name": "Dipesh Panchal", "role": "T-shirt Committee" },
-        { "name": "Pritesh Kudali", "role": "T-shirt Committee" },
-        { "name": "Padmaraj Kadam", "role": "T-shirt Committee" },
-
+        {
+          "name": "Siddhesh Sawant",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Gaurav Sawant",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Abhishek Shivlekar",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Manish Naik",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Ashish Baste",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Rohan Shinde",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Saurabh Mode",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Kunal Kantariya",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Raj Pawar",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Sahil Mahendrakar",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Dipesh Panchal",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Pritesh Kudali",
+          "role": "T-shirt Committee"
+        },
+        {
+          "name": "Padmaraj Kadam",
+          "role": "T-shirt Committee"
+        },
         {
           "name": "Ganesh Karavade (Committee Head)",
           "role": "Advertisement Committee (Souvenir)"
@@ -153,7 +473,10 @@
           "name": "Nishant Kanvinde",
           "role": "Advertisement Committee (Souvenir)"
         },
-        { "name": "Paresh Loke", "role": "Advertisement Committee (Souvenir)" },
+        {
+          "name": "Paresh Loke",
+          "role": "Advertisement Committee (Souvenir)"
+        },
         {
           "name": "Bhushan Haldankar",
           "role": "Advertisement Committee (Souvenir)"
@@ -170,17 +493,26 @@
           "name": "Mahesh Chindarkar",
           "role": "Advertisement Committee (Souvenir)"
         },
-
         {
           "name": "Sanjay Sawant (Committee Head)",
           "role": "Blood Donation Camp Committee"
         },
-        { "name": "Omkar Kadam", "role": "Blood Donation Camp Committee" },
-        { "name": "Siddhesh Sawant", "role": "Blood Donation Camp Committee" },
-        { "name": "Dinesh Gaychor", "role": "Blood Donation Camp Committee" },
-        { "name": "Dnyanesh Shirke", "role": "Blood Donation Camp Committee" },
-
-
+        {
+          "name": "Omkar Kadam",
+          "role": "Blood Donation Camp Committee"
+        },
+        {
+          "name": "Siddhesh Sawant",
+          "role": "Blood Donation Camp Committee"
+        },
+        {
+          "name": "Dinesh Gaychor",
+          "role": "Blood Donation Camp Committee"
+        },
+        {
+          "name": "Dnyanesh Shirke",
+          "role": "Blood Donation Camp Committee"
+        },
         {
           "name": "Sanjay Sawant (Committee Head)",
           "role": "Ganesh Idol and Festival Decoration Committee"
@@ -201,7 +533,6 @@
           "name": "Sanjit Sawant",
           "role": "Ganesh Idol and Festival Decoration Committee"
         },
-
         {
           "name": "Sanjay Sawant",
           "role": "Festival Banner & Digital Advertisement Committee"
@@ -226,62 +557,150 @@
           "name": "Sandip Bagwe",
           "role": "Festival Banner & Digital Advertisement Committee"
         },
-
         {
           "name": "Nandkumar Bagwe (Committee Head)",
           "role": "Police Permissions and Meetings"
         },
-        
-  { "name": "Manish Naik", "role": "Police Permissions and Meetings" },
-  { "name": "Santosh Pandey", "role": "Police Permissions and Meetings" },
-  { "name": "Sahil Kandalgavkar", "role": "Police Permissions and Meetings" },
-  { "name": "Amey Loke", "role": "Police Permissions and Meetings" },
-  { "name": "Shubham Devlekar", "role": "Police Permissions and Meetings" },
-  { "name": "Bhuvanesh Parab", "role": "Police Permissions and Meetings" },
-  { "name": "Dnyanesh Shirke", "role": "Police Permissions and Meetings" },
-  { "name": "Vishal Madkholkar", "role": "Police Permissions and Meetings" },
-
-
-
-        
-  
-  { "name": " Alankar Satardekar", "role": "Prasad Committee" },
-  { "name": " Abhishek Shivalekar", "role": "Prasad Committee" },
-  { "name": " Santosh Pandey", "role": "Prasad Committee" },
-  { "name": " Nitin Narvekar", "role": "Prasad Committee" },
-  { "name": " Ajinkya Nakashe", "role": "Prasad Committee" },
-  { "name": " Harsh Pandey", "role": "Prasad Committee" },
-  { "name": " Shubham Desai", "role": "Prasad Committee" },
-  { "name": " Viral Ghoghari", "role": "Prasad Committee" },
-  { "name": " Mayuresh Mayekar", "role": "Prasad Committee" },
-  { "name": " Suyash Surve", "role": "Prasad Committee" },
-  { "name": " Ankit Sharma", "role": "Prasad Committee" },
-  { "name": " Sarvesh Chavan", "role": "Prasad Committee" },
-  { "name": " Rohan Parker", "role": "Prasad Committee" },
-  { "name": " Pratik Sawant", "role": "Prasad Committee" },
-  { "name": " Sanmit Sawant", "role": "Prasad Committee" },
-  { "name": " Yash Matere", "role": "Prasad Committee" },
-  { "name": " Soham Shetty", "role": "Prasad Committee" },
-  { "name": " Shashikant Palkar", "role": "Prasad Committee" },
-  { "name": " Swaraj Kubal", "role": "Prasad Committee" },
-  { "name": " Soham Khedekar", "role": "Prasad Committee" },
-  { "name": " Avishkar Sakharakar", "role": "Prasad Committee" },
-  { "name": " Ajinkya Panhalkar", "role": "Prasad Committee" },
-  { "name": " Mehul Parab", "role": "Prasad Committee" },
-
-
-
-
+        {
+          "name": "Manish Naik",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": "Santosh Pandey",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": "Sahil Kandalgavkar",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": "Amey Loke",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": "Shubham Devlekar",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": "Bhuvanesh Parab",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": "Dnyanesh Shirke",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": "Vishal Madkholkar",
+          "role": "Police Permissions and Meetings"
+        },
+        {
+          "name": " Alankar Satardekar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Abhishek Shivalekar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Santosh Pandey",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Nitin Narvekar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Ajinkya Nakashe",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Harsh Pandey",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Shubham Desai",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Viral Ghoghari",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Mayuresh Mayekar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Suyash Surve",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Ankit Sharma",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Sarvesh Chavan",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Rohan Parker",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Pratik Sawant",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Sanmit Sawant",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Yash Matere",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Soham Shetty",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Shashikant Palkar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Swaraj Kubal",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Soham Khedekar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Avishkar Sakharakar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Ajinkya Panhalkar",
+          "role": "Prasad Committee"
+        },
+        {
+          "name": " Mehul Parab",
+          "role": "Prasad Committee"
+        },
         {
           "name": "Sandip Bagwe (Committee Head)",
           "role": "Pandal and Lighting Committee"
         },
-        { "name": "Manish Naik", "role": "Pandal and Lighting Committee" },
+        {
+          "name": "Manish Naik",
+          "role": "Pandal and Lighting Committee"
+        },
         {
           "name": "Vishal Madkholkar",
           "role": "Pandal and Lighting Committee"
         },
-        { "name": "Ameya Naik", "role": "Pandal and Lighting Committee" },
+        {
+          "name": "Ameya Naik",
+          "role": "Pandal and Lighting Committee"
+        },
         {
           "name": "Alankar Satardekar",
           "role": "Pandal and Lighting Committee"
@@ -290,15 +709,26 @@
           "name": "Mahesh Chindarkar",
           "role": "Pandal and Lighting Committee"
         },
-
         {
           "name": "Amit Tawte (Committee Head)",
           "role": "Disaster Management Committee"
         },
-        { "name": "Milind Surve", "role": "Disaster Management Committee" },
-        { "name": "Siddhesh Sawant", "role": "Disaster Management Committee" },
-        { "name": "Rohit Kurnekar", "role": "Disaster Management Committee" },
-        { "name": "Anand Dubey", "role": "Disaster Management Committee" },
+        {
+          "name": "Milind Surve",
+          "role": "Disaster Management Committee"
+        },
+        {
+          "name": "Siddhesh Sawant",
+          "role": "Disaster Management Committee"
+        },
+        {
+          "name": "Rohit Kurnekar",
+          "role": "Disaster Management Committee"
+        },
+        {
+          "name": "Anand Dubey",
+          "role": "Disaster Management Committee"
+        },
         {
           "name": "Rishikesh Sadvilkar",
           "role": "Disaster Management Committee"
@@ -307,9 +737,18 @@
           "name": "Prathamesh Kudali",
           "role": "Disaster Management Committee"
         },
-        { "name": "Shreyas Parab", "role": "Disaster Management Committee" },
-        { "name": "Tanmay Bandal", "role": "Disaster Management Committee" },
-        { "name": "Vinayak Vanzare", "role": "Disaster Management Committee" }
+        {
+          "name": "Shreyas Parab",
+          "role": "Disaster Management Committee"
+        },
+        {
+          "name": "Tanmay Bandal",
+          "role": "Disaster Management Committee"
+        },
+        {
+          "name": "Vinayak Vanzare",
+          "role": "Disaster Management Committee"
+        }
       ]
     }
   ]

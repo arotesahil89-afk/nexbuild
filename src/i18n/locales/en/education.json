@@ -4,7 +4,13 @@
   "description": "Initiatives for student support and educational guidance.",
   "readMore": "Read More",
   "readLess": "Read Less",
-  "years": ["2022", "2023", "2024", "2025", "2026"],
+  "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026"
+  ],
   "data": {
     "2026": [
       {
@@ -19,25 +25,24 @@
     ],
     "2025": [
       {
-  "title": "Primary, Secondary, and Higher Secondary Student Felicitation Ceremony – 2025",
-  "description": "Organized by the above-mentioned festive committee as part of an educational initiative, a felicitation ceremony was held with great enthusiasm on Saturday, August 2, 2025, at Dr. Shirodkar High School Auditorium. The aim was to encourage member students from the region who demonstrated exceptional academic excellence in the primary, secondary, and higher secondary examinations during the 2024–2025 academic year. Special appreciation was given to all meritorious students, along with best wishes for their future endeavors!",
-  "images": [
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_1.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_2.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_3.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_4.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_5.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_6.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_7.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_8.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_9.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_10.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
-    "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
-  ]
-}
-,
+        "title": "Primary, Secondary, and Higher Secondary Student Felicitation Ceremony – 2025",
+        "description": "Organized by the above-mentioned festive committee as part of an educational initiative, a felicitation ceremony was held with great enthusiasm on Saturday, August 2, 2025, at Dr. Shirodkar High School Auditorium. The aim was to encourage member students from the region who demonstrated exceptional academic excellence in the primary, secondary, and higher secondary examinations during the 2024–2025 academic year. Special appreciation was given to all meritorious students, along with best wishes for their future endeavors!",
+        "images": [
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_1.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_2.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_3.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_4.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_5.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_6.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_7.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_8.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_9.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_10.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
+          "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
+        ]
+      },
       {
         "title": "Computer Training Center",
         "description": "On Saturday, 1st February 2025, the Lalbaug Sarvajanik Utsav Mandal, Ganesh Galli-Mumbaicha Raja inaugurated a computer training center under its educational initiative. This step was taken to keep our students ahead in today’s competitive academic environment. Please take advantage of this initiative and support the mandal.",

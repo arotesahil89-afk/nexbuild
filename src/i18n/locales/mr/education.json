@@ -4,7 +4,13 @@
   "description": "विद्यार्थ्यांसाठी शैक्षणिक मदतीचे आणि मार्गदर्शनाचे उपक्रम.",
   "readMore": "अधिक वाचा",
   "readLess": "कमी वाचा",
-  "years": ["2022", "2023", "2024", "2025", "2026"],
+  "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026"
+  ],
   "data": {
     "2026": [
       {
@@ -35,10 +41,8 @@
           "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_11.jpeg",
           "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_12.jpeg",
           "https://www.mumbaicharaja.co/gungaurav/2025/gungaurav_13.jpeg"
-          
         ]
       },
-      
       {
         "title": "योगा व लाठी-काठी प्रशिक्षण शिबीर",
         "description": "खास लोकाग्रहास्तव प्रौढ गटाकरिता योगा व लाठी-काठी प्रशिक्षण शिबीर",
