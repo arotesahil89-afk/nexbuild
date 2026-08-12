@@ -1,0 +1,70 @@
+name: Frontend Zero-Downtime Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: frontend_production_deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy Frontend (Zero Downtime)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: SSH into Lightsail and Deploy Frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USERNAME }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          port: ${{ secrets.LIGHTSAIL_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            echo "🚀 [Frontend] Starting Zero-Downtime Deploy..."
+            
+            APP_DIR="/home/ec2-user/mumbaicha-raja/app"
+            RELEASES_DIR="/home/ec2-user/mumbaicha-raja/releases"
+            CURRENT_SYMLINK="/home/ec2-user/mumbaicha-raja/frontend-current"
+            TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+            NEW_RELEASE="$RELEASES_DIR/frontend_$TIMESTAMP"
+
+            mkdir -p "$RELEASES_DIR"
+            cd "$APP_DIR"
+
+            echo "📥 Fetching latest frontend code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "📦 Installing frontend dependencies..."
+            if [ -f "package-lock.json" ]; then
+              npm ci --no-audit --no-fund
+            else
+              npm install --no-audit --no-fund
+            fi
+
+            echo "🎨 Building production bundle with Vite..."
+            npm run build
+
+            # Validation check: ensure build succeeded before touching live site
+            if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
+              echo "❌ Error: Build output dist/index.html is missing. Aborting deploy!"
+              exit 1
+            fi
+
+            echo "🚚 Storing release at: $NEW_RELEASE"
+            cp -r dist "$NEW_RELEASE"
+
+            echo "🔗 Atomically switching live symlink (0 ms downtime)..."
+            ln -sfn "$NEW_RELEASE" "$CURRENT_SYMLINK"
+
+            echo "🧹 Cleaning up old releases (retaining last 5)..."
+            cd "$RELEASES_DIR"
+            ls -dt frontend_* | tail -n +6 | xargs -r rm -rf
+
+            echo "✅ [Frontend] Deployed successfully with Zero Downtime!"
