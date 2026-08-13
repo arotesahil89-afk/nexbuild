@@ -38,33 +38,14 @@ jobs:
             cd "$APP_DIR"
 
             echo "📥 Fetching latest frontend code..."
-            OLD_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "HEAD")
             git fetch origin main
             git reset --hard origin/main
 
-            # Check if package.json or package-lock.json modified
-            CHANGED_PKG=""
-            if git cat-file -e "$OLD_COMMIT" 2>/dev/null; then
-              CHANGED_PKG=$(git diff --name-only "$OLD_COMMIT" HEAD 2>/dev/null | grep -E "package\.json|package-lock\.json" || true)
-            fi
-
-            NEED_INSTALL="false"
-            if [ ! -d "node_modules" ]; then
-              NEED_INSTALL="true"
-            fi
-            if [ -n "$CHANGED_PKG" ]; then
-              NEED_INSTALL="true"
-            fi
-
-            if [ "$NEED_INSTALL" = "true" ]; then
-              echo "📦 Installing updated dependencies..."
-              if [ -f "package-lock.json" ]; then
-                npm ci --no-audit --no-fund
-              else
-                npm install --no-audit --no-fund
-              fi
+            echo "📦 Installing frontend dependencies..."
+            if [ -f "package-lock.json" ]; then
+              npm ci --no-audit --no-fund
             else
-              echo "⚡ Dependencies unchanged! Skipping npm install (Saved 4 minutes & CPU)..."
+              npm install --no-audit --no-fund
             fi
 
             echo "🎨 Building production bundle with Vite..."
