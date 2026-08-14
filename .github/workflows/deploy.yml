@@ -1,4 +1,4 @@
-name: Frontend Zero-Downtime Deploy
+name: Frontend Zero-Downtime Deploy (Build in CI -> Sync Dist)
 
 on:
   push:
@@ -10,13 +10,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Build & Deploy Frontend (Zero Downtime)
+  build-and-deploy:
+    name: Build in CI & Deploy Dist
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
-      - name: SSH into Lightsail and Deploy Frontend
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies in CI Runner
+        run: npm ci
+
+      - name: Build Production Dist Bundle with Server Environment
+        env:
+          VITE_API_URL: "https://mumbaicharaja.co/api"
+        run: npm run build
+
+      - name: Transfer Pre-built Dist to Lightsail
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USERNAME }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          port: ${{ secrets.LIGHTSAIL_PORT || 22 }}
+          source: "dist/"
+          target: "/home/ec2-user/mumbaicha-raja/temp_dist"
+          strip_components: 1
+
+      - name: Atomically Switch Live Symlink on Server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
@@ -26,45 +54,22 @@ jobs:
           script_stop: true
           script: |
             set -e
-            echo "🚀 [Frontend] Starting Zero-Downtime Deploy..."
-            
-            APP_DIR="/home/ec2-user/mumbaicha-raja/app"
             RELEASES_DIR="/home/ec2-user/mumbaicha-raja/releases"
             CURRENT_SYMLINK="/home/ec2-user/mumbaicha-raja/frontend-current"
+            TEMP_DIR="/home/ec2-user/mumbaicha-raja/temp_dist"
             TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
             NEW_RELEASE="$RELEASES_DIR/frontend_$TIMESTAMP"
 
             mkdir -p "$RELEASES_DIR"
-            cd "$APP_DIR"
 
-            echo "📥 Fetching latest frontend code..."
-            git fetch origin main
-            git reset --hard origin/main
+            # Move uploaded pre-built dist to release folder
+            mv "$TEMP_DIR" "$NEW_RELEASE"
 
-            echo "📦 Installing frontend dependencies..."
-            if [ -f "package-lock.json" ]; then
-              npm ci --no-audit --no-fund
-            else
-              npm install --no-audit --no-fund
-            fi
-
-            echo "🎨 Building production bundle with Vite..."
-            npm run build
-
-            # Validation check: ensure build succeeded before touching live site
-            if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
-              echo "❌ Error: Build output dist/index.html is missing. Aborting deploy!"
-              exit 1
-            fi
-
-            echo "🚚 Storing release at: $NEW_RELEASE"
-            cp -r dist "$NEW_RELEASE"
-
-            echo "🔗 Atomically switching live symlink (0 ms downtime)..."
+            # 0ms Atomic Symlink Switch
             ln -sfn "$NEW_RELEASE" "$CURRENT_SYMLINK"
 
-            echo "🧹 Cleaning up old releases (retaining last 5)..."
+            # Keep last 5 releases
             cd "$RELEASES_DIR"
             ls -dt frontend_* | tail -n +6 | xargs -r rm -rf
 
-            echo "✅ [Frontend] Deployed successfully with Zero Downtime!"
+            echo "✅ [Frontend] Pre-built dist deployed successfully with Zero Downtime!"
