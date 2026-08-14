@@ -108,6 +108,33 @@ const FlashNewsMobile = () => {
                 ))}
             </div>
 
+            {/* 🎥 YouTube Videos */}
+{popupMsg.videos && popupMsg.videos.length > 0 && (
+  <div className="mt-3 mb-2">
+    <h3 className="text-lg font-semibold mb-2 text-yellow-300">
+  {t("watch")}
+</h3>
+
+    <div className="space-y-3">
+      {popupMsg.videos.map((video, idx) => (
+        <div
+          key={idx}
+          className="w-full aspect-video rounded-lg overflow-hidden shadow-lg"
+        >
+          <iframe
+            src={video}
+            title={`Video ${idx + 1}`}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          ></iframe>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
             <button
               onClick={closePopup}
               className="absolute top-2 right-3 text-white text-lg hover:text-yellow-300"

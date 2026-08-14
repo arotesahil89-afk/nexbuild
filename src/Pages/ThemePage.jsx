@@ -4,7 +4,7 @@ import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 
 
-const years = [2025, 2024];
+const years = [2026, 2025, 2024];
 
 
 const ThemePage = () => {
