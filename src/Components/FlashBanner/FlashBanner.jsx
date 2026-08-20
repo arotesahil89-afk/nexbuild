@@ -3,19 +3,59 @@ import { useTranslation } from "react-i18next";
 import { toast, ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./FlashBanner.css";
+import { flashFirestoreService } from "../../services/firestoreService";
+import { isFirebaseConfigured } from "../../services/firebase";
 
 const FlashBanner = () => {
-  const { t } = useTranslation("flash");
-  const messages = t("messages", { returnObjects: true }) || [];
+  const { t, i18n } = useTranslation("flash");
+  const rawFallback = t("messages", { returnObjects: true });
+  const fallbackMessages = Array.isArray(rawFallback) ? rawFallback : [];
+  const currentLang = i18n.language || "mr";
 
+  const [messages, setMessages] = useState(fallbackMessages);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [popupMsg, setPopupMsg] = useState(null);
   const [zoomImg, setZoomImg] = useState(null);
 
+  // 1. Real-time Firebase Listener with fallback to static translation JSON
   useEffect(() => {
-    if (!messages.length || popupMsg) return;
+    if (isFirebaseConfigured) {
+      const unsubscribe = flashFirestoreService.listenFlashMessages(
+        (items) => {
+          if (Array.isArray(items) && items.length > 0) {
+            const activeItems = items.filter(
+              (m) =>
+                m.isActive !== false &&
+                (!m.language || m.language === currentLang || m.language === "all")
+            );
+            if (activeItems.length > 0) {
+              setMessages(activeItems);
+            } else {
+              setMessages(fallbackMessages);
+            }
+          } else {
+            setMessages(fallbackMessages);
+          }
+        },
+        (err) => {
+          console.warn("[FlashBanner] Firestore error, using fallback JSON:", err);
+          setMessages(fallbackMessages);
+        }
+      );
+      return () => unsubscribe();
+    } else {
+      setMessages(fallbackMessages);
+    }
+  }, [currentLang]);
 
-    const msg = messages[currentIndex];
+  // 2. Toast ticker rotation
+  useEffect(() => {
+    if (!messages || !messages.length || popupMsg) return;
+
+    const safeIndex = currentIndex >= messages.length ? 0 : currentIndex;
+    const msg = messages[safeIndex];
+    if (!msg) return;
+
     toast.dismiss();
 
     toast(
@@ -58,18 +98,19 @@ const FlashBanner = () => {
       {/* 🔴 Main Popup */}
       {popupMsg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-red-700 text-white p-6 rounded-lg shadow-lg max-w-md w-[90%] animate-popupOpen relative">
+          <div className="bg-red-700 text-white p-6 rounded-lg shadow-lg max-w-md w-[90%] max-h-[85vh] overflow-y-auto animate-popupOpen relative">
             <h2 className="text-xl font-bold mb-2">{popupMsg.title}</h2>
 
             {/* 🔄 Formatted description */}
             {popupMsg.description &&
+              typeof popupMsg.description === "string" &&
               popupMsg.description.split("\n").map((line, idx) => (
-                <p key={idx} className="mb-1">
+                <p key={idx} className="mb-1 text-sm sm:text-base">
                   {line}
                 </p>
               ))}
 
-            {/* 📋 Added direct link from JSON */}
+            {/* 📋 Added direct link */}
             {popupMsg.links?.url && (
               <div className="mt-3">
                 <a
@@ -83,8 +124,25 @@ const FlashBanner = () => {
               </div>
             )}
 
+            {/* 🎥 Embedded Videos */}
+            {popupMsg.videos && Array.isArray(popupMsg.videos) && popupMsg.videos.length > 0 && (
+              <div className="my-3 space-y-2">
+                {popupMsg.videos.map((vidUrl, vIdx) => (
+                  <div key={vIdx} className="aspect-video w-full rounded overflow-hidden shadow">
+                    <iframe
+                      src={vidUrl}
+                      title={`Video ${vIdx + 1}`}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* 📸 Image gallery */}
-            <div className="flex flex-wrap gap-3 mb-3">
+            <div className="flex flex-wrap gap-3 my-3">
               {popupMsg.image && (
                 <img
                   src={popupMsg.image}
@@ -94,6 +152,7 @@ const FlashBanner = () => {
                 />
               )}
               {popupMsg.images &&
+                Array.isArray(popupMsg.images) &&
                 popupMsg.images.map((img, idx) => (
                   <img
                     key={idx}
@@ -104,33 +163,6 @@ const FlashBanner = () => {
                   />
                 ))}
             </div>
-
-            {/* 🎥 YouTube Videos */}
-{popupMsg.videos && popupMsg.videos.length > 0 && (
-  <div className="mt-4 mb-3">
-    <h3 className="text-lg font-semibold mb-2 text-yellow-300">
-  {t("watch")}
-</h3>
-
-    <div className="space-y-3">
-      {popupMsg.videos.map((video, idx) => (
-        <div
-          key={idx}
-          className="w-full aspect-video rounded-lg overflow-hidden shadow-lg"
-        >
-          <iframe
-            src={video}
-            title={`Video ${idx + 1}`}
-            className="w-full h-full"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          ></iframe>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
 
             {/* 🔗 Social Media Links */}
             {popupMsg.links?.instagram || popupMsg.links?.facebook ? (
@@ -159,11 +191,11 @@ const FlashBanner = () => {
             ) : null}
 
             {/* 🎧 Episodes List */}
-            {popupMsg.episodes && popupMsg.episodes.length > 0 && (
+            {popupMsg.episodes && Array.isArray(popupMsg.episodes) && popupMsg.episodes.length > 0 && (
               <div className="mt-3">
                 <h3 className="text-lg font-semibold mb-2 text-yellow-300">
-  {t("watch")}
-</h3>
+                  {currentLang === "mr" ? "पहा:" : currentLang === "hi" ? "देखें:" : "Watch:"}
+                </h3>
                 <ul className="pl-1 space-y-3">
                   {popupMsg.episodes.map((ep, idx) => (
                     <li key={idx} className="text-white-200">

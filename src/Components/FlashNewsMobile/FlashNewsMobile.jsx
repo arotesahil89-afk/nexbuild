@@ -3,11 +3,16 @@ import { useTranslation } from "react-i18next";
 import { toast, ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./FlashNewsMobile.css";
+import { flashFirestoreService } from "../../services/firestoreService";
+import { isFirebaseConfigured } from "../../services/firebase";
 
 const FlashNewsMobile = () => {
-  const { t } = useTranslation("flash");
-  const messages = t("messages", { returnObjects: true }) || [];
+  const { t, i18n } = useTranslation("flash");
+  const rawFallback = t("messages", { returnObjects: true });
+  const fallbackMessages = Array.isArray(rawFallback) ? rawFallback : [];
+  const currentLang = i18n.language || "mr";
 
+  const [messages, setMessages] = useState(fallbackMessages);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [popupMsg, setPopupMsg] = useState(null);
   const [zoomImg, setZoomImg] = useState(null);
@@ -19,10 +24,45 @@ const FlashNewsMobile = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // 1. Real-time Firebase Listener
   useEffect(() => {
-    if (!messages.length || popupMsg || !isMobile) return;
+    if (isFirebaseConfigured) {
+      const unsubscribe = flashFirestoreService.listenFlashMessages(
+        (items) => {
+          if (Array.isArray(items) && items.length > 0) {
+            const activeItems = items.filter(
+              (m) =>
+                m.isActive !== false &&
+                (!m.language || m.language === currentLang || m.language === "all")
+            );
+            if (activeItems.length > 0) {
+              setMessages(activeItems);
+            } else {
+              setMessages(fallbackMessages);
+            }
+          } else {
+            setMessages(fallbackMessages);
+          }
+        },
+        (err) => {
+          console.warn("[FlashNewsMobile] Firestore error, using fallback JSON:", err);
+          setMessages(fallbackMessages);
+        }
+      );
+      return () => unsubscribe();
+    } else {
+      setMessages(fallbackMessages);
+    }
+  }, [currentLang]);
 
-    const msg = messages[currentIndex];
+  // 2. Toast ticker rotation
+  useEffect(() => {
+    if (!messages || !messages.length || popupMsg || !isMobile) return;
+
+    const safeIndex = currentIndex >= messages.length ? 0 : currentIndex;
+    const msg = messages[safeIndex];
+    if (!msg) return;
+
     toast.dismiss();
 
     toast(
@@ -68,6 +108,7 @@ const FlashNewsMobile = () => {
             <h2 className="text-lg font-bold mb-2">{popupMsg.title}</h2>
 
             {popupMsg.description &&
+              typeof popupMsg.description === "string" &&
               popupMsg.description.split("\n").map((line, idx) => (
                 <p key={idx} className="mb-1 text-sm">
                   {line}
@@ -87,6 +128,22 @@ const FlashNewsMobile = () => {
               </div>
             )}
 
+            {popupMsg.videos && Array.isArray(popupMsg.videos) && popupMsg.videos.length > 0 && (
+              <div className="my-2 space-y-2">
+                {popupMsg.videos.map((vidUrl, vIdx) => (
+                  <div key={vIdx} className="aspect-video w-full rounded overflow-hidden shadow">
+                    <iframe
+                      src={vidUrl}
+                      title={`Video ${vIdx + 1}`}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-2 mt-3 mb-2">
               {popupMsg.image && (
                 <img
@@ -97,6 +154,7 @@ const FlashNewsMobile = () => {
                 />
               )}
               {popupMsg.images &&
+                Array.isArray(popupMsg.images) &&
                 popupMsg.images.map((img, idx) => (
                   <img
                     key={idx}
@@ -107,33 +165,6 @@ const FlashNewsMobile = () => {
                   />
                 ))}
             </div>
-
-            {/* 🎥 YouTube Videos */}
-{popupMsg.videos && popupMsg.videos.length > 0 && (
-  <div className="mt-3 mb-2">
-    <h3 className="text-lg font-semibold mb-2 text-yellow-300">
-  {t("watch")}
-</h3>
-
-    <div className="space-y-3">
-      {popupMsg.videos.map((video, idx) => (
-        <div
-          key={idx}
-          className="w-full aspect-video rounded-lg overflow-hidden shadow-lg"
-        >
-          <iframe
-            src={video}
-            title={`Video ${idx + 1}`}
-            className="w-full h-full"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          ></iframe>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
 
             <button
               onClick={closePopup}
