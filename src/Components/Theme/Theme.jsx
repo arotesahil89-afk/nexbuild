@@ -73,7 +73,7 @@ const Theme = () => {
         >
           <iframe
             className="absolute top-0 left-0 w-full h-full"
-            src="https://www.youtube.com/embed/oKsisg-vj28?si=sZIselKUxZiy5w2A"
+            src="https://www.youtube.com/embed/MjQXnFhAL-Y?si=_PGUSHX5SdV9mQYC"
             title={t("videoTitle")}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -86,3 +86,4 @@ const Theme = () => {
 };
 
 export default Theme;
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MjQXnFhAL-Y?si=_PGUSHX5SdV9mQYC" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
