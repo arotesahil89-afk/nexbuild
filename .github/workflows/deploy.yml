@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies in CI Runner
-        run: npm ci
+        run: npm install
 
       - name: Build Production Dist Bundle with Server Environment
         env:
