@@ -84,7 +84,7 @@ const Padyapujan = () => {
         >
           <iframe
             className="absolute top-0 left-0 w-full h-full"
-            src="https://www.youtube.com/embed/bMRdhdOAmFM?si=xLdBMoRQy9Q334mk"
+            src="https://www.youtube.com/embed/K8YDhRlEFPk?si=X8AG9lcEHS7pgHhC"
             title={t("videoTitle")}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -97,3 +97,4 @@ const Padyapujan = () => {
 };
 
 export default Padyapujan;
+

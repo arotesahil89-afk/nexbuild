@@ -5,7 +5,7 @@ import { useAdmin, canAccess } from "./adminContext";
 import "./admin.css";
 import {
   LayoutDashboard, Award, CalendarDays, ShoppingBag,
-  LogOut, Menu, User, ChevronRight, Shield, Truck, Shirt,
+  LogOut, Menu, User, ChevronRight, Shield, Truck, Shirt, Megaphone,
 } from "lucide-react";
 
 // ─── Nav items definition (section keys drive role gating) ──────────────────
@@ -13,6 +13,7 @@ const NAV = [
   { to: "/admin",          end: true,  icon: LayoutDashboard, label: "Dashboard",   section: "dashboard"   },
   { to: "/admin/orders",              icon: ShoppingBag,      label: "Orders",      section: "orders"      },
   { to: "/admin/merchandise",         icon: Shirt,            label: "Merchandise", section: "merchandise" },
+  { to: "/admin/flash-banner",        icon: Megaphone,        label: "Flash Banner", section: "flash"       },
   { to: "/admin/awards",              icon: Award,            label: "Awards",      section: "awards"      },
   { to: "/admin/events",              icon: CalendarDays,     label: "Events",      section: "events"      },
   { to: "/admin/users",               icon: Shield,           label: "User Master", section: "users"       },

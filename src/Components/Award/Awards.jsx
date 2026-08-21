@@ -2,14 +2,15 @@ import React from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-// import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import useAwardsLoader from "../../loaders/AwardsLoader";
 
 const AwardsSlider = ({ lang }) => {
-  const { i18n } = useTranslation();
-  const currentLang = lang || i18n.language || "mr"; // default Marathi
-  const { awards, loading, error } = useAwardsLoader(currentLang);
+  const { t, i18n } = useTranslation("awards");
+  const fallbackAwards = t("awards", { returnObjects: true }) || [];
+  const currentLang = lang || i18n.language || "mr";
+  const { awards, loading } = useAwardsLoader(currentLang);
 
   const settings = {
     dots: false,
@@ -23,24 +24,20 @@ const AwardsSlider = ({ lang }) => {
     pauseOnHover: true,
   };
 
-  if (loading)
+  const displayHeading = awards?.title || t("heading") || "Awards & Honors";
+  const displayItems =
+    awards?.items && awards.items.length > 0
+      ? awards.items
+      : Array.isArray(fallbackAwards)
+      ? fallbackAwards
+      : [];
+
+  if (loading && displayItems.length === 0)
     return (
       <div className="text-center py-10 text-gray-600">Loading awards...</div>
     );
 
-  if (error)
-    return (
-      <div className="text-center py-10 text-red-600">
-        Error loading awards data
-      </div>
-    );
-
-  if (!awards || !awards.items || awards.items.length === 0)
-    return (
-      <div className="text-center py-10 text-gray-500">
-        No awards available yet
-      </div>
-    );
+  if (displayItems.length === 0) return null;
 
   return (
     <motion.div
@@ -57,11 +54,11 @@ const AwardsSlider = ({ lang }) => {
         viewport={{ once: true }}
         className="text-3xl font-bold text-center text-red-700 mb-6"
       >
-        {awards?.title || "Awards & Recognition"}
+        {displayHeading}
       </motion.h2>
 
       <Slider {...settings}>
-        {awards.items.map((award, index) => (
+        {displayItems.map((award, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -70,7 +67,7 @@ const AwardsSlider = ({ lang }) => {
             viewport={{ once: true }}
           >
             <div className="backdrop-blur-md bg-white/80 border border-red-100 p-6 rounded-xl shadow-md min-h-[180px] flex items-center justify-center text-center text-gray-800 text-lg sm:text-xl transition-all duration-300 hover:shadow-lg">
-              {award}
+              {typeof award === "string" ? award : award.text || award.title}
             </div>
           </motion.div>
         ))}

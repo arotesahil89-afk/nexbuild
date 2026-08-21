@@ -36,7 +36,7 @@ const Home = () => {
       <WorldRecordVideo />
       <Theme />
       <Padyapujan />
-      <UpcomingEvents />
+      {/* <UpcomingEvents /> */}
       <GalleryPreview />
       <Awards />
       <Donate />

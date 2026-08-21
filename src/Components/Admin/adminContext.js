@@ -13,6 +13,7 @@ export const SECTION_ROLES = {
   merchandise: ["admin"],
   awards:      ["admin"],
   events:      ["admin"],
+  flash:       ["admin"],
   users:       ["admin"],
 };
 

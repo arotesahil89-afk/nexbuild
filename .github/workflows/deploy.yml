@@ -31,6 +31,13 @@ jobs:
       - name: Build Production Dist Bundle with Server Environment
         env:
           VITE_API_URL: "https://mumbaicharaja.co/api"
+          VITE_FIREBASE_API_KEY: "AIzaSyCUiW1PbP1jrAG68qSLrzU_TDKklOHSHdY"
+          VITE_FIREBASE_AUTH_DOMAIN: "mumbaicharajawebsite.firebaseapp.com"
+          VITE_FIREBASE_PROJECT_ID: "mumbaicharajawebsite"
+          VITE_FIREBASE_STORAGE_BUCKET: "mumbaicharajawebsite.firebasestorage.app"
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "1087798763150"
+          VITE_FIREBASE_APP_ID: "1:1087798763150:web:e64e9ac10f6159528a73df"
+          VITE_FIREBASE_MEASUREMENT_ID: "G-E1E1C9V749"
         run: npm run build
 
       - name: Transfer Pre-built Dist to Lightsail
