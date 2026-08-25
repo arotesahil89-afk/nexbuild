@@ -84,6 +84,7 @@ const DonationDrivePage = () => {
 
   // OTP & Payment state
   const [otp, setOtp] = useState("");
+  const [otpSessionToken, setOtpSessionToken] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [otpTimer, setOtpTimer] = useState(60);
@@ -209,8 +210,12 @@ const DonationDrivePage = () => {
     try {
       const res = await apiClient.post("/donations/send-otp", { phone: form.phone });
       setOtpTimer(60);
-      if (res?.data?.devOtpHint) {
-        setDevOtpHint(res.data.devOtpHint);
+      const payload = res?.data || res;
+      if (payload?.otpSessionToken) {
+        setOtpSessionToken(payload.otpSessionToken);
+      }
+      if (payload?.devOtpHint) {
+        setDevOtpHint(payload.devOtpHint);
       }
       setStep("otp-modal");
     } catch (err) {
@@ -229,8 +234,12 @@ const DonationDrivePage = () => {
     try {
       const res = await apiClient.post("/donations/send-otp", { phone: form.phone });
       setOtpTimer(60);
-      if (res?.data?.devOtpHint) {
-        setDevOtpHint(res.data.devOtpHint);
+      const payload = res?.data || res;
+      if (payload?.otpSessionToken) {
+        setOtpSessionToken(payload.otpSessionToken);
+      }
+      if (payload?.devOtpHint) {
+        setDevOtpHint(payload.devOtpHint);
       }
     } catch (err) {
       setOtpError("Failed to resend OTP. Please try again.");
@@ -253,6 +262,7 @@ const DonationDrivePage = () => {
       const verifyRes = await apiClient.post("/donations/verify-otp", {
         phone: form.phone,
         otp,
+        otpSessionToken,
       });
 
       const token = verifyRes?.data?.verificationToken || "verified";

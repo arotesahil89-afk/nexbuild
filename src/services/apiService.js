@@ -6,7 +6,7 @@ const SECRET_KEY = import.meta.env.VITE_API_SECRET_KEY || 'default-secret-key-12
 const apiClient = axios.create({
   baseURL:
     import.meta.env.VITE_API_URL ||
-    "https://mumbaicha-raja-backend.onrender.com/api",
+    "https://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
