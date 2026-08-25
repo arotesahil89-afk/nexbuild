@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import apiClient from "../../services/apiService";
 import {
   ShoppingBag, Award, CalendarDays, User,
-  IndianRupee, Clock, PackageCheck, ArrowRight, RefreshCw, Truck, Shirt
+  IndianRupee, Clock, PackageCheck, ArrowRight, RefreshCw, Truck, Shirt, Heart
 } from "lucide-react";
 
 // ─── Counter animation hook ───────────────────────────────────────────────────
@@ -266,6 +266,7 @@ const AdminDashboardPage = () => {
           <p style={{ fontSize: 11, fontWeight: 700, color: "var(--a-muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 2 }}>
             Quick Access
           </p>
+          <QuickCard to="/admin/donations" icon={Heart}       label="Manage Donations" desc="Devotee offerings & receipts" color="#dc2626" />
           <QuickCard to="/admin/orders"   icon={ShoppingBag}  label="Manage Orders"    desc="View & update orders"  color="#991b1b" />
           <QuickCard to="/admin/merchandise" icon={Shirt}     label="Merchandise"      desc="Products & inventory"  color="#ec4899" />
           <QuickCard to="/admin/awards"   icon={Award}        label="Manage Awards"    desc="Add or edit awards"    color="#d97706" />

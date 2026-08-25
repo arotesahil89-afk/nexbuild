@@ -42,6 +42,7 @@ import ManageAward         from "./Pages/Admin/ManageAward.jsx";
 import ManageEvents        from "./Pages/Admin/ManageEvents.jsx";
 import ManageFlashBanner   from "./Pages/Admin/ManageFlashBanner.jsx";
 import ManageOrders        from "./Pages/Admin/ManageOrders.jsx";
+import ManageDonations     from "./Pages/Admin/ManageDonations.jsx";
 import ManageMerchandise   from "./Pages/Admin/ManageMerchandise.jsx";
 import ManageAdmins        from "./Pages/Admin/ManageAdmins.jsx";
 import AdminProfile        from "./Pages/Admin/AdminProfile.jsx";
@@ -159,6 +160,7 @@ function App() {
           }
         >
           <Route index           element={<AdminDashboardPage />} />
+          <Route path="donations" element={<RequireSection section="donations"><ManageDonations /></RequireSection>} />
           <Route path="orders"   element={<ManageOrders />} />
           <Route path="flash-banner" element={<RequireSection section="flash"><ManageFlashBanner /></RequireSection>} />
           <Route path="awards"   element={<RequireSection section="awards"><ManageAward /></RequireSection>} />
