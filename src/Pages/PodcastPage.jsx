@@ -34,6 +34,15 @@ const podcastSeasons = [
       "https://www.youtube.com/embed/BbF8bsuzEN4?si=tzNZAWwRVbbOjRi6",
       "https://www.youtube.com/embed/AdWm_k3wjgo?si=NdWnR9A6LjLyG0DF"
     ]
+  },
+  {
+    id: "season4",
+    titleKey: "season4",
+    videos: [
+      "https://www.youtube.com/embed/AhCrr0w5Lvs?si=Oa8n-VMyAUJttgUO",
+      "https://www.youtube.com/embed/bXqbUtnftS8?si=1PiQ2uPDm9WTnZpH"
+      
+    ]
   }
 ];
 
