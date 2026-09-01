@@ -3,10 +3,22 @@ import CryptoJS from 'crypto-js';
 
 const SECRET_KEY = import.meta.env.VITE_API_SECRET_KEY || 'default-secret-key-123456789012';
 
+const getBaseURL = () => {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('mumbaicharaja.co')) {
+    return `${window.location.origin}/api`;
+  }
+  if (import.meta.env.VITE_API_URL) {
+    const url = import.meta.env.VITE_API_URL;
+    if (url.includes('mumbaicharaja.co:5000')) {
+      return 'https://mumbaicharaja.co/api';
+    }
+    return url;
+  }
+  return 'http://localhost:5000/api';
+};
+
 const apiClient = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "https://localhost:5000/api",
+  baseURL: getBaseURL(),
   headers: {
     "Content-Type": "application/json",
   },
