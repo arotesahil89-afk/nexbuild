@@ -907,66 +907,6 @@ const DonationDrivePage = () => {
         </div>
       </div>
 
-      {/* ── Direct Payment Section ── */}
-      <div className="px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto mt-12">
-        <div className="text-center mb-6">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Or pay directly</p>
-          <h2 className="text-2xl font-extrabold text-gray-900 mt-1">UPI & Bank Transfer</h2>
-          <p className="text-sm text-gray-500 mt-1">No account needed. Scan or transfer directly to our mandal.</p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-6">
-
-          {/* QR Code */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col items-center">
-            <p className="text-sm font-bold text-gray-700 mb-4">Scan to Pay via UPI</p>
-            <div className="w-48 h-48 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center mb-4 overflow-hidden">
-              <img
-                src="/images/donation-qr.png"
-                alt="Donation QR Code"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "flex";
-                }}
-              />
-              <div className="hidden flex-col items-center justify-center text-center p-4">
-                <p className="text-3xl mb-2">📱</p>
-                <p className="text-xs text-gray-400">QR code coming soon</p>
-                <p className="text-xs text-gray-400 mt-1">Use UPI ID below</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full">
-              <p className="text-sm font-mono text-gray-700 flex-1 truncate">{BANK.upiId}</p>
-              <CopyBtn text={BANK.upiId} />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">Works with GPay · PhonePe · Paytm · Any UPI app</p>
-          </div>
-
-          {/* Bank details */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-            <p className="text-sm font-bold text-gray-700 mb-5">Bank Transfer / NEFT / RTGS</p>
-            <div className="space-y-4">
-              {[
-                { label: "Account Holder", value: BANK.holder },
-                { label: "Bank",           value: BANK.bank },
-                { label: "Account No.",    value: BANK.account },
-                { label: "IFSC Code",      value: BANK.ifsc },
-                { label: "Account Type",   value: "Savings" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium">{label}</p>
-                    <p className="text-sm font-semibold text-gray-800 mt-0.5">{value}</p>
-                  </div>
-                  <CopyBtn text={value} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 };
