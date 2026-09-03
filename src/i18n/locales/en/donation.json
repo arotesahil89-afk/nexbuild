@@ -33,6 +33,7 @@
   "labelName": "Full Name",
   "placeholderName": "As it should appear on receipt",
   "labelPhone": "Mobile Number",
+  "labelAddress": "Address",
   "placeholderPhone": "10-digit mobile",
   "labelEmail": "Email Address",
   "placeholderEmail": "For receipt & 80G certificate",

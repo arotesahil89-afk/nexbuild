@@ -33,6 +33,7 @@
   "labelName": "पूरा नाम",
   "placeholderName": "रसीद पर जैसा दिखना चाहिए",
   "labelPhone": "मोबाइल नंबर",
+  "labelAddress": "पता",
   "placeholderPhone": "10 अंकों का मोबाइल",
   "labelEmail": "ईमेल पता",
   "placeholderEmail": "रसीद और 80G प्रमाणपत्र के लिए",

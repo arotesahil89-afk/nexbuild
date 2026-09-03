@@ -4,8 +4,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Heart, ShieldCheck, ChevronRight, User, Mail, Phone, MapPin,
-  CheckCircle2, Award, Landmark, FileText, Copy, Check,
-  Upload, ImagePlus, X as XIcon, Send, AlertCircle, Lock, RefreshCw, Download
+  CheckCircle2, Award, Landmark, FileText, AlertCircle, Lock, RefreshCw, Download,
+  Check, Sparkles, HelpCircle
 } from "lucide-react";
 import { causes as causesData, presetAmounts, impactStats } from "../data/donationData";
 import apiClient from "../services/apiService";
@@ -13,49 +13,32 @@ import { downloadDonationReceipt } from "../utils/marathiReceipt";
 
 const fmtINR = (n) => Number(n || 0).toLocaleString("en-IN");
 
-/* ─── Bank / UPI details ─── */
-const BANK = {
-  upiId:   "mumbaicharaja@upi",
-  bank:    "Bank of Baroda",
-  account: "33380100002204",
-  ifsc:    "BARB0LALBAU",
-  holder:  "Lalbaug Sarvajanik Utsav Mandal Trust",
-};
-
-/* ─── Field ─── */
+/* ─── Mobile-First Input Field ─── */
 const Field = ({ icon: Icon, label, error, children }) => (
-  <div className="mb-4">
-    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">{label}</label>
-    <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
-      error
-        ? "border-red-400 bg-red-50"
-        : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
-    }`}>
-      <span className="pl-3.5 text-gray-400 shrink-0"><Icon size={16} /></span>
+  <div className="mb-3.5 sm:mb-4">
+    <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">
+      {label}
+    </label>
+    <div
+      className={`flex items-center border-2 rounded-xl sm:rounded-2xl transition-all duration-200 ${
+        error
+          ? "border-red-400 bg-red-50/50"
+          : "border-gray-200 bg-gray-50/60 focus-within:border-[#B91C1C] focus-within:bg-white focus-within:shadow-sm"
+      }`}
+    >
+      <span className="pl-3.5 sm:pl-4 text-gray-400 shrink-0">
+        <Icon size={18} className="text-gray-400" />
+      </span>
       {children}
     </div>
-    {error && <p className="text-xs text-red-500 mt-1 pl-1 font-medium">{error}</p>}
+    {error && (
+      <p className="text-xs text-red-600 mt-1 pl-1 font-medium flex items-center gap-1">
+        <AlertCircle size={13} className="shrink-0" />
+        {error}
+      </p>
+    )}
   </div>
 );
-
-/* ─── Copy button ─── */
-const CopyBtn = ({ text }) => {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-  return (
-    <button
-      onClick={copy}
-      className="ml-2 p-1 rounded text-gray-400 hover:text-[#B91C1C] transition shrink-0"
-    >
-      {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-    </button>
-  );
-};
 
 const DonationDrivePage = () => {
   const { t } = useTranslation("donate");
@@ -73,13 +56,13 @@ const DonationDrivePage = () => {
     label: t(`presets.${a.value}`, { defaultValue: a.label }),
   }));
 
-  const [cause,    setCause]    = useState(causes[0].id);
-  const [preset,   setPreset]   = useState(501);
-  const [custom,   setCustom]   = useState("");
-  const [form,     setForm]     = useState({ name: "", email: "", phone: "", address: "" });
+  const [cause, setCause] = useState(causes[0].id);
+  const [preset, setPreset] = useState(501);
+  const [custom, setCustom] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
   const [disclaimer, setDisclaimer] = useState(true);
-  const [errors,   setErrors]   = useState({});
-  const [step,     setStep]     = useState("form"); // 'form', 'confirm', 'otp-modal', 'redirecting', 'done'
+  const [errors, setErrors] = useState({});
+  const [step, setStep] = useState("form"); // 'form', 'confirm', 'otp-modal', 'redirecting', 'done'
   const [pageAlert, setPageAlert] = useState(null);
 
   // OTP & Payment state
@@ -146,25 +129,41 @@ const DonationDrivePage = () => {
     return () => clearInterval(interval);
   }, [step, otpTimer]);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
-  const finalAmount   = custom ? Number(custom) : preset;
+  const finalAmount = custom ? Number(custom) : preset;
   const selectedCause = causes.find((c) => c.id === cause);
 
   const validate = (f, amt) => {
     const e = {};
-    if (!f.name.trim() || f.name.trim().length < 2) e.name  = t("errorName", { defaultValue: "Please enter your full name" });
-    if (!/^[6-9]\d{9}$/.test(f.phone))              e.phone = t("errorPhone", { defaultValue: "Enter a valid 10-digit mobile" });
-    if (!f.address.trim() || f.address.trim().length < 5) e.address = "Please enter your complete address (min 5 characters)";
-    if (f.email && f.email.trim() && !/^\S+@\S+\.\S+$/.test(f.email)) e.email = t("errorEmail", { defaultValue: "Enter a valid email" });
-    if (!amt || Number(amt) < 1)                     e.amount = t("errorAmountEmpty", { defaultValue: "Enter amount" });
-    if (Number(amt) > 500000)                        e.amount = t("errorAmountMax", { defaultValue: "Max amount is ₹5,00,000" });
-    if (!disclaimer)                                 e.disclaimer = "Please accept the terms to proceed";
+    if (!f.name.trim() || f.name.trim().length < 2) {
+      e.name = t("errorName", { defaultValue: "Please enter your full name" });
+    }
+    if (!/^[6-9]\d{9}$/.test(f.phone)) {
+      e.phone = t("errorPhone", { defaultValue: "Enter a valid 10-digit mobile number" });
+    }
+    if (!f.address.trim() || f.address.trim().length < 5) {
+      e.address = "Please enter your complete address (min 5 characters)";
+    }
+    if (f.email && f.email.trim() && !/^\S+@\S+\.\S+$/.test(f.email)) {
+      e.email = t("errorEmail", { defaultValue: "Enter a valid email address" });
+    }
+    if (!amt || Number(amt) < 1) {
+      e.amount = t("errorAmountEmpty", { defaultValue: "Please enter or select an amount" });
+    }
+    if (Number(amt) > 500000) {
+      e.amount = t("errorAmountMax", { defaultValue: "Maximum single donation is ₹5,00,000" });
+    }
+    if (!disclaimer) {
+      e.disclaimer = "Please accept the voluntary offering terms to proceed";
+    }
     return e;
   };
 
-  const set      = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
-  const setPhone = (e)   => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }));
+  const set = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
+  const setPhone = (e) => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }));
 
   const handleReview = () => {
     const e = validate(form, finalAmount);
@@ -222,7 +221,7 @@ const DonationDrivePage = () => {
   // Verify OTP and redirect to CCAvenue
   const handleVerifyAndPayCCAvenue = async () => {
     if (!otp || otp.length !== 6) {
-      setOtpError("Please enter the 6-digit OTP");
+      setOtpError("Please enter the 6-digit OTP code");
       return;
     }
 
@@ -301,134 +300,159 @@ const DonationDrivePage = () => {
     });
   };
 
-  /* ── Cause & amount selector (reused on mobile below form) ── */
-  const CauseAmountPanel = () => (
-    <div>
-      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-        {t("whereTitle", { defaultValue: "Where your donation goes" })}
-      </p>
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        {causes.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => setCause(c.id)}
-            className={`rounded-2xl border-2 p-4 text-left transition ${
-              cause === c.id
-                ? "border-[#B91C1C] bg-red-50"
-                : "border-gray-100 bg-white hover:border-gray-200"
-            }`}
-          >
-            <span className="text-2xl block mb-1.5">{c.emoji}</span>
-            <p className={`text-sm font-bold leading-tight ${cause === c.id ? "text-[#B91C1C]" : "text-gray-800"}`}>
-              {c.title}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">{c.desc}</p>
-          </button>
-        ))}
-      </div>
-
-      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-        {t("amountTitle", { defaultValue: "Select Amount" })}
-      </p>
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        {presets.map((a) => (
-          <button
-            key={a.value}
-            type="button"
-            onClick={() => { setPreset(a.value); setCustom(""); setErrors((e) => ({ ...e, amount: undefined })); }}
-            className={`rounded-2xl border-2 py-4 text-center transition ${
-              preset === a.value && !custom
-                ? "border-[#B91C1C] bg-red-50"
-                : "border-gray-100 bg-white hover:border-gray-200"
-            }`}
-          >
-            <p className={`font-extrabold text-base ${preset === a.value && !custom ? "text-[#B91C1C]" : "text-gray-800"}`}>
-              ₹{fmtINR(a.value)}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">{a.label}</p>
-          </button>
-        ))}
-      </div>
-
-      <div className={`flex items-center border-2 rounded-2xl px-4 py-3.5 transition-colors ${
-        custom
-          ? "border-[#B91C1C] bg-red-50"
-          : errors.amount
-          ? "border-red-400 bg-red-50"
-          : "border-gray-100 bg-white focus-within:border-[#B91C1C]"
-      }`}>
-        <span className="text-gray-400 font-semibold mr-2 text-base">₹</span>
-        <input
-          type="number"
-          min="1"
-          max="500000"
-          placeholder={t("customPlaceholder", { defaultValue: "Or enter custom amount" })}
-          value={custom}
-          onChange={(e) => { setCustom(e.target.value); setErrors((er) => ({ ...er, amount: undefined })); }}
-          className="w-full outline-none bg-transparent text-base text-gray-800 placeholder:text-gray-400"
-        />
-      </div>
-      {errors.amount && <p className="text-sm text-red-500 mt-2 pl-1">{errors.amount}</p>}
-
-      {/* 80G notice */}
-      <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mt-5">
-        <FileText size={18} className="text-yellow-600 mt-0.5 shrink-0" />
-        <div>
-          <p className="text-sm font-bold text-yellow-800">{t("taxTitle", { defaultValue: "80G Tax Exemption" })}</p>
-          <p className="text-sm text-yellow-700 mt-1 leading-relaxed">{t("taxBody", { defaultValue: "All donations to Lalbaug Sarvajanik Utsav Mandal are eligible for 50% tax deduction under Section 80G." })}</p>
+  /* ── Reusable Cause & Amount UI Component ── */
+  const CauseAndAmountSection = ({ isMobileCompact = false }) => (
+    <div className="space-y-5 sm:space-y-6">
+      {/* 1. Cause Selector */}
+      <div>
+        <div className="flex items-center justify-between mb-2.5">
+          <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+            {t("whereTitle", { defaultValue: "1. Select Cause" })}
+          </p>
+          <span className="text-[11px] text-gray-400 font-medium hidden sm:inline">
+            Choose where your seva goes
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {causes.map((c) => {
+            const isSelected = cause === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCause(c.id)}
+                className={`relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[85px] sm:min-h-[100px] ${
+                  isSelected
+                    ? "border-[#B91C1C] bg-red-50/70 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
+                    : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+                }`}
+              >
+                {isSelected && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#B91C1C] rounded-full flex items-center justify-center">
+                    <Check size={10} className="text-white stroke-[3]" />
+                  </span>
+                )}
+                <span className="text-2xl sm:text-3xl mb-1 select-none">{c.emoji}</span>
+                <p className={`text-xs sm:text-sm font-bold leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-800"}`}>
+                  {c.title}
+                </p>
+                {!isMobileCompact && (
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1 line-clamp-1">{c.desc}</p>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Trust row */}
-      <div className="grid grid-cols-3 gap-3 mt-6">
-        {[
-          { icon: Award,       lk: "trust1Label", sk: "trust1Sub", defL: "Est. 1928", defS: "98 Years Legacy" },
-          { icon: ShieldCheck, lk: "trust2Label", sk: "trust2Sub", defL: "80G Certified", defS: "Tax Deductible" },
-          { icon: Landmark,    lk: "trust3Label", sk: "trust3Sub", defL: "Govt. Regd.", defS: "Trust A-2236" },
-        ].map(({ icon: Icon, lk, sk, defL, defS }) => (
-          <div key={lk} className="flex flex-col items-center text-center bg-white border border-gray-100 rounded-2xl py-4 px-2 shadow-sm">
-            <Icon size={20} className="text-[#B91C1C] mb-2" />
-            <p className="text-xs font-bold text-gray-800 leading-tight">{t(lk, { defaultValue: defL })}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{t(sk, { defaultValue: defS })}</p>
-          </div>
-        ))}
+      {/* 2. Amount Selector */}
+      <div>
+        <div className="flex items-center justify-between mb-2.5">
+          <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+            {t("amountTitle", { defaultValue: "2. Choose Amount" })}
+          </p>
+        </div>
+
+        {/* Preset Pills */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
+          {presets.map((a) => {
+            const isSelected = preset === a.value && !custom;
+            return (
+              <button
+                key={a.value}
+                type="button"
+                onClick={() => {
+                  setPreset(a.value);
+                  setCustom("");
+                  setErrors((e) => ({ ...e, amount: undefined }));
+                }}
+                className={`py-3 sm:py-3.5 px-2 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[64px] sm:min-h-[72px] flex flex-col items-center justify-center ${
+                  isSelected
+                    ? "border-[#B91C1C] bg-red-50/80 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
+                    : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+                }`}
+              >
+                <p className={`font-black text-base sm:text-lg leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-900"}`}>
+                  ₹{fmtINR(a.value)}
+                </p>
+                <p className={`text-[10px] sm:text-xs mt-0.5 font-medium ${isSelected ? "text-red-700" : "text-gray-400"}`}>
+                  {a.label}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom Amount Input */}
+        <div
+          className={`flex items-center border-2 rounded-xl sm:rounded-2xl px-3.5 py-2.5 sm:py-3 transition-all duration-200 ${
+            custom
+              ? "border-[#B91C1C] bg-red-50/50 shadow-sm"
+              : errors.amount
+              ? "border-red-400 bg-red-50/50"
+              : "border-gray-200 bg-white focus-within:border-[#B91C1C] focus-within:shadow-sm"
+          }`}
+        >
+          <span className="text-gray-500 font-bold mr-2 text-base sm:text-lg">₹</span>
+          <input
+            type="number"
+            min="1"
+            max="500000"
+            inputMode="numeric"
+            placeholder={t("customPlaceholder", { defaultValue: "Or enter custom amount (e.g. 2100)" })}
+            value={custom}
+            onChange={(e) => {
+              setCustom(e.target.value);
+              setErrors((er) => ({ ...er, amount: undefined }));
+            }}
+            className="w-full outline-none bg-transparent text-base sm:text-base text-gray-900 placeholder:text-gray-400 font-semibold"
+          />
+        </div>
+        {errors.amount && (
+          <p className="text-xs text-red-600 mt-1 pl-1 font-medium flex items-center gap-1">
+            <AlertCircle size={13} className="shrink-0" />
+            {errors.amount}
+          </p>
+        )}
       </div>
     </div>
   );
 
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
+    <div className="bg-gradient-to-b from-orange-50/40 via-white to-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
 
-      {/* ── Page header ── */}
-      <div className="pt-24 pb-6 px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto">
-        <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-5">
-          <span>{t("breadHome", { defaultValue: "Home" })}</span>
-          <ChevronRight size={14} />
-          <span className="text-[#B91C1C] font-semibold">{t("breadDonate", { defaultValue: "Donate" })}</span>
+      {/* ── Page Header & Breadcrumb ── */}
+      <div className="pt-20 sm:pt-24 pb-4 sm:pb-6 px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto">
+        <div className="flex items-center gap-1 text-xs text-gray-400 mb-3 sm:mb-4">
+          <span onClick={() => navigate("/")} className="hover:text-gray-700 cursor-pointer">{t("breadHome", { defaultValue: "Home" })}</span>
+          <ChevronRight size={12} />
+          <span className="text-[#B91C1C] font-bold">{t("breadDonate", { defaultValue: "Online Donation" })}</span>
         </div>
-        <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#B91C1C] flex items-center justify-center shrink-0 shadow-lg shadow-red-200">
-            <Heart size={26} className="text-white" fill="white" />
+
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#B91C1C] to-red-700 flex items-center justify-center shrink-0 shadow-md shadow-red-200">
+            <Heart size={24} className="text-white fill-white" />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-              {t("pageTitle", { defaultValue: "Donate to Mumbai Cha Raja" })}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+              {t("pageTitle", { defaultValue: "Online Donation / देणगी" })}
             </h1>
-            <p className="text-gray-500 text-base mt-2 max-w-xl leading-relaxed">
-              {t("pageSubtitle", { defaultValue: "Support our social initiatives, educational drives, and grand Ganeshotsav celebrations." })}
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 line-clamp-1 sm:line-clamp-none">
+              Lalbaug Sarvajanik Utsav Mandal · Ganeshgalli, Mumbai
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Alert Bar ── */}
+      {/* ── Alert Bar (Errors/Notices) ── */}
       {pageAlert && (
-        <div className="px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto mb-6">
-          <div className="p-4 rounded-2xl border border-red-200 bg-red-50 text-red-700 flex items-center gap-3">
-            <AlertCircle size={18} className="shrink-0" />
-            <p className="text-sm font-semibold flex-1">{pageAlert.text}</p>
-            <button onClick={() => setPageAlert(null)}><XIcon size={16} /></button>
+        <div className="px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto mb-4">
+          <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-red-200 bg-red-50 text-red-700 flex items-center gap-3 text-xs sm:text-sm">
+            <AlertCircle size={18} className="shrink-0 text-red-600" />
+            <p className="font-semibold flex-1">{pageAlert.text}</p>
+            <button onClick={() => setPageAlert(null)} className="p-1 hover:bg-red-100 rounded-lg">
+              <span className="text-lg leading-none">&times;</span>
+            </button>
           </div>
         </div>
       )}
@@ -473,130 +497,123 @@ const DonationDrivePage = () => {
         </div>
       </div>
 
-      {/* ── Main 2-column grid ── */}
-      <div className="px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-10">
+      {/* ── Main Responsive Grid ── */}
+      <div className="px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
-        {/* LEFT — cause + amount (hidden on mobile, shown after form) */}
-        <div className="hidden lg:block">
-          <CauseAmountPanel />
+        {/* ── DESKTOP LEFT SIDEBAR: Cause, Amount & Trust Details (Hidden on Mobile) ── */}
+        <div className="hidden lg:block lg:col-span-5 space-y-6 sticky top-24">
+          <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm">
+            <CauseAndAmountSection isMobileCompact={false} />
+
+            {/* 80G Information Card */}
+            <div className="flex items-start gap-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 mt-6">
+              <FileText size={18} className="text-amber-700 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-amber-900 uppercase tracking-wide">80G Tax Exemption</p>
+                <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                  All donations are eligible for 50% tax deduction under Section 80G of the Income Tax Act.
+                </p>
+              </div>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-2.5 mt-5">
+              {[
+                { icon: Award, label: "Est. 1928", sub: "98 Years" },
+                { icon: ShieldCheck, label: "80G Certified", sub: "Tax Free" },
+                { icon: Landmark, label: "Govt. Regd.", sub: "Trust A-7236" },
+              ].map(({ icon: Icon, label, sub }) => (
+                <div key={label} className="flex flex-col items-center text-center bg-gray-50/80 border border-gray-200/70 rounded-xl py-3 px-1.5">
+                  <Icon size={16} className="text-[#B91C1C] mb-1" />
+                  <p className="text-[11px] font-bold text-gray-800 leading-tight">{label}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT — form / confirm / otp / done */}
-        <div className="w-full min-w-0">
+        {/* ── RIGHT COLUMN / MOBILE MAIN: Flow Steps (Form, Confirm, OTP, Done) ── */}
+        <div className="w-full lg:col-span-7 min-w-0">
           <AnimatePresence mode="wait">
 
-            {/* ── Form ── */}
+            {/* ── Step 1: Form ── */}
             {step === "form" && (
               <motion.div
                 key="form"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="space-y-4 w-full min-w-0"
+                className="space-y-4 sm:space-y-6 w-full min-w-0"
               >
-                {/* Mobile-only cause + amount above */}
-                <div className="lg:hidden bg-white rounded-3xl shadow-sm border border-gray-100 p-4 w-full">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t("whereTitle", { defaultValue: "Where your donation goes" })}</p>
-                  <div className="flex gap-2 overflow-x-auto pb-2 mb-5 snap-x snap-mandatory"
-                       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                    {causes.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setCause(c.id)}
-                        className={`snap-start shrink-0 w-28 rounded-2xl border-2 p-3 text-center transition ${
-                          cause === c.id ? "border-[#B91C1C] bg-red-50" : "border-gray-100 bg-gray-50"
-                        }`}
-                      >
-                        <span className="text-2xl block mb-1.5">{c.emoji}</span>
-                        <p className={`text-xs font-bold leading-tight ${cause === c.id ? "text-[#B91C1C]" : "text-gray-700"}`}>
-                          {c.title}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t("amountTitle", { defaultValue: "Select Amount" })}</p>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    {presets.map((a) => (
-                      <button
-                        key={a.value}
-                        type="button"
-                        onClick={() => { setPreset(a.value); setCustom(""); setErrors((e) => ({ ...e, amount: undefined })); }}
-                        className={`rounded-2xl border-2 py-3 text-center transition ${
-                          preset === a.value && !custom ? "border-[#B91C1C] bg-red-50" : "border-gray-100 bg-gray-50"
-                        }`}
-                      >
-                        <p className={`font-extrabold text-sm ${preset === a.value && !custom ? "text-[#B91C1C]" : "text-gray-800"}`}>
-                          ₹{fmtINR(a.value)}
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{a.label}</p>
-                      </button>
-                    ))}
-                  </div>
-                  <div className={`flex items-center border-2 rounded-xl px-3 py-3 transition-colors ${
-                    custom ? "border-[#B91C1C] bg-red-50" : errors.amount ? "border-red-400 bg-red-50" : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C]"
-                  }`}>
-                    <span className="text-gray-400 font-semibold mr-2 text-sm">₹</span>
-                    <input
-                      type="number" min="1" max="500000"
-                      placeholder={t("customPlaceholder", { defaultValue: "Custom amount" })}
-                      value={custom}
-                      onChange={(e) => { setCustom(e.target.value); setErrors((er) => ({ ...er, amount: undefined })); }}
-                      className="w-full outline-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400"
-                    />
-                  </div>
+                {/* Mobile-Only Cause & Amount Card (Top on Mobile) */}
+                <div className="lg:hidden bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
+                  <CauseAndAmountSection isMobileCompact={true} />
                 </div>
 
-                {/* Details card */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-8 w-full">
-                  <div className="mb-5">
-                    <h3 className="text-lg font-bold text-gray-900">{t("formTitle", { defaultValue: "Your Details" })}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{t("formSubtitle", { defaultValue: "Enter details for your 80G tax exemption receipt" })}</p>
-                    {finalAmount ? (
-                      <div className="flex items-center gap-2 mt-3 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
-                        <Heart size={14} className="text-[#B91C1C] shrink-0" fill="#B91C1C" />
-                        <p className="text-xs text-gray-500">{t("donatingLabel", { defaultValue: "Donating to" })} <span className="font-semibold text-gray-700">{selectedCause?.title}</span></p>
-                        <p className="text-base font-extrabold text-[#B91C1C] ml-auto">₹{fmtINR(finalAmount)}</p>
-                      </div>
-                    ) : null}
+                {/* Donor Details Card */}
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-gray-200/80 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3.5 mb-4 sm:mb-5">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-black text-gray-900">
+                        {t("formTitle", { defaultValue: "Donor Details / देणगीदाराचे नाव" })}
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Required for official Marathi Pāvatī receipt
+                      </p>
+                    </div>
+
+                    {/* Live Selected Amount Badge */}
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Offering</p>
+                      <p className="text-lg sm:text-2xl font-black text-[#B91C1C] leading-tight">
+                        ₹{fmtINR(finalAmount)}
+                      </p>
+                    </div>
                   </div>
 
-                  <Field icon={User} label={t("labelName", { defaultValue: "Full Name" })} error={errors.name}>
+                  {/* Input 1: Full Name */}
+                  <Field icon={User} label={t("labelName", { defaultValue: "Full Name (नाव) *" })} error={errors.name}>
                     <input
-                      className="flex-1 px-3 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400 font-medium"
-                      placeholder={t("placeholderName", { defaultValue: "As per PAN card" })}
+                      className="w-full px-3 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium"
+                      placeholder={t("placeholderName", { defaultValue: "Full Name as per ID" })}
                       value={form.name}
                       onChange={set("name")}
                       autoComplete="name"
                     />
                   </Field>
 
-                  <Field icon={Phone} label={t("labelPhone", { defaultValue: "Mobile Number" })} error={errors.phone}>
-                    <span className="pl-2 pr-2 text-xs font-semibold text-gray-400 border-r border-gray-200 mr-1 py-3">+91</span>
+                  {/* Input 2: Mobile Phone */}
+                  <Field icon={Phone} label={t("labelPhone", { defaultValue: "Mobile Number (मोबाईल क्र.) *" })} error={errors.phone}>
+                    <span className="pl-2 pr-2 text-xs sm:text-sm font-bold text-gray-500 border-r border-gray-300 mr-1 py-3 select-none">
+                      +91
+                    </span>
                     <input
-                      className="flex-1 px-2 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide font-medium"
-                      placeholder={t("placeholderPhone", { defaultValue: "10-digit mobile" })}
+                      className="w-full px-2 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium tracking-wide"
+                      placeholder="10-digit mobile"
                       value={form.phone}
                       onChange={setPhone}
                       inputMode="numeric"
+                      maxLength={10}
                       autoComplete="tel"
                     />
                   </Field>
 
-                  <Field icon={MapPin} label="Address (पत्ता)" error={errors.address}>
+                  {/* Input 3: Address */}
+                  <Field icon={MapPin} label="Residential Address (पत्ता) *" error={errors.address}>
                     <input
-                      className="flex-1 px-3 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400 font-medium"
-                      placeholder="Residential / Billing Address"
+                      className="w-full px-3 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium"
+                      placeholder="Street, Area, City, Pin"
                       value={form.address}
                       onChange={set("address")}
                     />
                   </Field>
 
+                  {/* Input 4: Email Address (Optional) */}
                   <Field icon={Mail} label={t("labelEmail", { defaultValue: "Email Address (Optional)" })} error={errors.email}>
                     <input
-                      className="flex-1 px-3 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400 font-medium"
-                      placeholder={t("placeholderEmail", { defaultValue: "For digital receipt copy" })}
+                      className="w-full px-3 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium"
+                      placeholder="For digital receipt copy"
                       value={form.email}
                       onChange={set("email")}
                       inputMode="email"
@@ -604,160 +621,271 @@ const DonationDrivePage = () => {
                     />
                   </Field>
 
-                  {/* Disclaimer Checkbox */}
-                  <div className="mb-4 pt-2">
+                  {/* Voluntary Disclaimer Checkbox */}
+                  <div className="pt-2 mb-5">
                     <label className="flex items-start gap-2.5 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={disclaimer}
                         onChange={(e) => setDisclaimer(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 text-[#B91C1C] rounded border-gray-300 focus:ring-[#B91C1C]"
+                        className="mt-0.5 w-4 h-4 text-[#B91C1C] rounded border-gray-300 focus:ring-[#B91C1C] cursor-pointer"
                       />
-                      <span className="text-xs text-gray-500 leading-tight">
-                        I confirm that this contribution is made voluntarily out of devotion to Lalbaug Sarvajanik Utsav Mandal for trust welfare activities.
+                      <span className="text-xs text-gray-500 leading-relaxed">
+                        I confirm that this contribution is made voluntarily out of devotion to Lalbaug Sarvajanik Utsav Mandal for charitable & social activities.
                       </span>
                     </label>
-                    {errors.disclaimer && <p className="text-xs text-red-500 mt-1 pl-6">{errors.disclaimer}</p>}
+                    {errors.disclaimer && (
+                      <p className="text-xs text-red-600 mt-1 pl-6 font-medium flex items-center gap-1">
+                        <AlertCircle size={13} className="shrink-0" />
+                        {errors.disclaimer}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 mb-5">
-                    <ShieldCheck size={13} className="text-green-600 shrink-0" />
-                    <p className="text-xs text-gray-400">{t("secureNote", { defaultValue: "100% secure · 256-bit encrypted · Tax deductible" })}</p>
-                  </div>
-
+                  {/* CTA Button */}
                   <button
                     type="button"
                     onClick={handleReview}
                     disabled={!finalAmount}
-                    className="w-full bg-[#B91C1C] hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-100 flex items-center justify-center gap-2 text-base cursor-pointer"
+                    className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 text-base cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[50px]"
                   >
-                    <Heart size={17} fill="white" />
-                    {t("reviewBtn", { defaultValue: "Review Details" })} — ₹{finalAmount ? fmtINR(finalAmount) : "—"}
-                    <ChevronRight size={17} />
+                    <Heart size={18} fill="white" />
+                    <span>Proceed with Donation — ₹{fmtINR(finalAmount)}</span>
+                    <ChevronRight size={18} />
                   </button>
+
+                  <p className="text-[11px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1.5 font-medium">
+                    <Lock size={12} className="text-emerald-600" />
+                    Secured by 256-bit Encryption · Official Trust Receipt
+                  </p>
+                </div>
+
+                {/* Mobile-Only Trust Badges Footer */}
+                <div className="lg:hidden grid grid-cols-3 gap-2 pt-2">
+                  {[
+                    { icon: Award, label: "Est. 1928", sub: "98th Year" },
+                    { icon: ShieldCheck, label: "80G Tax Free", sub: "Approved" },
+                    { icon: Landmark, label: "Govt Regd.", sub: "Trust A-7236" },
+                  ].map(({ icon: Icon, label, sub }) => (
+                    <div key={label} className="flex flex-col items-center text-center bg-white border border-gray-200/80 rounded-xl py-3 px-1">
+                      <Icon size={16} className="text-[#B91C1C] mb-1" />
+                      <p className="text-[11px] font-bold text-gray-800 leading-tight">{label}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             )}
 
-            {/* ── Confirm Step ── */}
+            {/* ── Step 2: Confirm Screen ── */}
             {step === "confirm" && (
               <motion.div
                 key="confirm"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 overflow-hidden"
               >
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
+                {/* Clean Mobile-First Header */}
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 bg-white">
                   <button
                     type="button"
                     onClick={() => setStep("form")}
-                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#B91C1C] font-semibold transition cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200/80 text-gray-700 text-xs font-bold transition cursor-pointer active:scale-95 shrink-0"
                   >
-                    <ChevronRight size={15} className="rotate-180" /> {t("editDetails", { defaultValue: "Edit Details" })}
+                    <ChevronRight size={14} className="rotate-180 text-gray-500" />
+                    <span>{t("editDetails", { defaultValue: "Edit details" })}</span>
                   </button>
-                  <h3 className="text-base font-bold text-gray-900">{t("confirmTitle", { defaultValue: "Confirm Donation" })}</h3>
-                  <div className="w-20" />
+
+                  <div className="text-center px-2">
+                    <h3 className="text-sm sm:text-base font-black text-gray-900 tracking-tight leading-tight">
+                      {t("confirmTitle", { defaultValue: "Confirm Donation" })}
+                    </h3>
+                  </div>
+
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-red-50 text-[10px] font-bold text-[#B91C1C] border border-red-100 shrink-0">
+                    Step 2/2
+                  </span>
                 </div>
 
-                <div className="p-5 sm:p-6">
-                  {/* Amount hero */}
-                  <div className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-2xl p-4 mb-4">
-                    <span className="text-3xl">{selectedCause?.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("causeLabel", { defaultValue: "Selected Cause" })}</p>
-                      <p className="font-bold text-gray-900 truncate">{selectedCause?.title}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-gray-400">{t("amountLabel", { defaultValue: "Amount" })}</p>
-                      <p className="text-2xl font-extrabold text-[#B91C1C]">₹{fmtINR(finalAmount)}</p>
-                    </div>
-                  </div>
-
-                  {/* Donor details */}
-                  <div className="bg-gray-50 rounded-2xl divide-y divide-gray-100 mb-4">
-                    {[
-                      { label: t("labelName", { defaultValue: "Name" }),   value: form.name },
-                      { label: t("labelPhone", { defaultValue: "Phone" }),  value: `+91 ${form.phone}` },
-                      { label: "Address",                                   value: form.address },
-                      { label: t("labelEmail", { defaultValue: "Email" }),  value: form.email || "Not provided" },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="flex items-center justify-between px-4 py-3">
-                        <span className="text-xs text-gray-500 font-medium shrink-0 mr-3">{label}</span>
-                        <span className="text-sm font-semibold text-gray-800 text-right break-all">{value}</span>
+                <div className="p-4 sm:p-6">
+                  {/* Selected Cause & Amount Hero Card */}
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50/80 via-red-50/50 to-orange-50/60 border border-red-100/90 p-4 mb-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-red-100 flex items-center justify-center shrink-0 text-2xl select-none">
+                          {selectedCause?.emoji || "🙏"}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="inline-block text-[10px] font-bold text-[#B91C1C] uppercase tracking-wider bg-red-100/70 px-2 py-0.5 rounded-md mb-0.5">
+                            {t("causeLabel", { defaultValue: "Cause" })}
+                          </span>
+                          <p className="font-extrabold text-base sm:text-lg text-gray-900 truncate leading-tight">
+                            {selectedCause?.title}
+                          </p>
+                        </div>
                       </div>
-                    ))}
+
+                      <div className="text-right shrink-0 pl-2">
+                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block">
+                          {t("amountLabel", { defaultValue: "Amount" })}
+                        </span>
+                        <span className="text-2xl sm:text-3xl font-black text-[#B91C1C] tracking-tight leading-none">
+                          ₹{fmtINR(finalAmount)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-5">
-                    <FileText size={14} className="text-yellow-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-yellow-700 leading-relaxed">
-                      Official Marathi Pāvatī & SMS receipt will be sent directly to <strong>+91 {form.phone}</strong> upon payment confirmation.
+                  {/* Donor Details Card — Structured Mobile-First Layout (Multi-language!) */}
+                  <div className="bg-gray-50/80 rounded-2xl border border-gray-200/70 p-2.5 sm:p-3.5 mb-4 space-y-2">
+                    {/* Name */}
+                    <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-red-50 text-[#B91C1C] flex items-center justify-center shrink-0 mt-0.5">
+                        <User size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          {t("labelName", { defaultValue: "Full Name" })}
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 break-words leading-snug mt-0.5">
+                          {form.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Phone */}
+                    <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <Phone size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          {t("labelPhone", { defaultValue: "Mobile Number" })}
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 tracking-wide leading-snug mt-0.5">
+                          +91 {form.phone}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <MapPin size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          {t("labelAddress", { defaultValue: "Address" })}
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 break-words leading-snug mt-0.5">
+                          {form.address}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    {form.email && (
+                      <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                          <Mail size={15} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            {t("labelEmail", { defaultValue: "Email Address" })}
+                          </p>
+                          <p className="text-xs sm:text-sm font-bold text-gray-900 break-all leading-snug mt-0.5">
+                            {form.email}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* SMS & Pāvatī Notice Box */}
+                  <div className="flex items-start gap-2.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 mb-5 text-xs text-amber-900">
+                    <div className="w-6 h-6 rounded-full bg-amber-200/70 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <FileText size={13} className="text-amber-800" />
+                    </div>
+                    <p className="leading-relaxed">
+                      Official Marathi Pāvatī & SMS receipt will be sent directly to <strong className="text-gray-900 font-bold">+91 {form.phone}</strong> upon payment confirmation.
                     </p>
                   </div>
 
+                  {/* High-Conversion Devotional CTA */}
                   <button
                     type="button"
                     disabled={otpLoading}
                     onClick={handleProceedToOtp}
-                    className="w-full bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-100 flex items-center justify-center gap-2 text-base cursor-pointer"
+                    className="w-full bg-gradient-to-r from-[#B91C1C] via-red-700 to-[#991B1B] hover:from-red-700 hover:to-red-900 active:scale-[0.98] text-white font-black py-3.5 sm:py-4 px-6 rounded-2xl transition-all shadow-lg shadow-red-600/25 flex items-center justify-center gap-2.5 text-base cursor-pointer disabled:opacity-50 min-h-[52px]"
                   >
                     {otpLoading ? (
-                      <RefreshCw size={18} className="animate-spin" />
+                      <>
+                        <RefreshCw size={19} className="animate-spin" />
+                        <span>Sending OTP...</span>
+                      </>
                     ) : (
                       <>
-                        <Heart size={17} fill="white" />
-                        {t("donateBtn", { defaultValue: "Proceed to Donate" })} — ₹{fmtINR(finalAmount)}
+                        <Heart size={19} fill="white" className="shrink-0" />
+                        <span>{t("donateBtn", { defaultValue: "Donate Securely" })} — ₹{fmtINR(finalAmount)}</span>
+                        <ChevronRight size={18} className="shrink-0 opacity-80" />
                       </>
                     )}
                   </button>
-                  <p className="text-[10px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1">
-                    🔒 CCAvenue Payment Gateway · PCI-DSS Level 1 · 256-bit SSL
+
+                  <p className="text-[11px] text-gray-400 text-center mt-3.5 flex items-center justify-center gap-1.5 font-medium">
+                    <Lock size={12} className="text-emerald-600 shrink-0" />
+                    <span>CCAvenue Payment Gateway · PCI-DSS Level 1 · 256-bit SSL</span>
                   </p>
                 </div>
               </motion.div>
             )}
 
-            {/* ── OTP Modal ── */}
+            {/* ── Step 3: OTP Screen ── */}
             {step === "otp-modal" && (
               <motion.div
                 key="otp-modal"
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 text-center"
+                exit={{ opacity: 0, scale: 0.96 }}
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 p-5 sm:p-8 text-center"
               >
-                <div className="w-16 h-16 rounded-full bg-red-50 text-[#B91C1C] flex items-center justify-center mx-auto mb-4 border border-red-100">
-                  <ShieldCheck size={32} />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-red-50 text-[#B91C1C] flex items-center justify-center mx-auto mb-3 sm:mb-4 border border-red-100 shadow-sm">
+                  <ShieldCheck size={30} />
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-1">Verify Mobile Number</h3>
-                <p className="text-xs text-gray-500 mb-5">
-                  Enter the 6-digit verification code sent to <br />
-                  <strong className="text-gray-800">+91 {form.phone}</strong>
+                <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-1">Verify Mobile Number</h3>
+                <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-5">
+                  Enter the 6-digit OTP code sent to <br />
+                  <strong className="text-gray-900 font-bold">+91 {form.phone}</strong>
                 </p>
 
                 {devOtpHint && (
                   <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-800">
-                    ⚡ <strong>Development OTP Hint:</strong> <span className="font-mono font-bold tracking-widest">{devOtpHint}</span>
+                    ⚡ <strong>Test OTP Code:</strong>{" "}
+                    <span className="font-mono font-black tracking-widest text-sm">{devOtpHint}</span>
                   </div>
                 )}
 
                 {otpError && (
-                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-2.5 text-xs text-red-600 font-medium">
-                    {otpError}
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-2.5 text-xs text-red-600 font-semibold flex items-center justify-center gap-1.5">
+                    <AlertCircle size={14} className="shrink-0" />
+                    <span>{otpError}</span>
                   </div>
                 )}
 
-                <div className="mb-6">
+                {/* 6-Digit Mobile-Friendly OTP Input */}
+                <div className="mb-5">
                   <input
                     type="text"
                     maxLength={6}
                     autoFocus
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
                     placeholder="• • • • • •"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    className="w-full text-center tracking-[0.6em] text-2xl font-bold py-3.5 bg-gray-50 border-2 border-gray-200 rounded-2xl outline-none focus:border-[#B91C1C] focus:bg-white transition"
+                    className="w-full text-center tracking-[0.5em] text-2xl sm:text-3xl font-black py-3 sm:py-4 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl outline-none focus:border-[#B91C1C] focus:bg-white transition-all"
                   />
                 </div>
 
@@ -765,26 +893,29 @@ const DonationDrivePage = () => {
                   type="button"
                   disabled={otpLoading || otp.length !== 6}
                   onClick={handleVerifyAndPayCCAvenue}
-                  className="w-full bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-100 flex items-center justify-center gap-2 text-base cursor-pointer disabled:opacity-40"
+                  className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-4 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 text-base cursor-pointer disabled:opacity-40 min-h-[50px]"
                 >
                   {otpLoading ? (
                     <>
                       <RefreshCw size={18} className="animate-spin" />
-                      Connecting...
+                      <span>Connecting to Payment Gateway...</span>
                     </>
                   ) : (
                     <>
                       <Lock size={18} />
-                      Verify & Pay ₹{fmtINR(finalAmount)}
+                      <span>Verify & Pay ₹{fmtINR(finalAmount)}</span>
                     </>
                   )}
                 </button>
 
-                <div className="mt-5 flex items-center justify-between text-xs text-gray-500">
+                <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
                   <button
                     type="button"
-                    onClick={() => { setStep("confirm"); setOtp(""); }}
-                    className="text-gray-400 hover:text-gray-700 font-medium cursor-pointer"
+                    onClick={() => {
+                      setStep("confirm");
+                      setOtp("");
+                    }}
+                    className="text-gray-500 hover:text-gray-900 font-bold cursor-pointer py-1"
                   >
                     ← Back
                   </button>
@@ -793,96 +924,101 @@ const DonationDrivePage = () => {
                     type="button"
                     disabled={otpTimer > 0 || otpLoading}
                     onClick={handleResendOtp}
-                    className={`font-bold cursor-pointer ${
+                    className={`font-black cursor-pointer py-1 ${
                       otpTimer > 0 ? "text-gray-400" : "text-[#B91C1C] hover:underline"
                     }`}
                   >
-                    {otpTimer > 0 ? `Resend in ${otpTimer}s` : "Resend OTP"}
+                    {otpTimer > 0 ? `Resend in ${otpTimer}s` : "Resend Code"}
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* ── Redirecting Spinner ── */}
+            {/* ── Step 4: Redirecting Spinner ── */}
             {step === "redirecting" && (
               <motion.div
                 key="redirecting"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 p-10 text-center"
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 p-8 sm:p-12 text-center"
               >
-                <div className="w-16 h-16 rounded-2xl bg-[#B91C1C] flex items-center justify-center mx-auto mb-5 shadow-lg shadow-red-200">
-                  <Lock size={28} className="text-white" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#B91C1C] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-red-200">
+                  <Lock size={26} className="text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Connecting to CCAvenue</h3>
+                <h3 className="text-base sm:text-lg font-black text-gray-900 mb-1">
+                  Connecting to CCAvenue
+                </h3>
                 <p className="text-xs text-gray-400 mb-6">
-                  Please wait while we redirect you to the secure payment page...
+                  Please wait while we redirect you to the secure payment checkout...
                 </p>
                 <RefreshCw size={32} className="animate-spin text-[#B91C1C] mx-auto mb-4" />
                 <p className="text-[11px] text-gray-400">Do not refresh or close this browser window.</p>
               </motion.div>
             )}
 
-            {/* ── Success / Done Step ── */}
+            {/* ── Step 5: Success / Done Step ── */}
             {step === "done" && (
               <motion.div
                 key="done"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 text-center"
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 p-6 sm:p-8 text-center"
               >
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", damping: 12, delay: 0.1 }}
-                  className="w-24 h-24 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-100"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-green-50 border border-green-100 flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-lg shadow-green-100"
                 >
-                  <CheckCircle2 size={52} className="text-green-500" strokeWidth={1.5} />
+                  <CheckCircle2 size={46} className="text-green-600" strokeWidth={1.5} />
                 </motion.div>
-                <h3 className="text-2xl font-extrabold text-gray-900 mb-2">{t("doneTitle", { defaultValue: "Thank You for Your Donation! 🙏" })}</h3>
-                <p className="text-base text-gray-500 mb-6 leading-relaxed">
-                  {t("doneThanks", {
-                    name:   successData?.donorName || form.name || "Devotee",
-                    amount: fmtINR(successData?.amount || finalAmount),
-                    cause:  selectedCause?.title,
-                    defaultValue: `Thank you, ${successData?.donorName || form.name || "Devotee"}! Your contribution has been gratefully received.`
-                  })}
+
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1">
+                  {t("doneTitle", { defaultValue: "Thank You for Your Seva! 🙏" })}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500 mb-5 leading-relaxed">
+                  Your donation has been confirmed successfully. May Mumbai Cha Raja bless you and your family.
                 </p>
-                <div className="bg-gray-50 rounded-2xl p-5 text-left space-y-3 mb-6">
+
+                {/* Summary Box */}
+                <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left space-y-2.5 mb-5 border border-gray-200/70 text-xs sm:text-sm">
                   {successData?.donationNo && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Donation No</span>
-                      <span className="font-mono font-bold text-gray-800">{successData.donationNo}</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Receipt No:</span>
+                      <span className="font-mono font-black text-gray-900">{successData.donationNo}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">{t("causeLabel", { defaultValue: "Cause" })}</span>
-                    <span className="font-semibold text-gray-800">{selectedCause?.emoji} {selectedCause?.title}</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Cause:</span>
+                    <span className="font-bold text-gray-800">{selectedCause?.emoji} {selectedCause?.title}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">{t("doneAmount", { defaultValue: "Amount Paid" })}</span>
-                    <span className="font-semibold text-gray-800">₹{fmtINR(successData?.amount || finalAmount)}</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Amount Paid:</span>
+                    <span className="font-black text-[#B91C1C] text-sm sm:text-base">
+                      ₹{fmtINR(successData?.amount || finalAmount)}
+                    </span>
                   </div>
                   {successData?.txnId && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Transaction ID</span>
-                      <span className="font-mono font-semibold text-gray-800">{successData.txnId}</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Transaction ID:</span>
+                      <span className="font-mono text-gray-700">{successData.txnId}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl p-3 mb-6 text-xs text-left">
+                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-5 text-xs text-emerald-800 text-left">
                   <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                  <p>SMS containing your official Pāvatī receipt download link has been dispatched to your mobile.</p>
+                  <p>SMS containing your official Pāvatī receipt download link has been sent to your mobile.</p>
                 </div>
 
                 <div className="space-y-3">
                   <button
                     type="button"
                     onClick={handleManualPavatiDownload}
-                    className="w-full bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-3.5 px-6 rounded-2xl transition text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-100"
+                    className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-3.5 px-6 rounded-xl sm:rounded-2xl transition-all text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-100 min-h-[48px]"
                   >
-                    <Download size={18} /> Download Official Marathi Pāvatī (PDF)
+                    <Download size={18} />
+                    <span>Download Official Marathi Pāvatī (PDF)</span>
                   </button>
 
                   <button
@@ -895,9 +1031,9 @@ const DonationDrivePage = () => {
                       setPreset(501);
                       setSuccessData(null);
                     }}
-                    className="w-full border-2 border-[#B91C1C] text-[#B91C1C] font-bold py-3.5 rounded-2xl hover:bg-red-50 transition text-sm cursor-pointer"
+                    className="w-full border-2 border-gray-300 text-gray-700 font-bold py-3.5 rounded-xl sm:rounded-2xl hover:bg-gray-50 transition text-sm cursor-pointer min-h-[48px]"
                   >
-                    {t("doAgainBtn", { defaultValue: "Make Another Donation" })}
+                    Make Another Offering
                   </button>
                 </div>
               </motion.div>
