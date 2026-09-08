@@ -333,7 +333,7 @@ function buildDonationReceiptHTML({
           letter-spacing: 0.5px;
         ">+91 ${donorPhone || "—"}</div>
 
-        <!-- 6. युनिक आय डी क्र. -->
+        <!-- 6. आय डी क्र. -->
         <div style="
           position: absolute;
           left: 1135px;
