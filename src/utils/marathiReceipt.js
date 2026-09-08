@@ -203,6 +203,7 @@ export async function downloadMarathiReceipt({ receiptNo, customerName, amount, 
 // ══════════════════════════════════════════════════════════════════════════════
 
 function buildDonationReceiptHTML({
+  templateSrc,
   donationNo,
   donorName,
   donorPhone,
@@ -213,358 +214,346 @@ function buildDonationReceiptHTML({
   bankRefNo,
   date,
 }) {
-  const cleanAmount = Math.round(Number(amount) || 0);
-  const marathiAmount = toMarathiDigits(cleanAmount);
+  const cleanAmount = Math.round(Number(String(amount || 0).replace(/,/g, "")) || 0);
+  const marathiAmount = toMarathiDigits(cleanAmount.toLocaleString("en-IN"));
   const marathiWords = amountToMarathiWords(cleanAmount);
   const formattedDate = formatMarathiDate(date || new Date());
-  const displayDonationNo = donationNo || "DON-20260825-001";
+  const displayDonationNo = donationNo || `DON-${Date.now()}`;
   const displayTxnId = txnId || donationNo || "—";
   const displayPaymentMode = paymentMode || "CCAvenue Online / UPI";
   const displayBank = bankRefNo || "Online Gateway";
 
   return `
     <div id="donation-receipt-canvas" style="
-      width: 1080px;
-      min-height: 680px;
-      background: #fbfbf9;
-      font-family: 'Noto Sans Devanagari', 'Mangal', 'Segoe UI', Arial, sans-serif;
+      width: 1684px;
+      height: 1191px;
       position: relative;
-      padding: 24px;
+      background: #ffffff;
+      font-family: 'Noto Sans Devanagari', 'Mangal', 'Segoe UI', Arial, sans-serif;
       box-sizing: border-box;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      overflow: hidden;
     ">
+      <!-- Master Template Background Image -->
+      <img
+        src="${templateSrc}"
+        alt="Receipt Template"
+        style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 1684px;
+          height: 1191px;
+          z-index: 0;
+          pointer-events: none;
+          display: block;
+        "
+        crossorigin="anonymous"
+      />
 
-      <!-- ── Outer Soft Card Container with Rounded Border ── -->
-      <div style="
-        width: 100%;
-        background: #ffffff;
-        border: 1.5px solid #dcdcdc;
-        border-radius: 20px;
-        box-shadow: 0 12px 36px rgba(0,0,0,0.08);
-        padding: 16px;
-        box-sizing: border-box;
-        display: flex;
-        gap: 14px;
-      ">
-
-        <!-- ── Left Artwork Banner ── -->
+      <!-- Dynamic Overlay Fields -->
+      <div style="position: absolute; inset: 0; z-index: 1; pointer-events: none;">
+        <!-- 1. पावती क्र. -->
         <div style="
-          width: 245px;
-          flex-shrink: 0;
-          background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 30%, #fed7aa 70%, #fdba74 100%);
-          border: 2px solid #ea580c;
-          border-radius: 14px;
-          padding: 18px 12px 14px;
+          position: absolute;
+          left: 680px;
+          top: 486px;
+          width: 380px;
+          height: 34px;
           display: flex;
-          flex-direction: column;
           align-items: center;
-          justify-content: space-between;
-          text-align: center;
-          position: relative;
-          box-sizing: border-box;
-        ">
-          <!-- Top Sunburst Ornament: विश्वविक्रमी मुंबईचा राजा -->
-          <div style="
-            width: 88px; height: 88px; border-radius: 50%;
-            background: radial-gradient(circle, #b91c1c 0%, #7f1d1d 100%);
-            color: #ffffff;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(185,28,28,0.35);
-            border: 3px solid #fde047;
-            position: relative;
-          ">
-            <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: #fef08a;">विश्वविक्रमी</span>
-            <span style="font-size: 13.5px; font-weight: 900; color: #ffffff; margin-top: 1px;">मुंबईचा राजा</span>
-          </div>
+          font-size: 21px;
+          font-weight: 800;
+          font-family: 'Noto Sans Devanagari', monospace, sans-serif;
+          color: #991b1b;
+          letter-spacing: 0.5px;
+        ">${displayDonationNo}</div>
 
-          <!-- Middle Calligraphy: वारी चुकायाची नाही! -->
-          <div style="margin: 18px 0; text-align: center;">
-            <div style="
-              font-size: 34px; font-weight: 900; color: #166534;
-              line-height: 1.15; letter-spacing: -0.5px;
-              text-shadow: 1px 1px 0px #fff;
-            ">
-              वारी<br/>चुकायाची<br/>नाही!
-            </div>
-            <!-- Lotus Motif -->
-            <div style="font-size: 28px; margin-top: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
-              🪷
-            </div>
-          </div>
-
-          <!-- Bottom: Warkari Procession Banner -->
-          <div style="
-            width: 100%; padding: 8px 6px;
-            background: rgba(255,255,255,0.85);
-            border-radius: 10px; border: 1.5px dashed #ea580c;
-            font-size: 11px; font-weight: 800; color: #c2410c;
-            letter-spacing: 0.2px;
-          ">
-            🚩 वारकरी पालखी सोहळा 🚩
-          </div>
-        </div>
-
-        <!-- ── Center Main Receipt Section ── -->
+        <!-- 2. दिनांक -->
         <div style="
-          flex: 1;
-          padding: 0 16px;
+          position: absolute;
+          left: 1185px;
+          top: 486px;
+          width: 115px;
+          height: 34px;
           display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        ">
-          <div>
-            <!-- Top Meta Line: Estd & Reg -->
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size: 12px; color: #334155; font-weight: 700; margin-bottom: 2px;">
-              <span>स्थापना १९२८</span>
-              <span style="font-size: 15px; font-weight: 900; color: #991b1b;">॥ श्री ॥</span>
-              <span>नोंदणी क्र. ए ७२३६</span>
-            </div>
-
-            <!-- Mandal Title Header -->
-            <div style="text-align: center; margin-top: 2px;">
-              <h1 style="
-                margin: 0; font-size: 25px; font-weight: 900; color: #991b1b;
-                letter-spacing: -0.3px; line-height: 1.2;
-              ">
-                लालबाग सार्वजनिक उत्सव मंडळ,गणेशगल्ली
-              </h1>
-              <p style="margin: 2px 0 0; font-size: 13px; font-weight: 700; color: #334155;">
-                लालबाग, मुंबई ४०००१२.
-              </p>
-              <p style="
-                margin: 4px 0 0; font-size: 22px; font-weight: 900; color: #991b1b;
-                letter-spacing: 1px;
-              ">
-                ॥ मुंबईचा राजा ॥
-              </p>
-            </div>
-
-            <!-- Header Divider -->
-            <div style="height: 1.5px; background: #cbd5e1; margin: 8px 0 10px;"></div>
-
-            <!-- Form Row 1: Pavati No & Date -->
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size: 14px; margin-bottom: 9px;">
-              <div style="display:flex; align-items:center; gap: 6px;">
-                <span style="font-weight: 700; color: #0f172a;">पावती क्र. :</span>
-                <span style="font-family: monospace; font-size: 16px; font-weight: 900; color: #991b1b; letter-spacing: 0.5px;">${displayDonationNo}</span>
-              </div>
-              <div style="display:flex; align-items:center; gap: 6px;">
-                <span style="font-weight: 700; color: #0f172a;">दिनांक :</span>
-                <span style="font-weight: 800; font-size: 14.5px; color: #0f172a;">${formattedDate}</span>
-              </div>
-            </div>
-
-            <!-- Form Row 2: Devotee Name -->
-            <div style="display:flex; align-items:flex-end; font-size: 14px; margin-bottom: 9px;">
-              <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-right: 6px;">श्री. / श्रीमती</span>
-              <div style="
-                flex: 1; border-bottom: 1.5px dotted #334155;
-                padding: 0 8px 2px; font-weight: 800; font-size: 15px; color: #0f172a;
-              ">
-                ${donorName || "देणगीदार"}
-              </div>
-              <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-left: 6px;">यांजकडून</span>
-            </div>
-
-            <!-- Form Row 3: Address -->
-            <div style="display:flex; align-items:flex-end; font-size: 14px; margin-bottom: 9px;">
-              <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-right: 6px;">पत्ता</span>
-              <div style="
-                flex: 1; border-bottom: 1.5px dotted #334155;
-                padding: 0 8px 2px; font-weight: 600; font-size: 13.5px; color: #1e293b;
-              ">
-                ${donorAddress || "मुंबई"}
-              </div>
-            </div>
-
-            <!-- Form Row 4: Phone & Unique Txn ID -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; font-size: 13.5px; margin-bottom: 11px;">
-              <div style="display:flex; align-items:flex-end; flex: 1; margin-right: 14px;">
-                <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-right: 6px;">मोबाईल</span>
-                <div style="flex: 1; border-bottom: 1.5px dotted #334155; padding: 0 8px 2px; font-weight: 800; font-family: monospace;">
-                  +91 ${donorPhone || "—"}
-                </div>
-              </div>
-              <div style="display:flex; align-items:flex-end; flex: 1.2;">
-                <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-right: 6px;">युनिक आय डी क्र.</span>
-                <div style="flex: 1; border-bottom: 1.5px dotted #334155; padding: 0 8px 2px; font-weight: 700; font-family: monospace; font-size: 12px; color: #1e293b;">
-                  ${displayTxnId}
-                </div>
-              </div>
-            </div>
-
-            <!-- ── 4-Column Table ── -->
-            <table style="
-              width: 100%; border-collapse: collapse; text-align: center;
-              font-size: 13px; margin-bottom: 10px; border: 2px solid #991b1b;
-            ">
-              <thead>
-                <tr style="background: #991b1b; color: #ffffff;">
-                  <th colspan="2" style="border: 1px solid #7f1d1d; padding: 5px; font-weight: 800; width: 25%;">वर्गणी</th>
-                  <th colspan="2" style="border: 1px solid #7f1d1d; padding: 5px; font-weight: 800; width: 25%;">देणगी</th>
-                  <th colspan="2" style="border: 1px solid #7f1d1d; padding: 5px; font-weight: 800; width: 25%;">जाहिरात</th>
-                  <th colspan="2" style="border: 1px solid #7f1d1d; padding: 5px; font-weight: 800; width: 25%;">एकूण</th>
-                </tr>
-                <tr style="background: #fef2f2; color: #991b1b; font-size: 11.5px; font-weight: 700;">
-                  <th style="border: 1px solid #991b1b; padding: 3px;">रु.</th>
-                  <th style="border: 1px solid #991b1b; padding: 3px;">पै.</th>
-                  <th style="border: 1px solid #991b1b; padding: 3px;">रु.</th>
-                  <th style="border: 1px solid #991b1b; padding: 3px;">पै.</th>
-                  <th style="border: 1px solid #991b1b; padding: 3px;">रु.</th>
-                  <th style="border: 1px solid #991b1b; padding: 3px;">पै.</th>
-                  <th style="border: 1px solid #991b1b; padding: 3px;">रु.</th>
-                  <th style="border: 1px solid #991b1b; padding: 3px;">पै.</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="height: 36px; font-size: 15px; font-weight: 800; color: #0f172a;">
-                  <td style="border: 1px solid #991b1b;">—</td>
-                  <td style="border: 1px solid #991b1b;">—</td>
-                  <td style="border: 1px solid #991b1b; color: #991b1b; font-size: 17px;">${marathiAmount}</td>
-                  <td style="border: 1px solid #991b1b; color: #991b1b;">००</td>
-                  <td style="border: 1px solid #991b1b;">—</td>
-                  <td style="border: 1px solid #991b1b;">—</td>
-                  <td style="border: 1px solid #991b1b; color: #991b1b; font-size: 18px;">${marathiAmount}</td>
-                  <td style="border: 1px solid #991b1b; color: #991b1b;">००</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Form Row 5: Amount in Words -->
-            <div style="display:flex; align-items:flex-end; font-size: 14px; margin-bottom: 9px;">
-              <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-right: 6px;">अक्षरी रुपये</span>
-              <div style="
-                flex: 1; border-bottom: 1.5px dotted #334155;
-                padding: 0 8px 2px; font-weight: 800; font-size: 14.5px; color: #991b1b;
-              ">
-                ${marathiWords} रुपये फक्त
-              </div>
-              <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-left: 6px;">साभार मिळाले.</span>
-            </div>
-
-            <!-- Form Row 6: Mode & Bank -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; font-size: 13px; margin-bottom: 10px;">
-              <div style="display:flex; align-items:flex-end; flex: 1; margin-right: 14px;">
-                <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-right: 6px;">धनादेश / UPI</span>
-                <div style="flex: 1; border-bottom: 1.5px dotted #334155; padding: 0 8px 2px; font-weight: 700; color: #1e293b;">
-                  ${displayPaymentMode}
-                </div>
-              </div>
-              <div style="display:flex; align-items:flex-end; flex: 1;">
-                <span style="font-weight: 700; color: #0f172a; white-space: nowrap; margin-right: 6px;">बँक</span>
-                <div style="flex: 1; border-bottom: 1.5px dotted #334155; padding: 0 8px 2px; font-weight: 700; color: #1e293b;">
-                  ${displayBank}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── Signatures & Footer Row ── -->
-          <div>
-            <div style="
-              display:flex; justify-content:space-between; text-align:center;
-              font-size: 11.5px; font-weight: 700; color: #0f172a; padding: 8px 0 4px;
-              border-top: 1px solid #cbd5e1;
-            ">
-              <div>
-                <p style="margin: 0; font-weight: 800;">श्री. किरण प्र. तावडे</p>
-                <p style="margin: 2px 0 0; font-size: 10.5px; color: #64748b;">अध्यक्ष</p>
-              </div>
-              <div>
-                <p style="margin: 0; font-weight: 800;">श्री. स्वप्निल सु. परब</p>
-                <p style="margin: 2px 0 0; font-size: 10.5px; color: #64748b;">सरचिटणीस</p>
-              </div>
-              <div>
-                <p style="margin: 0; font-weight: 800;">श्री. नितेश का. महाडेश्वर</p>
-                <p style="margin: 2px 0 0; font-size: 10.5px; color: #64748b;">खजिनदार</p>
-              </div>
-              <div>
-                <p style="margin: 0; font-weight: 800; color: #15803d;">✓ संगणकीय अधिकृत पावती</p>
-                <p style="margin: 2px 0 0; font-size: 10.5px; color: #64748b;">प्राप्तकर्ता</p>
-              </div>
-            </div>
-
-            <!-- Mandatory Footer Note -->
-            <div style="
-              text-align: center; font-size: 11px; font-weight: 800;
-              color: #0f172a; padding-top: 5px; border-top: 1px solid #cbd5e1;
-            ">
-              टीप : मंडळाच्या विविध उपक्रमांचा लाभ घेण्यासाठी पावती दाखवणे आवश्यक आहे.
-            </div>
-          </div>
-
-        </div>
-
-        <!-- ── Right Artwork Section (Centenary Year 98 & QR) ── -->
-        <div style="
-          width: 185px;
-          flex-shrink: 0;
-          background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 45%, #fde68a 100%);
-          border: 2px solid #d97706;
-          border-radius: 14px;
-          padding: 16px 10px 14px;
-          display: flex;
-          flex-direction: column;
           align-items: center;
-          justify-content: space-between;
-          text-align: center;
-          box-sizing: border-box;
-        ">
-          <!-- 98 Centennial Emblem Logo -->
-          <div>
-            <div style="
-              width: 66px; height: 66px; border-radius: 50%;
-              background: radial-gradient(circle, #991b1b 0%, #7f1d1d 100%);
-              color: #fde047; margin: 0 auto 6px;
-              display: flex; flex-direction: column; align-items: center; justify-content: center;
-              font-size: 22px; font-weight: 900; border: 2.5px solid #fbbf24;
-              box-shadow: 0 4px 10px rgba(153,27,27,0.3);
-            ">
-              <span>९८</span>
-            </div>
-            <div style="font-size: 17px; font-weight: 900; color: #991b1b; line-height: 1.15;">
-              शतक<br/>महोत्सवी
-            </div>
-            <div style="font-size: 11px; font-weight: 700; color: #475569; margin-top: 2px;">
-              वर्षाकडे वाटचाल
-            </div>
-          </div>
+          justify-content: center;
+          font-size: 19px;
+          font-weight: 700;
+          color: #0f172a;
+        ">${formattedDate}</div>
 
-          <!-- Red Pill Badge: गणेशोत्सव २०२६ -->
-          <div style="
-            background: #b91c1c; color: #ffffff;
-            padding: 4px 12px; border-radius: 99px;
-            font-size: 11.5px; font-weight: 900; letter-spacing: 0.5px;
-            margin: 6px 0;
-            box-shadow: 0 2px 6px rgba(185,28,28,0.25);
-          ">
-            गणेशोत्सव २०२६
-          </div>
+        <!-- 3. श्री. / श्रीमती ... यांजकडून -->
+        <div style="
+          position: absolute;
+          left: 755px;
+          top: 542px;
+          width: 420px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          font-size: 20px;
+          font-weight: 800;
+          color: #0f172a;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">${donorName || "देणगीदार"}</div>
 
-          <!-- QR Code and Link Info -->
-          <div>
-            <p style="margin: 0 0 5px; font-size: 11px; font-weight: 800; color: #0f172a;">
-              अधिक माहितीकरिता
-            </p>
-            <img
-              src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://mumbaicharaja.co"
-              alt="Mandal QR Code"
-              style="width: 86px; height: 86px; border-radius: 8px; border: 1.5px solid #d97706; background: #fff; padding: 2px;"
-              crossorigin="anonymous"
-            />
-          </div>
-        </div>
+        <!-- 4. पत्ता -->
+        <div style="
+          position: absolute;
+          left: 655px;
+          top: 594px;
+          width: 635px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          font-size: 18px;
+          font-weight: 600;
+          color: #1e293b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">${donorAddress || "—"}</div>
 
+        <!-- 5. मोबाईल -->
+        <div style="
+          position: absolute;
+          left: 675px;
+          top: 638px;
+          width: 235px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          font-size: 19px;
+          font-weight: 700;
+          color: #0f172a;
+          font-family: monospace, sans-serif;
+          letter-spacing: 0.5px;
+        ">+91 ${donorPhone || "—"}</div>
+
+        <!-- 6. युनिक आय डी क्र. -->
+        <div style="
+          position: absolute;
+          left: 1135px;
+          top: 638px;
+          width: 155px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          font-size: 14.5px;
+          font-weight: 700;
+          color: #1e293b;
+          font-family: monospace, sans-serif;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">${displayTxnId}</div>
+
+        <!-- 7. वर्गणी / देणगी / जाहिरात / एकूण Table Values -->
+        <!-- वर्गणी (रु. पै.) -->
+        <div style="
+          position: absolute;
+          left: 579px;
+          top: 763px;
+          width: 132px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          color: #64748b;
+        ">—</div>
+        <div style="
+          position: absolute;
+          left: 711px;
+          top: 763px;
+          width: 44px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          color: #64748b;
+        ">—</div>
+
+        <!-- देणगी (रु. पै.) -->
+        <div style="
+          position: absolute;
+          left: 756px;
+          top: 763px;
+          width: 132px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 21px;
+          font-weight: 800;
+          color: #991b1b;
+        ">${marathiAmount}/-</div>
+        <div style="
+          position: absolute;
+          left: 888px;
+          top: 763px;
+          width: 45px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 19px;
+          font-weight: 800;
+          color: #991b1b;
+        ">००</div>
+
+        <!-- जाहिरात (रु. पै.) -->
+        <div style="
+          position: absolute;
+          left: 933px;
+          top: 763px;
+          width: 132px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          color: #64748b;
+        ">—</div>
+        <div style="
+          position: absolute;
+          left: 1065px;
+          top: 763px;
+          width: 45px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          color: #64748b;
+        ">—</div>
+
+        <!-- एकूण (रु. पै.) -->
+        <div style="
+          position: absolute;
+          left: 1110px;
+          top: 763px;
+          width: 132px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 22px;
+          font-weight: 900;
+          color: #991b1b;
+        ">${marathiAmount}/-</div>
+        <div style="
+          position: absolute;
+          left: 1242px;
+          top: 763px;
+          width: 45px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 19px;
+          font-weight: 800;
+          color: #991b1b;
+        ">००</div>
+
+        <!-- 8. अक्षरी रुपये ... साभार मिळाले. -->
+        <div style="
+          position: absolute;
+          left: 725px;
+          top: 800px;
+          width: 420px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          font-size: 19px;
+          font-weight: 800;
+          color: #991b1b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">${marathiWords} रुपये फक्त</div>
+
+        <!-- 9. धनादेश / UPI -->
+        <div style="
+          position: absolute;
+          left: 755px;
+          top: 854px;
+          width: 260px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          font-size: 16.5px;
+          font-weight: 700;
+          color: #1e293b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">${displayPaymentMode}</div>
+
+        <!-- 10. बँक -->
+        <div style="
+          position: absolute;
+          left: 1135px;
+          top: 854px;
+          width: 155px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          font-size: 16.5px;
+          font-weight: 700;
+          color: #1e293b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">${displayBank}</div>
+
+        <!-- 11. प्राप्तकर्ता (Digital Confirmation Seal) -->
+        <div style="
+          position: absolute;
+          left: 1180px;
+          top: 910px;
+          width: 130px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 15px;
+          font-weight: 800;
+          color: #15803d;
+          letter-spacing: 0.3px;
+        ">✓ संगणकीय पावती</div>
       </div>
-
     </div>
   `;
 }
 
+/** Preload template image as Data URL or verified image URL */
+async function getReceiptTemplateDataUrl() {
+  const url = "/images/donation_receipt_template.png";
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => resolve(url);
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch {
+    // Fallback if fetch not supported or fails
+  }
+  return url;
+}
+
 /**
  * Downloads official Donation Pāvatī PDF with the exact name: <DonationNo>.pdf
+ * Perfectly matches physical receipt format master PDF
  */
 export async function downloadDonationReceipt({
   donationNo,
@@ -576,12 +565,17 @@ export async function downloadDonationReceipt({
   paymentMode,
   bankRefNo,
   date,
+  email,
+  donorEmail,
 }) {
+  const templateSrc = await getReceiptTemplateDataUrl();
+
   const container = document.createElement("div");
-  container.style.cssText = "position:fixed;top:-9999px;left:-9999px;z-index:-1;";
+  container.style.cssText = "position:fixed;top:-9999px;left:-9999px;z-index:-1;opacity:0;pointer-events:none;";
   container.innerHTML = `
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     ${buildDonationReceiptHTML({
+      templateSrc,
       donationNo,
       donorName,
       donorPhone,
@@ -591,18 +585,28 @@ export async function downloadDonationReceipt({
       paymentMode,
       bankRefNo,
       date,
+      email: email || donorEmail,
     })}
   `;
   document.body.appendChild(container);
 
+  // Ensure fonts and template image are loaded
   await document.fonts.ready;
-  await new Promise(r => setTimeout(r, 600));
+  const templateImgEl = container.querySelector("img");
+  if (templateImgEl && !templateImgEl.complete) {
+    await new Promise((resolve) => {
+      templateImgEl.onload = resolve;
+      templateImgEl.onerror = resolve;
+      setTimeout(resolve, 800);
+    });
+  }
+  await new Promise((r) => setTimeout(r, 200));
 
   const target = container.querySelector("#donation-receipt-canvas");
   const canvas = await html2canvas(target, {
-    scale: 2,
+    scale: 1, // Already high-res (1684 x 1191 px)
     useCORS: true,
-    allowTaint: false,
+    allowTaint: true,
     backgroundColor: "#ffffff",
     logging: false,
   });
@@ -610,15 +614,14 @@ export async function downloadDonationReceipt({
   document.body.removeChild(container);
 
   const imgData = canvas.toDataURL("image/png");
-  const pxW = canvas.width / 2;
-  const pxH = canvas.height / 2;
 
+  // Output as standard A4 landscape matching the master template
   const pdf = new jsPDF({
     orientation: "landscape",
-    unit: "px",
-    format: [pxW, pxH],
+    unit: "pt",
+    format: [841.89, 595.28],
   });
-  pdf.addImage(imgData, "PNG", 0, 0, pxW, pxH);
+  pdf.addImage(imgData, "PNG", 0, 0, 841.89, 595.28, undefined, "FAST");
 
   // Exact requested file name: DON-YYYYMMDD-005.pdf
   const filename = donationNo ? `${donationNo}.pdf` : `DON-${Date.now()}.pdf`;

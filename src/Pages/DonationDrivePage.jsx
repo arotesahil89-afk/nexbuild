@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -40,6 +40,137 @@ const Field = ({ icon: Icon, label, error, children }) => (
   </div>
 );
 
+/* ─── Reusable Cause & Amount UI Component (Defined outside parent to preserve focus & prevent remounting) ─── */
+const CauseAndAmountSection = ({
+  causes,
+  cause,
+  setCause,
+  presets,
+  preset,
+  setPreset,
+  custom,
+  setCustom,
+  errors,
+  setErrors,
+  t,
+  isMobileCompact = false,
+}) => (
+  <div className="space-y-5 sm:space-y-6">
+    {/* 1. Cause Selector */}
+    <div>
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+          {t("whereTitle", { defaultValue: "1. Select Cause" })}
+        </p>
+        <span className="text-[11px] text-gray-400 font-medium hidden sm:inline">
+          Choose where your seva goes
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {causes.map((c) => {
+          const isSelected = cause === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setCause(c.id)}
+              className={`relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[85px] sm:min-h-[100px] ${
+                isSelected
+                  ? "border-[#B91C1C] bg-red-50/70 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
+                  : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+              }`}
+            >
+              {isSelected && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#B91C1C] rounded-full flex items-center justify-center">
+                  <Check size={10} className="text-white stroke-[3]" />
+                </span>
+              )}
+              <span className="text-2xl sm:text-3xl mb-1 select-none">{c.emoji}</span>
+              <p className={`text-xs sm:text-sm font-bold leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-800"}`}>
+                {c.title}
+              </p>
+              {!isMobileCompact && (
+                <p className="text-[10px] sm:text-xs text-gray-400 mt-1 line-clamp-1">{c.desc}</p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* 2. Amount Selector */}
+    <div>
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+          {t("amountTitle", { defaultValue: "2. Choose Amount" })}
+        </p>
+      </div>
+
+      {/* Preset Pills */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
+        {presets.map((a) => {
+          const isSelected = preset === a.value && !custom;
+          return (
+            <button
+              key={a.value}
+              type="button"
+              onClick={() => {
+                setPreset(a.value);
+                setCustom("");
+                setErrors((e) => ({ ...e, amount: undefined }));
+              }}
+              className={`py-3 sm:py-3.5 px-2 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[64px] sm:min-h-[72px] flex flex-col items-center justify-center ${
+                isSelected
+                  ? "border-[#B91C1C] bg-red-50/80 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
+                  : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+              }`}
+            >
+              <p className={`font-black text-base sm:text-lg leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-900"}`}>
+                ₹{fmtINR(a.value)}
+              </p>
+              <p className={`text-[10px] sm:text-xs mt-0.5 font-medium ${isSelected ? "text-red-700" : "text-gray-400"}`}>
+                {a.label}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Custom Amount Input */}
+      <div
+        className={`flex items-center border-2 rounded-xl sm:rounded-2xl px-3.5 py-2.5 sm:py-3 transition-all duration-200 ${
+          custom
+            ? "border-[#B91C1C] bg-red-50/50 shadow-sm"
+            : errors.amount
+            ? "border-red-400 bg-red-50/50"
+            : "border-gray-200 bg-white focus-within:border-[#B91C1C] focus-within:shadow-sm"
+        }`}
+      >
+        <span className="text-gray-500 font-bold mr-2 text-base sm:text-lg">₹</span>
+        <input
+          type="number"
+          min="1"
+          max="500000"
+          inputMode="numeric"
+          placeholder={t("customPlaceholder", { defaultValue: "Or enter custom amount (e.g. 2100)" })}
+          value={custom}
+          onChange={(e) => {
+            setCustom(e.target.value);
+            setErrors((er) => ({ ...er, amount: undefined }));
+          }}
+          className="w-full outline-none bg-transparent text-base sm:text-base text-gray-900 placeholder:text-gray-400 font-semibold"
+        />
+      </div>
+      {errors.amount && (
+        <p className="text-xs text-red-600 mt-1 pl-1 font-medium flex items-center gap-1">
+          <AlertCircle size={13} className="shrink-0" />
+          {errors.amount}
+        </p>
+      )}
+    </div>
+  </div>
+);
+
 const DonationDrivePage = () => {
   const { t } = useTranslation("donate");
   const [searchParams] = useSearchParams();
@@ -75,6 +206,32 @@ const DonationDrivePage = () => {
   const [verificationToken, setVerificationToken] = useState("");
   const [successData, setSuccessData] = useState(null);
   const hasDownloadedRef = useRef(false);
+  const isMovingToConfirmRef = useRef(false);
+  const confirmRef = useRef(null);
+
+  const performScrollToConfirm = useCallback((targetEl) => {
+    const el = targetEl || confirmRef.current || document.getElementById("confirm-donation-section");
+    if (!el) return;
+    const navbarOffset = window.innerWidth < 768 ? 70 : 85;
+    const rect = el.getBoundingClientRect();
+    const targetY = Math.max(0, rect.top + window.pageYOffset - navbarOffset);
+    window.scrollTo({
+      top: targetY,
+      behavior: "smooth",
+    });
+  }, []);
+
+  const setConfirmRef = useCallback((node) => {
+    confirmRef.current = node;
+    if (node && isMovingToConfirmRef.current) {
+      isMovingToConfirmRef.current = false;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          performScrollToConfirm(node);
+        }, 50);
+      });
+    }
+  }, [performScrollToConfirm]);
 
   // Check URL query parameters for return from CCAvenue
   useEffect(() => {
@@ -130,8 +287,15 @@ const DonationDrivePage = () => {
   }, [step, otpTimer]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [step]);
+    if (step === "confirm") {
+      if (isMovingToConfirmRef.current && confirmRef.current) {
+        isMovingToConfirmRef.current = false;
+        performScrollToConfirm(confirmRef.current);
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [step, performScrollToConfirm]);
 
   const finalAmount = custom ? Number(custom) : preset;
   const selectedCause = causes.find((c) => c.id === cause);
@@ -169,6 +333,7 @@ const DonationDrivePage = () => {
     const e = validate(form, finalAmount);
     setErrors(e);
     if (Object.keys(e).length === 0) {
+      isMovingToConfirmRef.current = true;
       setStep("confirm");
     }
   };
@@ -300,124 +465,6 @@ const DonationDrivePage = () => {
     });
   };
 
-  /* ── Reusable Cause & Amount UI Component ── */
-  const CauseAndAmountSection = ({ isMobileCompact = false }) => (
-    <div className="space-y-5 sm:space-y-6">
-      {/* 1. Cause Selector */}
-      <div>
-        <div className="flex items-center justify-between mb-2.5">
-          <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
-            {t("whereTitle", { defaultValue: "1. Select Cause" })}
-          </p>
-          <span className="text-[11px] text-gray-400 font-medium hidden sm:inline">
-            Choose where your seva goes
-          </span>
-        </div>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {causes.map((c) => {
-            const isSelected = cause === c.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setCause(c.id)}
-                className={`relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[85px] sm:min-h-[100px] ${
-                  isSelected
-                    ? "border-[#B91C1C] bg-red-50/70 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
-                    : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-                }`}
-              >
-                {isSelected && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#B91C1C] rounded-full flex items-center justify-center">
-                    <Check size={10} className="text-white stroke-[3]" />
-                  </span>
-                )}
-                <span className="text-2xl sm:text-3xl mb-1 select-none">{c.emoji}</span>
-                <p className={`text-xs sm:text-sm font-bold leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-800"}`}>
-                  {c.title}
-                </p>
-                {!isMobileCompact && (
-                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1 line-clamp-1">{c.desc}</p>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. Amount Selector */}
-      <div>
-        <div className="flex items-center justify-between mb-2.5">
-          <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
-            {t("amountTitle", { defaultValue: "2. Choose Amount" })}
-          </p>
-        </div>
-
-        {/* Preset Pills */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
-          {presets.map((a) => {
-            const isSelected = preset === a.value && !custom;
-            return (
-              <button
-                key={a.value}
-                type="button"
-                onClick={() => {
-                  setPreset(a.value);
-                  setCustom("");
-                  setErrors((e) => ({ ...e, amount: undefined }));
-                }}
-                className={`py-3 sm:py-3.5 px-2 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[64px] sm:min-h-[72px] flex flex-col items-center justify-center ${
-                  isSelected
-                    ? "border-[#B91C1C] bg-red-50/80 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
-                    : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-                }`}
-              >
-                <p className={`font-black text-base sm:text-lg leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-900"}`}>
-                  ₹{fmtINR(a.value)}
-                </p>
-                <p className={`text-[10px] sm:text-xs mt-0.5 font-medium ${isSelected ? "text-red-700" : "text-gray-400"}`}>
-                  {a.label}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Custom Amount Input */}
-        <div
-          className={`flex items-center border-2 rounded-xl sm:rounded-2xl px-3.5 py-2.5 sm:py-3 transition-all duration-200 ${
-            custom
-              ? "border-[#B91C1C] bg-red-50/50 shadow-sm"
-              : errors.amount
-              ? "border-red-400 bg-red-50/50"
-              : "border-gray-200 bg-white focus-within:border-[#B91C1C] focus-within:shadow-sm"
-          }`}
-        >
-          <span className="text-gray-500 font-bold mr-2 text-base sm:text-lg">₹</span>
-          <input
-            type="number"
-            min="1"
-            max="500000"
-            inputMode="numeric"
-            placeholder={t("customPlaceholder", { defaultValue: "Or enter custom amount (e.g. 2100)" })}
-            value={custom}
-            onChange={(e) => {
-              setCustom(e.target.value);
-              setErrors((er) => ({ ...er, amount: undefined }));
-            }}
-            className="w-full outline-none bg-transparent text-base sm:text-base text-gray-900 placeholder:text-gray-400 font-semibold"
-          />
-        </div>
-        {errors.amount && (
-          <p className="text-xs text-red-600 mt-1 pl-1 font-medium flex items-center gap-1">
-            <AlertCircle size={13} className="shrink-0" />
-            {errors.amount}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <div className="bg-gradient-to-b from-orange-50/40 via-white to-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
 
@@ -503,7 +550,20 @@ const DonationDrivePage = () => {
         {/* ── DESKTOP LEFT SIDEBAR: Cause, Amount & Trust Details (Hidden on Mobile) ── */}
         <div className="hidden lg:block lg:col-span-5 space-y-6 sticky top-24">
           <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm">
-            <CauseAndAmountSection isMobileCompact={false} />
+            <CauseAndAmountSection
+              causes={causes}
+              cause={cause}
+              setCause={setCause}
+              presets={presets}
+              preset={preset}
+              setPreset={setPreset}
+              custom={custom}
+              setCustom={setCustom}
+              errors={errors}
+              setErrors={setErrors}
+              t={t}
+              isMobileCompact={false}
+            />
 
             {/* 80G Information Card */}
             <div className="flex items-start gap-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 mt-6">
@@ -548,7 +608,20 @@ const DonationDrivePage = () => {
               >
                 {/* Mobile-Only Cause & Amount Card (Top on Mobile) */}
                 <div className="lg:hidden bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
-                  <CauseAndAmountSection isMobileCompact={true} />
+                  <CauseAndAmountSection
+                    causes={causes}
+                    cause={cause}
+                    setCause={setCause}
+                    presets={presets}
+                    preset={preset}
+                    setPreset={setPreset}
+                    custom={custom}
+                    setCustom={setCustom}
+                    errors={errors}
+                    setErrors={setErrors}
+                    t={t}
+                    isMobileCompact={true}
+                  />
                 </div>
 
                 {/* Donor Details Card */}
@@ -680,6 +753,8 @@ const DonationDrivePage = () => {
             {/* ── Step 2: Confirm Screen ── */}
             {step === "confirm" && (
               <motion.div
+                ref={setConfirmRef}
+                id="confirm-donation-section"
                 key="confirm"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
