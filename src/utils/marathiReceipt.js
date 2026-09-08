@@ -533,7 +533,8 @@ function buildDonationReceiptHTML({
 
 /** Preload template image as Data URL or verified image URL */
 async function getReceiptTemplateDataUrl() {
-  const url = "/images/donation_receipt_template.png";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const url = `${origin}/images/donation_receipt_template.png`;
   try {
     const res = await fetch(url);
     if (res.ok) {
@@ -546,7 +547,7 @@ async function getReceiptTemplateDataUrl() {
       });
     }
   } catch {
-    // Fallback if fetch not supported or fails
+    // Fallback if fetch fails
   }
   return url;
 }
@@ -568,62 +569,67 @@ export async function downloadDonationReceipt({
   email,
   donorEmail,
 }) {
-  const templateSrc = await getReceiptTemplateDataUrl();
+  try {
+    const templateSrc = await getReceiptTemplateDataUrl();
 
-  const container = document.createElement("div");
-  container.style.cssText = "position:fixed;top:-9999px;left:-9999px;z-index:-1;opacity:0;pointer-events:none;";
-  container.innerHTML = `
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    ${buildDonationReceiptHTML({
-      templateSrc,
-      donationNo,
-      donorName,
-      donorPhone,
-      donorAddress,
-      amount,
-      txnId,
-      paymentMode,
-      bankRefNo,
-      date,
-      email: email || donorEmail,
-    })}
-  `;
-  document.body.appendChild(container);
+    const container = document.createElement("div");
+    container.style.cssText = "position:fixed;top:-9999px;left:-9999px;z-index:-1;";
+    container.innerHTML = `
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+      ${buildDonationReceiptHTML({
+        templateSrc,
+        donationNo,
+        donorName,
+        donorPhone,
+        donorAddress,
+        amount,
+        txnId,
+        paymentMode,
+        bankRefNo,
+        date,
+        email: email || donorEmail,
+      })}
+    `;
+    document.body.appendChild(container);
 
-  // Ensure fonts and template image are loaded
-  await document.fonts.ready;
-  const templateImgEl = container.querySelector("img");
-  if (templateImgEl && !templateImgEl.complete) {
-    await new Promise((resolve) => {
-      templateImgEl.onload = resolve;
-      templateImgEl.onerror = resolve;
-      setTimeout(resolve, 800);
+    // Ensure fonts and template image are loaded
+    await document.fonts.ready;
+    const templateImgEl = container.querySelector("img");
+    if (templateImgEl && !templateImgEl.complete) {
+      await new Promise((resolve) => {
+        templateImgEl.onload = resolve;
+        templateImgEl.onerror = resolve;
+        setTimeout(resolve, 800);
+      });
+    }
+    await new Promise((r) => setTimeout(r, 200));
+
+    const target = container.querySelector("#donation-receipt-canvas");
+    const canvas = await html2canvas(target, {
+      scale: 1, // Already high-res (1684 x 1191 px)
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: "#ffffff",
+      logging: false,
     });
+
+    document.body.removeChild(container);
+
+    const imgData = canvas.toDataURL("image/png");
+
+    // Output as standard A4 landscape matching the master template
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: [841.89, 595.28],
+    });
+    pdf.addImage(imgData, "PNG", 0, 0, 841.89, 595.28, undefined, "FAST");
+
+    // Exact requested file name: DON-YYYYMMDD-005.pdf
+    const filename = donationNo ? `${donationNo}.pdf` : `DON-${Date.now()}.pdf`;
+    pdf.save(filename);
+  } catch (err) {
+    console.error("[Donation Receipt Generation Error]:", err);
+    throw err;
   }
-  await new Promise((r) => setTimeout(r, 200));
-
-  const target = container.querySelector("#donation-receipt-canvas");
-  const canvas = await html2canvas(target, {
-    scale: 1, // Already high-res (1684 x 1191 px)
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: "#ffffff",
-    logging: false,
-  });
-
-  document.body.removeChild(container);
-
-  const imgData = canvas.toDataURL("image/png");
-
-  // Output as standard A4 landscape matching the master template
-  const pdf = new jsPDF({
-    orientation: "landscape",
-    unit: "pt",
-    format: [841.89, 595.28],
-  });
-  pdf.addImage(imgData, "PNG", 0, 0, 841.89, 595.28, undefined, "FAST");
-
-  // Exact requested file name: DON-YYYYMMDD-005.pdf
-  const filename = donationNo ? `${donationNo}.pdf` : `DON-${Date.now()}.pdf`;
-  pdf.save(filename);
 }

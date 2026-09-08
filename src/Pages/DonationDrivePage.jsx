@@ -240,14 +240,64 @@ const DonationDrivePage = () => {
       const donationNo = searchParams.get("donationNo") || "";
       const amt = searchParams.get("amount") || "";
       const txnId = searchParams.get("txnId") || "";
-      const donorNameParam = searchParams.get("donorName") || form.name || "Devotee";
+
+      let cachedForm = null;
+      try {
+        cachedForm = JSON.parse(sessionStorage.getItem("mcr_donation_form") || "null");
+      } catch (e) {}
+
+      const donorNameParam = searchParams.get("donorName") || cachedForm?.name || form.name || "Devotee";
+      const donorPhoneParam = searchParams.get("donorPhone") || cachedForm?.phone || form.phone || "";
+      const donorAddressParam = searchParams.get("donorAddress") || cachedForm?.address || form.address || "";
+      const paymentModeParam = searchParams.get("paymentMode") || "CCAvenue Online / UPI";
+
+      if (cachedForm) {
+        setForm((prev) => ({
+          ...prev,
+          name: cachedForm.name || prev.name,
+          phone: cachedForm.phone || prev.phone,
+          address: cachedForm.address || prev.address,
+          email: cachedForm.email || prev.email,
+        }));
+      }
 
       setSuccessData({
         donationNo,
         amount: amt,
         txnId,
         donorName: donorNameParam,
+        donorPhone: donorPhoneParam,
+        donorAddress: donorAddressParam,
+        paymentMode: paymentModeParam,
       });
+
+      // If phone or address was missing from URL and session, query server record
+      if (donationNo && (!donorPhoneParam || !donorAddressParam)) {
+        apiClient.get(`/donations/pavati/${donationNo}`).then((res) => {
+          const d = res?.data || res;
+          if (d && (d.donorPhone || d.donorAddress)) {
+            setSuccessData((prev) => ({
+              ...prev,
+              donorName: d.donorName || prev?.donorName,
+              donorPhone: d.donorPhone || prev?.donorPhone,
+              donorAddress: d.donorAddress || prev?.donorAddress,
+              amount: d.amount || prev?.amount,
+              txnId: d.paymentId || prev?.txnId,
+              paymentMode: d.paymentMode || prev?.paymentMode,
+            }));
+            setForm((prev) => ({
+              ...prev,
+              name: d.donorName || prev.name,
+              phone: d.donorPhone || prev.phone,
+              address: d.donorAddress || prev.address,
+              email: d.donorEmail || prev.email,
+            }));
+          }
+        }).catch((err) => {
+          console.warn("Pavati lookup error:", err);
+        });
+      }
+
       setStep("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (status === "failure") {
@@ -256,26 +306,34 @@ const DonationDrivePage = () => {
     }
   }, [searchParams]);
 
+  const successDataRef = useRef(successData);
+  useEffect(() => {
+    successDataRef.current = successData;
+  }, [successData]);
+
   // Auto download Marathi Pavati on Success
   useEffect(() => {
-    if (step === "done" && successData && !hasDownloadedRef.current) {
+    if (step === "done" && successData?.donationNo && !hasDownloadedRef.current) {
       hasDownloadedRef.current = true;
       const timer = setTimeout(() => {
+        const cur = successDataRef.current || successData;
         downloadDonationReceipt({
-          donationNo: successData.donationNo,
-          donorName: successData.donorName || form.name || "देणगीदार",
-          donorPhone: form.phone,
-          donorAddress: form.address,
-          amount: Number(successData.amount) || finalAmount || 501,
-          txnId: successData.txnId || successData.donationNo || "",
-          paymentMode: "CCAvenue Online / UPI",
+          donationNo: cur.donationNo,
+          donorName: cur.donorName || form.name || "देणगीदार",
+          donorPhone: cur.donorPhone || form.phone,
+          donorAddress: cur.donorAddress || form.address,
+          amount: Number(cur.amount) || finalAmount || 501,
+          txnId: cur.txnId || cur.donationNo || "",
+          paymentMode: cur.paymentMode || "CCAvenue Online / UPI",
           bankRefNo: "",
           date: new Date(),
+        }).catch((err) => {
+          console.error("Auto download failed:", err);
         });
-      }, 800);
-      return () => clearTimeout(timer);
+      }, 700);
+      return () => {};
     }
-  }, [step, successData]);
+  }, [step, successData?.donationNo]);
 
   // OTP Countdown timer
   useEffect(() => {
@@ -420,6 +478,15 @@ const DonationDrivePage = () => {
       const paymentData = initRes?.data || initRes;
 
       if (paymentData?.actionUrl && paymentData?.encRequest && paymentData?.accessCode) {
+        try {
+          sessionStorage.setItem("mcr_donation_form", JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            address: form.address,
+            email: form.email,
+          }));
+        } catch (e) {}
+
         const formEl = document.createElement("form");
         formEl.method = "POST";
         formEl.action = paymentData.actionUrl;
@@ -455,11 +522,11 @@ const DonationDrivePage = () => {
     downloadDonationReceipt({
       donationNo: successData?.donationNo,
       donorName: successData?.donorName || form.name || "देणगीदार",
-      donorPhone: form.phone,
-      donorAddress: form.address,
+      donorPhone: successData?.donorPhone || form.phone,
+      donorAddress: successData?.donorAddress || form.address,
       amount: Number(successData?.amount) || finalAmount || 501,
       txnId: successData?.txnId || successData?.donationNo || "",
-      paymentMode: "CCAvenue Online / UPI",
+      paymentMode: successData?.paymentMode || "CCAvenue Online / UPI",
       bankRefNo: "",
       date: new Date(),
     });
