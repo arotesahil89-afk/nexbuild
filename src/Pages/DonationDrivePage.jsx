@@ -699,7 +699,7 @@ const DonationDrivePage = () => {
                         {t("formTitle", { defaultValue: "Donor Details / देणगीदाराचे नाव" })}
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        Required for official Marathi Pāvatī receipt
+                        Required for official Marathi Pavati receipt
                       </p>
                     </div>
 
@@ -944,13 +944,13 @@ const DonationDrivePage = () => {
                     )}
                   </div>
 
-                  {/* SMS & Pāvatī Notice Box */}
+                  {/* SMS Notice Box */}
                   <div className="flex items-start gap-2.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 mb-5 text-xs text-amber-900">
                     <div className="w-6 h-6 rounded-full bg-amber-200/70 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
                       <FileText size={13} className="text-amber-800" />
                     </div>
                     <p className="leading-relaxed">
-                      Official Marathi Pāvatī & SMS receipt will be sent directly to <strong className="text-gray-900 font-bold">+91 {form.phone}</strong> upon payment confirmation.
+                      SMS receipt will be sent to <strong className="text-gray-900 font-bold">+91 {form.phone}</strong> after payment.
                     </p>
                   </div>
 
@@ -1150,7 +1150,7 @@ const DonationDrivePage = () => {
 
                 <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-5 text-xs text-emerald-800 text-left">
                   <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                  <p>SMS containing your official Pāvatī receipt download link has been sent to your mobile.</p>
+                  <p>SMS containing your official Pavati receipt download link has been sent to your mobile.</p>
                 </div>
 
                 <div className="space-y-3">
@@ -1160,7 +1160,7 @@ const DonationDrivePage = () => {
                     className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-3.5 px-6 rounded-xl sm:rounded-2xl transition-all text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-100 min-h-[48px]"
                   >
                     <Download size={18} />
-                    <span>Download Official Marathi Pāvatī (PDF)</span>
+                    <span>Download Official Marathi Pavati (PDF)</span>
                   </button>
 
                   <button
