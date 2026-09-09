@@ -632,13 +632,13 @@ const DonationDrivePage = () => {
               isMobileCompact={false}
             />
 
-            {/* 80G Information Card */}
+            {/* 12A Information Card */}
             <div className="flex items-start gap-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 mt-6">
               <FileText size={18} className="text-amber-700 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-amber-900 uppercase tracking-wide">80G Tax Exemption</p>
+                <p className="text-xs font-bold text-amber-900 uppercase tracking-wide">12A Registration</p>
                 <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
-                  All donations are eligible for 50% tax deduction under Section 80G of the Income Tax Act.
+                  Registered Trust under Section 12A of the Income Tax Act.
                 </p>
               </div>
             </div>
@@ -647,7 +647,7 @@ const DonationDrivePage = () => {
             <div className="grid grid-cols-3 gap-2.5 mt-5">
               {[
                 { icon: Award, label: "Est. 1928", sub: "98 Years" },
-                { icon: ShieldCheck, label: "80G Certified", sub: "Tax Free" },
+                { icon: ShieldCheck, label: "12A Registered", sub: "Regd. Trust" },
                 { icon: Landmark, label: "Govt. Regd.", sub: "Trust A-7236" },
               ].map(({ icon: Icon, label, sub }) => (
                 <div key={label} className="flex flex-col items-center text-center bg-gray-50/80 border border-gray-200/70 rounded-xl py-3 px-1.5">
@@ -804,7 +804,7 @@ const DonationDrivePage = () => {
                 <div className="lg:hidden grid grid-cols-3 gap-2 pt-2">
                   {[
                     { icon: Award, label: "Est. 1928", sub: "98th Year" },
-                    { icon: ShieldCheck, label: "80G Tax Free", sub: "Approved" },
+                    { icon: ShieldCheck, label: "12A Registered", sub: "Approved Trust" },
                     { icon: Landmark, label: "Govt Regd.", sub: "Trust A-7236" },
                   ].map(({ icon: Icon, label, sub }) => (
                     <div key={label} className="flex flex-col items-center text-center bg-white border border-gray-200/80 rounded-xl py-3 px-1">
