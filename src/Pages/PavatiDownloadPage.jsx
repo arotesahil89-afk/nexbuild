@@ -220,7 +220,7 @@ export default function PavatiDownloadPage() {
               onClick={handleManualDownload}
               className="w-full bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-3.5 px-6 rounded-2xl transition text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-100"
             >
-              <Download size={18} /> पावती पुन्हा डाउनलोड करा (Download Pavati)
+              <Download size={18} /> पावती डाउनलोड करा (Download Receipt)
             </button>
           </div>
         )}

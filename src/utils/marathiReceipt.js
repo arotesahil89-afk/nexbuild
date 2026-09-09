@@ -255,9 +255,10 @@ function buildDonationReceiptHTML({
         <!-- 1. पावती क्र. -->
         <div style="
           position: absolute;
-          left: 670px;
-          top: 482px;
-          width: 400px;
+          left: 680px;
+          top: 486px;
+          width: 380px;
+          height: 34px;
           display: flex;
           align-items: center;
           font-size: 21px;
@@ -272,9 +273,10 @@ function buildDonationReceiptHTML({
         <!-- 2. दिनांक -->
         <div style="
           position: absolute;
-          left: 1150px;
-          top: 482px;
-          width: 150px;
+          left: 1185px;
+          top: 486px;
+          width: 115px;
+          height: 34px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -288,9 +290,10 @@ function buildDonationReceiptHTML({
         <!-- 3. श्री. / श्रीमती ... यांजकडून -->
         <div style="
           position: absolute;
-          left: 645px;
-          top: 536px;
-          width: 555px;
+          left: 755px;
+          top: 542px;
+          width: 420px;
+          height: 34px;
           display: flex;
           align-items: center;
           font-size: 20px;
@@ -304,9 +307,10 @@ function buildDonationReceiptHTML({
         <!-- 4. पत्ता -->
         <div style="
           position: absolute;
-          left: 590px;
-          top: 588px;
-          width: 710px;
+          left: 655px;
+          top: 594px;
+          width: 635px;
+          height: 32px;
           display: flex;
           align-items: center;
           font-size: 18px;
@@ -320,9 +324,10 @@ function buildDonationReceiptHTML({
         <!-- 5. मोबाईल -->
         <div style="
           position: absolute;
-          left: 625px;
-          top: 632px;
-          width: 350px;
+          left: 675px;
+          top: 638px;
+          width: 235px;
+          height: 32px;
           display: flex;
           align-items: center;
           font-size: 19px;
@@ -337,12 +342,13 @@ function buildDonationReceiptHTML({
         <!-- 6. आय डी क्र. -->
         <div style="
           position: absolute;
-          left: 1090px;
-          top: 632px;
-          width: 210px;
+          left: 1135px;
+          top: 638px;
+          width: 155px;
+          height: 32px;
           display: flex;
           align-items: center;
-          font-size: 15px;
+          font-size: 14.5px;
           font-weight: 700;
           color: #1e293b;
           font-family: monospace, sans-serif;
@@ -356,7 +362,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 579px;
-          top: 760px;
+          top: 763px;
           width: 132px;
           height: 38px;
           display: flex;
@@ -370,7 +376,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 711px;
-          top: 760px;
+          top: 763px;
           width: 44px;
           height: 38px;
           display: flex;
@@ -386,7 +392,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 756px;
-          top: 760px;
+          top: 763px;
           width: 132px;
           height: 38px;
           display: flex;
@@ -401,7 +407,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 888px;
-          top: 760px;
+          top: 763px;
           width: 45px;
           height: 38px;
           display: flex;
@@ -418,7 +424,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 933px;
-          top: 760px;
+          top: 763px;
           width: 132px;
           height: 38px;
           display: flex;
@@ -432,7 +438,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 1065px;
-          top: 760px;
+          top: 763px;
           width: 45px;
           height: 38px;
           display: flex;
@@ -448,7 +454,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 1110px;
-          top: 760px;
+          top: 763px;
           width: 132px;
           height: 38px;
           display: flex;
@@ -463,7 +469,7 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 1242px;
-          top: 760px;
+          top: 763px;
           width: 45px;
           height: 38px;
           display: flex;
@@ -479,9 +485,10 @@ function buildDonationReceiptHTML({
         <!-- 8. अक्षरी रुपये ... साभार मिळाले. -->
         <div style="
           position: absolute;
-          left: 670px;
-          top: 794px;
-          width: 520px;
+          left: 725px;
+          top: 800px;
+          width: 420px;
+          height: 34px;
           display: flex;
           align-items: center;
           font-size: 19px;
@@ -495,9 +502,10 @@ function buildDonationReceiptHTML({
         <!-- 9. धनादेश / UPI -->
         <div style="
           position: absolute;
-          left: 685px;
-          top: 848px;
-          width: 345px;
+          left: 755px;
+          top: 854px;
+          width: 260px;
+          height: 34px;
           display: flex;
           align-items: center;
           font-size: 16.5px;
@@ -511,9 +519,10 @@ function buildDonationReceiptHTML({
         <!-- 10. बँक -->
         <div style="
           position: absolute;
-          left: 1085px;
-          top: 848px;
-          width: 215px;
+          left: 1135px;
+          top: 854px;
+          width: 155px;
+          height: 34px;
           display: flex;
           align-items: center;
           font-size: 16.5px;
@@ -528,8 +537,9 @@ function buildDonationReceiptHTML({
         <div style="
           position: absolute;
           left: 1180px;
-          top: 906px;
+          top: 910px;
           width: 130px;
+          height: 30px;
           display: flex;
           align-items: center;
           justify-content: center;

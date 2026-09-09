@@ -1146,7 +1146,7 @@ const DonationDrivePage = () => {
                     className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-3.5 px-6 rounded-xl sm:rounded-2xl transition-all text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-100 min-h-[48px]"
                   >
                     <Download size={18} />
-                    <span>Download Official Marathi Pavati (PDF)</span>
+                    <span>Download Receipt</span>
                   </button>
 
                   <button

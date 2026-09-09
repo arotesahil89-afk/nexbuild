@@ -184,7 +184,7 @@ const DonationDetailModal = ({ donation, onClose, onResendSMS }) => {
               cursor: "pointer",
             }}
           >
-            <Download size={14} /> Download Official Pāvatī
+            <Download size={14} /> Download Receipt
           </button>
         </div>
 
