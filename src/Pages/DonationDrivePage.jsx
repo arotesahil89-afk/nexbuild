@@ -202,7 +202,6 @@ const DonationDrivePage = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [otpTimer, setOtpTimer] = useState(60);
-  const [devOtpHint, setDevOtpHint] = useState("");
   const [verificationToken, setVerificationToken] = useState("");
   const [successData, setSuccessData] = useState(null);
   const hasDownloadedRef = useRef(false);
@@ -407,9 +406,6 @@ const DonationDrivePage = () => {
       if (payload?.otpSessionToken) {
         setOtpSessionToken(payload.otpSessionToken);
       }
-      if (payload?.devOtpHint) {
-        setDevOtpHint(payload.devOtpHint);
-      }
       setStep("otp-modal");
     } catch (err) {
       console.error("Failed to send OTP:", err);
@@ -430,9 +426,6 @@ const DonationDrivePage = () => {
       const payload = res?.data || res;
       if (payload?.otpSessionToken) {
         setOtpSessionToken(payload.otpSessionToken);
-      }
-      if (payload?.devOtpHint) {
-        setDevOtpHint(payload.devOtpHint);
       }
     } catch (err) {
       setOtpError("Failed to resend OTP. Please try again.");
@@ -1001,13 +994,6 @@ const DonationDrivePage = () => {
                   Enter the 6-digit OTP code sent to <br />
                   <strong className="text-gray-900 font-bold">+91 {form.phone}</strong>
                 </p>
-
-                {devOtpHint && (
-                  <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-800">
-                    ⚡ <strong>Test OTP Code:</strong>{" "}
-                    <span className="font-mono font-black tracking-widest text-sm">{devOtpHint}</span>
-                  </div>
-                )}
 
                 {otpError && (
                   <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-2.5 text-xs text-red-600 font-semibold flex items-center justify-center gap-1.5">
