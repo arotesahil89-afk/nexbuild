@@ -529,7 +529,7 @@ const DonationDrivePage = () => {
     <div className="bg-gradient-to-b from-orange-50/40 via-white to-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
 
       {/* ── Page Header & Breadcrumb ── */}
-      <div className="pt-20 sm:pt-24 pb-4 sm:pb-6 px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto">
+      <div className="pt-20 sm:pt-24 pb-4 sm:pb-5 px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto border-b border-orange-200/50 mb-6 sm:mb-8">
         <div className="flex items-center gap-1 text-xs text-gray-400 mb-3 sm:mb-4">
           <span onClick={() => navigate("/")} className="hover:text-gray-700 cursor-pointer">{t("breadHome", { defaultValue: "Home" })}</span>
           <ChevronRight size={12} />
@@ -563,46 +563,6 @@ const DonationDrivePage = () => {
           </div>
         </div>
       )}
-
-      {/* ── Devotional banner ── */}
-      <div className="relative w-full overflow-hidden mb-10">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-red-700 to-rose-800" />
-        <div className="absolute -left-16 -top-10 w-64 h-64 rounded-full bg-white/5 pointer-events-none" />
-        <div className="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
-
-        <div className="relative w-full px-4 sm:px-10 py-10 max-w-6xl mx-auto">
-          {/* Mantra */}
-          <div className="flex items-center justify-center gap-2 mb-5">
-            <span className="text-yellow-300 text-lg">🪔</span>
-            <p className="text-yellow-300 font-extrabold text-base sm:text-2xl tracking-wide sm:tracking-widest text-center"
-               style={{ fontFamily: "'Noto Serif Devanagari', serif" }}>
-              गणपती बाप्पा मोरया
-            </p>
-            <span className="text-yellow-300 text-lg">🪔</span>
-          </div>
-
-          {/* Quote */}
-          <p className="text-white/85 text-center text-sm sm:text-base font-medium leading-relaxed max-w-xl mx-auto mb-7 italic px-2">
-            "Every offering, however small, made with a pure heart, is accepted by Bappa.
-            Your donation is a <span className="text-yellow-300 font-bold not-italic">seva</span> — an act of devotion."
-          </p>
-
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {impactStats.map((s) => (
-              <div key={s.label}
-                className="text-center bg-white/10 border border-white/20 rounded-2xl py-3 px-2">
-                <p className="text-xl sm:text-3xl font-extrabold text-yellow-300 leading-none">{s.value}</p>
-                <p className="text-[11px] sm:text-xs text-white/70 mt-1.5 leading-tight">{s.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-center mt-5 text-white/40 text-[10px] tracking-widest">
-            🌸 EST. 1928 · LALBAUG, MUMBAI 🌸
-          </p>
-        </div>
-      </div>
 
       {/* ── Main Responsive Grid ── */}
       <div className="px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
@@ -1168,6 +1128,42 @@ const DonationDrivePage = () => {
             )}
 
           </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ── Devotional Banner (Placed Below Form & Success View) ── */}
+      <div className="relative w-full overflow-hidden mt-12 sm:mt-16 mb-6">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-red-700 to-rose-800" />
+        <div className="absolute -left-16 -top-10 w-64 h-64 rounded-full bg-white/5 pointer-events-none" />
+        <div className="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
+
+        <div className="relative w-full px-4 sm:px-10 py-10 max-w-6xl mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-5">
+            <span className="text-yellow-300 text-lg">🪔</span>
+            <p className="text-yellow-300 font-extrabold text-base sm:text-2xl tracking-wide sm:tracking-widest text-center"
+               style={{ fontFamily: "'Noto Serif Devanagari', serif" }}>
+              गणपती बाप्पा मोरया
+            </p>
+            <span className="text-yellow-300 text-lg">🪔</span>
+          </div>
+
+          <p className="text-white/85 text-center text-sm sm:text-base font-medium leading-relaxed max-w-xl mx-auto mb-7 italic px-2">
+            "Every offering, however small, made with a pure heart, is accepted by Bappa.
+            Your donation is a <span className="text-yellow-300 font-bold not-italic">seva</span> — an act of devotion."
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {impactStats.map((s) => (
+              <div key={s.label} className="text-center bg-white/10 border border-white/20 rounded-2xl py-3 px-2">
+                <p className="text-xl sm:text-3xl font-extrabold text-yellow-300 leading-none">{s.value}</p>
+                <p className="text-[11px] sm:text-xs text-white/70 mt-1.5 leading-tight">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center mt-5 text-white/40 text-[10px] tracking-widest">
+            🌸 EST. 1928 · LALBAUG, MUMBAI 🌸
+          </p>
         </div>
       </div>
 
