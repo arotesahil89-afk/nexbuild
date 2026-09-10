@@ -58,9 +58,9 @@ const Navbar = () => {
         links: [
           { name: t("events"), path: "/events" },
           { name: t("award"), path: "/awards" },
-          { name: t("donation"), path: "/donate" },
+          // Backup old static donation path: { name: t("donation"), path: "/donate-bank" },
+          { name: t("donation"), path: "/donate-now" },
           ...(import.meta.env.VITE_ENABLE_COMMERCE === "true" ? [
-            { name: "Donate Now", path: "/donate-now" },
             { name: "Membership", path: "/membership" }
           ] : []),
           { name: t("contact"), path: "/contact" },

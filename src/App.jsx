@@ -127,8 +127,10 @@ function App() {
         <Route path="/"                element={<Home lang={i18n.language} />} />
         <Route path="/about"           element={<AboutPage lang={i18n.language} />} />
         <Route path="/contact"         element={<ContactPage lang={i18n.language} />} />
-        <Route path="/committee"       element={<CommitteePage lang={i18n.language} />} />
-        <Route path="/donate"          element={<DonationPage lang={i18n.language} />} />
+        {/* Backup route for old static bank transfer page */}
+        <Route path="/donate-bank"     element={<DonationPage lang={i18n.language} />} />
+        <Route path="/donate-old"      element={<DonationPage lang={i18n.language} />} />
+        <Route path="/donate"          element={<DonationDrivePage lang={i18n.language} />} />
         <Route path="/events"          element={<EventsPage lang={i18n.language} />} />
         <Route path="/gallery"         element={<GalleryPage lang={i18n.language} />} />
         <Route path="/live"            element={<LivePage lang={i18n.language} />} />
