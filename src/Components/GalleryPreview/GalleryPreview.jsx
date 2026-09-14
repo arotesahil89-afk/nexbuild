@@ -10,7 +10,7 @@ const images = [
   "https://www.mumbaicharaja.co/gallery-image/Lalbaug%20Chi%20Mata/img4.jpeg",
   "https://www.mumbaicharaja.co/gallery-image/Mumbai%20Cha%20Raja/MumbaichaRaja2024.jpg",
   "https://www.mumbaicharaja.co/gallery-image/Lalbaug%20Chi%20Mata/img3.jpeg",
-  "https://www.mumbaicharaja.co/gallery-image/Mumbai%20Cha%20Raja/MumbaichaRaja2023.jpg",
+  "https://www.mumbaicharaja.co/gallery-image/Mumbai%20Cha%20Raja/MumbaichaRaja2026.jpg",
   "https://www.mumbaicharaja.co/gallery-image/Lalbaug%20Chi%20Mata/img1.jpeg",
 ];
 

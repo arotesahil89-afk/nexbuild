@@ -49,7 +49,7 @@ const LivePage = () => {
           <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-lg">
             <iframe
               className="absolute top-0 left-0 w-full h-full"
-              src="https://www.youtube.com/embed/9ThLarUCcas?si=2ogd-WyZi7o-lfPp"
+              src="https://www.youtube.com/embed/Id07vJpFwAY?si=xpotbL_ucnOECu1X"
               title="Live Stream"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -74,3 +74,5 @@ const LivePage = () => {
 };
 
 export default LivePage;
+
+
