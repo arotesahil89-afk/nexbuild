@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import apiClient from "../../services/apiService";
 import {
   ShoppingBag, Award, CalendarDays, User,
-  IndianRupee, Clock, PackageCheck, ArrowRight, RefreshCw, Truck, Shirt, Heart
+  IndianRupee, Clock, PackageCheck, ArrowRight, RefreshCw, Truck, Shirt, Heart, Video
 } from "lucide-react";
 
 // ─── Counter animation hook ───────────────────────────────────────────────────
@@ -272,6 +272,7 @@ const AdminDashboardPage = () => {
           <QuickCard to="/admin/awards"   icon={Award}        label="Manage Awards"    desc="Add or edit awards"    color="#d97706" />
           <QuickCard to="/admin/events"   icon={CalendarDays} label="Manage Events"    desc="Schedule events"       color="#2563eb" />
           <QuickCard to="/admin/profile"  icon={User}         label="My Profile"       desc="Account & password"    color="#7c3aed" />
+          <QuickCard to="/admin/live"      icon={Video}        label="Live Stream"      desc="Manage YouTube live URL" color="#ef4444" />
         </div>
       </div>
     </div>

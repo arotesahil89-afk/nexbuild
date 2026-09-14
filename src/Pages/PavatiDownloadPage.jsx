@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { Download, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import apiClient from "../services/apiService";
 import { downloadMarathiReceipt, downloadDonationReceipt } from "../utils/marathiReceipt";
 
 export default function PavatiDownloadPage() {
-  const { id } = useParams();
+  const { id: pathId } = useParams();
+  const [searchParams] = useSearchParams();
+  const rawQuery = (typeof window !== "undefined" && window.location.search) ? window.location.search.replace(/^\?/, "") : "";
+  const queryId = searchParams.get("id") || (rawQuery.startsWith("DON-") ? rawQuery : null);
+  const id = pathId || queryId;
   const [order, setOrder] = useState(null);
   const [isDonation, setIsDonation] = useState(false);
   const [loading, setLoading] = useState(true);

@@ -15,6 +15,7 @@ export const SECTION_ROLES = {
   awards:      ["admin"],
   events:      ["admin"],
   flash:       ["admin"],
+  live:        ["admin"],
   users:       ["admin"],
 };
 
