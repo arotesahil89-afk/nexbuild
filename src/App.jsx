@@ -151,6 +151,8 @@ function App() {
         <Route path="/pavati"          element={<PavatiDownloadPage />} />
         <Route path="/p/:id"           element={<PavatiDownloadPage />} />
         <Route path="/p"               element={<PavatiDownloadPage />} />
+        <Route path="/LSUMGG/:id"      element={<PavatiDownloadPage />} />
+        <Route path="/LSUMGG"          element={<PavatiDownloadPage />} />
         <Route path="/LSUMGG/p/:id"    element={<PavatiDownloadPage />} />
         <Route path="/LSUMGG/p"        element={<PavatiDownloadPage />} />
         <Route path="/LSUMGG/pavati/:id" element={<PavatiDownloadPage />} />
