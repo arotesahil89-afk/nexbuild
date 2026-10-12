@@ -71,7 +71,7 @@ const VisarjanSohala = () => {
         >
           <iframe
             className="absolute top-0 left-0 w-full h-full"
-            src="https://www.youtube.com/embed/O1dM0aqE07w?si=gydTg5pdSMRWGktZ"
+            src="https://www.youtube.com/embed/hgncoN-eC3Q?si=GaPDZ-uCQJGdU1WC"
             title={t("videoTitle")}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
