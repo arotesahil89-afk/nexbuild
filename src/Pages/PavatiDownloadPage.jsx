@@ -1,12 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { Download, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import apiClient from "../services/apiService";
-import { downloadMarathiReceipt } from "../utils/marathiReceipt";
+import { downloadMarathiReceipt, downloadDonationReceipt } from "../utils/marathiReceipt";
 
 export default function PavatiDownloadPage() {
-  const { id } = useParams();
+  const { id: pathId } = useParams();
+  const [searchParams] = useSearchParams();
+  const rawQuery = (typeof window !== "undefined" && window.location.search) ? window.location.search.replace(/^\?/, "") : "";
+  const queryId = searchParams.get("id") || (rawQuery.startsWith("DON-") ? rawQuery : null);
+  const id = pathId || queryId;
   const [order, setOrder] = useState(null);
+  const [isDonation, setIsDonation] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloaded, setDownloaded] = useState(false);
@@ -16,9 +21,57 @@ export default function PavatiDownloadPage() {
     async function fetchPavatiData() {
       try {
         setLoading(true);
-        const res = await apiClient.get(`/orders/pavati/${id}`);
-        if (res.success && res.data) {
-          setOrder(res.data);
+        let res = null;
+        let isDon = false;
+        
+        // If ID starts with DON-, query donations endpoint directly
+        if (id && id.startsWith("DON-")) {
+          isDon = true;
+          try {
+            res = await apiClient.get(`/donations/pavati/${id}`);
+          } catch (e) {
+            res = null;
+          }
+        }
+        
+        // If not found or not DON-, try orders first, then donations
+        if (!res || !res.success || !res.data) {
+          try {
+            res = await apiClient.get(`/orders/pavati/${id}`);
+            isDon = false;
+          } catch (e) {
+            res = null;
+          }
+        }
+
+        if (!res || !res.success || !res.data) {
+          try {
+            res = await apiClient.get(`/donations/pavati/${id}`);
+            isDon = true;
+          } catch (e) {
+            res = null;
+          }
+        }
+
+        if (res && res.success && res.data) {
+          const d = res.data;
+          setIsDonation(isDon || !!d.donationNo);
+          setOrder({
+            ...d,
+            orderNo: d.orderNo || d.donationNo,
+            donationNo: d.donationNo,
+            customerName: d.customerName || d.donorName,
+            donorName: d.donorName || d.customerName,
+            donorPhone: d.donorPhone || d.customerPhone,
+            donorAddress: d.donorAddress || d.deliveryAddress,
+            totalAmount: d.totalAmount || d.amount,
+            unitPrice: d.unitPrice || d.amount,
+            quantity: d.quantity || 1,
+            productName: d.productName || d.cause || "शतक महोत्सवी निधीकरिता",
+            paymentMode: d.paymentMode || "CCAvenue Online",
+            bankRefNo: d.bankRefNo,
+            createdAt: d.createdAt,
+          });
         } else {
           setError("पावती माहिती सापडली नाही (Pavati not found)");
         }
@@ -40,20 +93,34 @@ export default function PavatiDownloadPage() {
       const subtotal = unitPrice * quantity;
 
       const timer = setTimeout(() => {
-        downloadMarathiReceipt({
-          receiptNo: order.orderNo?.replace(/\D/g, "").slice(-4) || "1",
-          customerName: order.customerName || "",
-          amount: subtotal,
-          txnId: order.paymentId || order.orderNo || "",
-          productName: order.productName || "शतक महोत्सवी निधीकरिता",
-          quantity: quantity,
-        });
+        if (isDonation || order.donationNo) {
+          downloadDonationReceipt({
+            donationNo: order.donationNo || order.orderNo,
+            donorName: order.donorName || order.customerName || "देणगीदार",
+            donorPhone: order.donorPhone,
+            donorAddress: order.donorAddress,
+            amount: subtotal || order.amount,
+            txnId: order.paymentId || order.donationNo || "",
+            paymentMode: order.paymentMode || "CCAvenue Online",
+            bankRefNo: order.bankRefNo,
+            date: order.createdAt,
+          });
+        } else {
+          downloadMarathiReceipt({
+            receiptNo: order.orderNo?.replace(/\D/g, "").slice(-4) || "1",
+            customerName: order.customerName || "",
+            amount: subtotal,
+            txnId: order.paymentId || order.orderNo || "",
+            productName: order.productName || "शतक महोत्सवी निधीकरिता",
+            quantity: quantity,
+          });
+        }
         setDownloaded(true);
       }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [order]);
+  }, [order, isDonation]);
 
   const handleManualDownload = () => {
     if (!order) return;
@@ -61,14 +128,28 @@ export default function PavatiDownloadPage() {
     const quantity = order.quantity || 1;
     const subtotal = unitPrice * quantity;
 
-    downloadMarathiReceipt({
-      receiptNo: order.orderNo?.replace(/\D/g, "").slice(-4) || "1",
-      customerName: order.customerName || "",
-      amount: subtotal,
-      txnId: order.paymentId || order.orderNo || "",
-      productName: order.productName || "शतक महोत्सवी निधीकरिता",
-      quantity: quantity,
-    });
+    if (isDonation || order.donationNo) {
+      downloadDonationReceipt({
+        donationNo: order.donationNo || order.orderNo,
+        donorName: order.donorName || order.customerName || "देणगीदार",
+        donorPhone: order.donorPhone,
+        donorAddress: order.donorAddress,
+        amount: subtotal || order.amount,
+        txnId: order.paymentId || order.donationNo || "",
+        paymentMode: order.paymentMode || "CCAvenue Online",
+        bankRefNo: order.bankRefNo,
+        date: order.createdAt,
+      });
+    } else {
+      downloadMarathiReceipt({
+        receiptNo: order.orderNo?.replace(/\D/g, "").slice(-4) || "1",
+        customerName: order.customerName || "",
+        amount: subtotal,
+        txnId: order.paymentId || order.orderNo || "",
+        productName: order.productName || "शतक महोत्सवी निधीकरिता",
+        quantity: quantity,
+      });
+    }
   };
 
   const fmtINR = (n) => Number(n).toLocaleString("en-IN");
@@ -143,7 +224,7 @@ export default function PavatiDownloadPage() {
               onClick={handleManualDownload}
               className="w-full bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-3.5 px-6 rounded-2xl transition text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-100"
             >
-              <Download size={18} /> पावती पुन्हा डाउनलोड करा (Download Pavati)
+              <Download size={18} /> पावती डाउनलोड करा (Download Receipt)
             </button>
           </div>
         )}

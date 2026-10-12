@@ -1,63 +1,180 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  Heart, ShieldCheck, ChevronRight, User, Mail, Phone,
-  CheckCircle2, Award, Landmark, FileText, Copy, Check,
-  Upload, ImagePlus, X as XIcon, Send, AlertCircle,
+  Heart, ShieldCheck, ChevronRight, User, Mail, Phone, MapPin,
+  CheckCircle2, Award, Landmark, FileText, AlertCircle, Lock, RefreshCw, Download,
+  Check, Sparkles, HelpCircle
 } from "lucide-react";
-import PaymentGatewayModal from "../Components/PaymentGatewayModal/PaymentGatewayModal";
 import { causes as causesData, presetAmounts, impactStats } from "../data/donationData";
+import apiClient from "../services/apiService";
+import { downloadDonationReceipt } from "../utils/marathiReceipt";
 
-const fmtINR = (n) => Number(n).toLocaleString("en-IN");
+const fmtINR = (n) => Number(n || 0).toLocaleString("en-IN");
 
-/* ─── Bank / UPI details ─── */
-const BANK = {
-  upiId:   "mumbaicharaja@upi",          // ← replace with real UPI ID
-  bank:    "State Bank of India",
-  account: "XXXX XXXX XXXX 1928",        // ← replace with real account
-  ifsc:    "SBIN0000001",                // ← replace with real IFSC
-  holder:  "Mumbaicha Raja Mandal Trust",
-};
-
-/* ─── Field ─── */
+/* ─── Mobile-First Input Field ─── */
 const Field = ({ icon: Icon, label, error, children }) => (
-  <div className="mb-5">
-    <label className="block text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wide">{label}</label>
-    <div className={`flex items-center border-2 rounded-xl overflow-hidden transition-colors ${
-      error
-        ? "border-red-400 bg-red-50"
-        : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C] focus-within:bg-white"
-    }`}>
-      <span className="pl-4 text-gray-400 shrink-0"><Icon size={18} /></span>
+  <div className="mb-3.5 sm:mb-4">
+    <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">
+      {label}
+    </label>
+    <div
+      className={`flex items-center border-2 rounded-xl sm:rounded-2xl transition-all duration-200 ${
+        error
+          ? "border-red-400 bg-red-50/50"
+          : "border-gray-200 bg-gray-50/60 focus-within:border-[#B91C1C] focus-within:bg-white focus-within:shadow-sm"
+      }`}
+    >
+      <span className="pl-3.5 sm:pl-4 text-gray-400 shrink-0">
+        <Icon size={18} className="text-gray-400" />
+      </span>
       {children}
     </div>
-    {error && <p className="text-sm text-red-500 mt-1.5 pl-1">{error}</p>}
+    {error && (
+      <p className="text-xs text-red-600 mt-1 pl-1 font-medium flex items-center gap-1">
+        <AlertCircle size={13} className="shrink-0" />
+        {error}
+      </p>
+    )}
   </div>
 );
 
-/* ─── Copy button ─── */
-const CopyBtn = ({ text }) => {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-  return (
-    <button
-      onClick={copy}
-      className="ml-2 p-1 rounded text-gray-400 hover:text-[#B91C1C] transition shrink-0"
-    >
-      {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-    </button>
-  );
-};
+/* ─── Reusable Cause & Amount UI Component (Defined outside parent to preserve focus & prevent remounting) ─── */
+const CauseAndAmountSection = ({
+  causes,
+  cause,
+  setCause,
+  presets,
+  preset,
+  setPreset,
+  custom,
+  setCustom,
+  errors,
+  setErrors,
+  t,
+  isMobileCompact = false,
+}) => (
+  <div className="space-y-5 sm:space-y-6">
+    {/* 1. Cause Selector */}
+    <div>
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+          {t("whereTitle", { defaultValue: "1. Select Cause" })}
+        </p>
+        <span className="text-[11px] text-gray-400 font-medium hidden sm:inline">
+          Choose where your seva goes
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {causes.map((c) => {
+          const isSelected = cause === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setCause(c.id)}
+              className={`relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[85px] sm:min-h-[100px] ${
+                isSelected
+                  ? "border-[#B91C1C] bg-red-50/70 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
+                  : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+              }`}
+            >
+              {isSelected && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#B91C1C] rounded-full flex items-center justify-center">
+                  <Check size={10} className="text-white stroke-[3]" />
+                </span>
+              )}
+              <span className="text-2xl sm:text-3xl mb-1 select-none">{c.emoji}</span>
+              <p className={`text-xs sm:text-sm font-bold leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-800"}`}>
+                {c.title}
+              </p>
+              {!isMobileCompact && (
+                <p className="text-[10px] sm:text-xs text-gray-400 mt-1 line-clamp-1">{c.desc}</p>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
 
-/* ─── Page ─── */
+    {/* 2. Amount Selector */}
+    <div>
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+          {t("amountTitle", { defaultValue: "2. Choose Amount" })}
+        </p>
+      </div>
+
+      {/* Preset Pills */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
+        {presets.map((a) => {
+          const isSelected = preset === a.value && !custom;
+          return (
+            <button
+              key={a.value}
+              type="button"
+              onClick={() => {
+                setPreset(a.value);
+                setCustom("");
+                setErrors((e) => ({ ...e, amount: undefined }));
+              }}
+              className={`py-3 sm:py-3.5 px-2 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-center cursor-pointer min-h-[64px] sm:min-h-[72px] flex flex-col items-center justify-center ${
+                isSelected
+                  ? "border-[#B91C1C] bg-red-50/80 shadow-sm shadow-red-100 ring-1 ring-[#B91C1C]/20"
+                  : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+              }`}
+            >
+              <p className={`font-black text-base sm:text-lg leading-tight ${isSelected ? "text-[#B91C1C]" : "text-gray-900"}`}>
+                ₹{fmtINR(a.value)}
+              </p>
+              <p className={`text-[10px] sm:text-xs mt-0.5 font-medium ${isSelected ? "text-red-700" : "text-gray-400"}`}>
+                {a.label}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Custom Amount Input */}
+      <div
+        className={`flex items-center border-2 rounded-xl sm:rounded-2xl px-3.5 py-2.5 sm:py-3 transition-all duration-200 ${
+          custom
+            ? "border-[#B91C1C] bg-red-50/50 shadow-sm"
+            : errors.amount
+            ? "border-red-400 bg-red-50/50"
+            : "border-gray-200 bg-white focus-within:border-[#B91C1C] focus-within:shadow-sm"
+        }`}
+      >
+        <span className="text-gray-500 font-bold mr-2 text-base sm:text-lg">₹</span>
+        <input
+          type="number"
+          min="1"
+          max="500000"
+          inputMode="numeric"
+          placeholder={t("customPlaceholder", { defaultValue: "Or enter custom amount (e.g. 2100)" })}
+          value={custom}
+          onChange={(e) => {
+            setCustom(e.target.value);
+            setErrors((er) => ({ ...er, amount: undefined }));
+          }}
+          className="w-full outline-none bg-transparent text-base sm:text-base text-gray-900 placeholder:text-gray-400 font-semibold"
+        />
+      </div>
+      {errors.amount && (
+        <p className="text-xs text-red-600 mt-1 pl-1 font-medium flex items-center gap-1">
+          <AlertCircle size={13} className="shrink-0" />
+          {errors.amount}
+        </p>
+      )}
+    </div>
+  </div>
+);
+
 const DonationDrivePage = () => {
   const { t } = useTranslation("donate");
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const causes = causesData.map((c) => ({
     ...c,
@@ -70,200 +187,957 @@ const DonationDrivePage = () => {
     label: t(`presets.${a.value}`, { defaultValue: a.label }),
   }));
 
-  const [cause,    setCause]    = useState(causes[0].id);
-  const [preset,   setPreset]   = useState(501);
-  const [custom,   setCustom]   = useState("");
-  const [form,     setForm]     = useState({ name: "", email: "", phone: "" });
-  const [errors,   setErrors]   = useState({});
-  const [payOpen,  setPayOpen]  = useState(false);
-  const [customer, setCustomer] = useState(null);
-  const [step,     setStep]     = useState("form");
+  const [cause, setCause] = useState(causes[0].id);
+  const [preset, setPreset] = useState(501);
+  const [custom, setCustom] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const [disclaimer, setDisclaimer] = useState(true);
+  const [errors, setErrors] = useState({});
+  const [step, setStep] = useState("form"); // 'form', 'confirm', 'otp-modal', 'redirecting', 'done'
+  const [pageAlert, setPageAlert] = useState(null);
 
-  /* ── Receipt upload state ── */
-  const [receipt,       setReceipt]       = useState(null);   // { file, preview }
-  const [receiptName,   setReceiptName]   = useState("");
-  const [receiptPhone,  setReceiptPhone]  = useState("");
-  const [receiptAmount, setReceiptAmount] = useState("");
-  const [receiptSent,   setReceiptSent]   = useState(false);
-  const [receiptErr,    setReceiptErr]    = useState({});
-  const [isDragging,    setIsDragging]    = useState(false);
+  // OTP & Payment state
+  const [otp, setOtp] = useState("");
+  const [otpSessionToken, setOtpSessionToken] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpTimer, setOtpTimer] = useState(60);
+  const [verificationToken, setVerificationToken] = useState("");
+  const [successData, setSuccessData] = useState(null);
+  const hasDownloadedRef = useRef(false);
+  const isMovingToConfirmRef = useRef(false);
+  const confirmRef = useRef(null);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
+  const performScrollToConfirm = useCallback((targetEl) => {
+    const el = targetEl || confirmRef.current || document.getElementById("confirm-donation-section");
+    if (!el) return;
+    const navbarOffset = window.innerWidth < 768 ? 70 : 85;
+    const rect = el.getBoundingClientRect();
+    const targetY = Math.max(0, rect.top + window.pageYOffset - navbarOffset);
+    window.scrollTo({
+      top: targetY,
+      behavior: "smooth",
+    });
+  }, []);
 
-  const handleFilePick = (file) => {
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setReceiptErr((e) => ({ ...e, file: "File must be under 5 MB" })); return; }
-    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-      setReceiptErr((e) => ({ ...e, file: "Only images or PDF allowed" })); return;
+  const setConfirmRef = useCallback((node) => {
+    confirmRef.current = node;
+    if (node && isMovingToConfirmRef.current) {
+      isMovingToConfirmRef.current = false;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          performScrollToConfirm(node);
+        }, 50);
+      });
     }
-    setReceiptErr((e) => ({ ...e, file: undefined }));
-    setReceipt({ file, preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : null });
-  };
+  }, [performScrollToConfirm]);
 
-  const handleReceiptSubmit = () => {
-    const e = {};
-    if (!receiptName.trim())                        e.name   = "Enter your name";
-    if (!/^[6-9]\d{9}$/.test(receiptPhone))         e.phone  = "Enter a valid 10-digit mobile";
-    if (!receiptAmount || Number(receiptAmount) < 1) e.amount = "Enter the amount you paid";
-    if (!receipt)                                    e.file   = "Upload your payment screenshot";
-    setReceiptErr(e);
-    if (Object.keys(e).length === 0) setReceiptSent(true);
-  };
+  // Check URL query parameters for return from CCAvenue
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status === "success") {
+      const donationNo = searchParams.get("donationNo") || "";
+      const amt = searchParams.get("amount") || "";
+      const txnId = searchParams.get("txnId") || "";
 
-  const finalAmount   = custom ? Number(custom) : preset;
+      let cachedForm = null;
+      try {
+        cachedForm = JSON.parse(sessionStorage.getItem("mcr_donation_form") || "null");
+      } catch (e) {}
+
+      const donorNameParam = searchParams.get("donorName") || cachedForm?.name || form.name || "Devotee";
+      const donorPhoneParam = searchParams.get("donorPhone") || cachedForm?.phone || form.phone || "";
+      const donorAddressParam = searchParams.get("donorAddress") || cachedForm?.address || form.address || "";
+      const paymentModeParam = searchParams.get("paymentMode") || "CCAvenue Online / UPI";
+
+      if (cachedForm) {
+        setForm((prev) => ({
+          ...prev,
+          name: cachedForm.name || prev.name,
+          phone: cachedForm.phone || prev.phone,
+          address: cachedForm.address || prev.address,
+          email: cachedForm.email || prev.email,
+        }));
+      }
+
+      setSuccessData({
+        donationNo,
+        amount: amt,
+        txnId,
+        donorName: donorNameParam,
+        donorPhone: donorPhoneParam,
+        donorAddress: donorAddressParam,
+        paymentMode: paymentModeParam,
+      });
+
+      // If phone or address was missing from URL and session, query server record
+      if (donationNo && (!donorPhoneParam || !donorAddressParam)) {
+        apiClient.get(`/donations/pavati/${donationNo}`).then((res) => {
+          const d = res?.data || res;
+          if (d && (d.donorPhone || d.donorAddress)) {
+            setSuccessData((prev) => ({
+              ...prev,
+              donorName: d.donorName || prev?.donorName,
+              donorPhone: d.donorPhone || prev?.donorPhone,
+              donorAddress: d.donorAddress || prev?.donorAddress,
+              amount: d.amount || prev?.amount,
+              txnId: d.paymentId || prev?.txnId,
+              paymentMode: d.paymentMode || prev?.paymentMode,
+            }));
+            setForm((prev) => ({
+              ...prev,
+              name: d.donorName || prev.name,
+              phone: d.donorPhone || prev.phone,
+              address: d.donorAddress || prev.address,
+              email: d.donorEmail || prev.email,
+            }));
+          }
+        }).catch((err) => {
+          console.warn("Pavati lookup error:", err);
+        });
+      }
+
+      setStep("done");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (status === "failure") {
+      const msg = searchParams.get("message") || "Payment was cancelled or unsuccessful";
+      setPageAlert({ type: "error", text: msg });
+    }
+  }, [searchParams]);
+
+  const successDataRef = useRef(successData);
+  useEffect(() => {
+    successDataRef.current = successData;
+  }, [successData]);
+
+  // Auto download Marathi Pavati on Success
+  useEffect(() => {
+    if (step === "done" && successData?.donationNo && !hasDownloadedRef.current) {
+      hasDownloadedRef.current = true;
+      const timer = setTimeout(() => {
+        const cur = successDataRef.current || successData;
+        downloadDonationReceipt({
+          donationNo: cur.donationNo,
+          donorName: cur.donorName || form.name || "देणगीदार",
+          donorPhone: cur.donorPhone || form.phone,
+          donorAddress: cur.donorAddress || form.address,
+          amount: Number(cur.amount) || finalAmount || 501,
+          txnId: cur.txnId || cur.donationNo || "",
+          paymentMode: cur.paymentMode || "CCAvenue Online / UPI",
+          bankRefNo: "",
+          date: new Date(),
+        }).catch((err) => {
+          console.error("Auto download failed:", err);
+        });
+      }, 700);
+      return () => {};
+    }
+  }, [step, successData?.donationNo]);
+
+  // OTP Countdown timer
+  useEffect(() => {
+    let interval = null;
+    if (step === "otp-modal" && otpTimer > 0) {
+      interval = setInterval(() => setOtpTimer((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step, otpTimer]);
+
+  useEffect(() => {
+    if (step === "confirm") {
+      if (isMovingToConfirmRef.current && confirmRef.current) {
+        isMovingToConfirmRef.current = false;
+        performScrollToConfirm(confirmRef.current);
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [step, performScrollToConfirm]);
+
+  const finalAmount = custom ? Number(custom) : preset;
   const selectedCause = causes.find((c) => c.id === cause);
 
   const validate = (f, amt) => {
     const e = {};
-    if (!f.name.trim() || f.name.trim().length < 2) e.name  = t("errorName");
-    if (!/^\S+@\S+\.\S+$/.test(f.email))            e.email = t("errorEmail");
-    if (!/^[6-9]\d{9}$/.test(f.phone))              e.phone = t("errorPhone");
-    if (!amt || Number(amt) < 1)                     e.amount = t("errorAmountEmpty");
-    if (Number(amt) > 500000)                        e.amount = t("errorAmountMax");
+    if (!f.name.trim() || f.name.trim().length < 2) {
+      e.name = t("errorName", { defaultValue: "Please enter your full name" });
+    }
+    if (!/^[6-9]\d{9}$/.test(f.phone)) {
+      e.phone = t("errorPhone", { defaultValue: "Enter a valid 10-digit mobile number" });
+    }
+    if (!f.address.trim() || f.address.trim().length < 5) {
+      e.address = "Please enter your complete address (min 5 characters)";
+    }
+    if (f.email && f.email.trim() && !/^\S+@\S+\.\S+$/.test(f.email)) {
+      e.email = t("errorEmail", { defaultValue: "Enter a valid email address" });
+    }
+    if (!amt || Number(amt) < 1) {
+      e.amount = t("errorAmountEmpty", { defaultValue: "Please enter or select an amount" });
+    }
+    if (Number(amt) > 500000) {
+      e.amount = t("errorAmountMax", { defaultValue: "Maximum single donation is ₹5,00,000" });
+    }
+    if (!disclaimer) {
+      e.disclaimer = "Please accept the voluntary offering terms to proceed";
+    }
     return e;
   };
 
-  const set      = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
-  const setPhone = (e)   => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }));
+  const set = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
+  const setPhone = (e) => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }));
 
   const handleReview = () => {
     const e = validate(form, finalAmount);
     setErrors(e);
     if (Object.keys(e).length === 0) {
-      setCustomer({ ...form });
+      isMovingToConfirmRef.current = true;
       setStep("confirm");
     }
   };
 
-  const handlePaymentSuccess = () => { setPayOpen(false); setStep("done"); };
+  // Trigger Phone OTP dispatch
+  const handleProceedToOtp = async () => {
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const res = await apiClient.post("/donations/send-otp", { phone: form.phone });
+      setOtpTimer(60);
+      const payload = res?.data || res;
+      if (payload?.otpSessionToken) {
+        setOtpSessionToken(payload.otpSessionToken);
+      }
+      setStep("otp-modal");
+    } catch (err) {
+      console.error("Failed to send OTP:", err);
+      const msg = err.response?.data?.error || err.message || "Failed to send verification code";
+      setPageAlert({ type: "error", text: msg });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
-  /* ── Cause & amount selector (reused on mobile below form) ── */
-  const CauseAmountPanel = () => (
-    <div>
-      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-        {t("whereTitle")}
-      </p>
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        {causes.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setCause(c.id)}
-            className={`rounded-2xl border-2 p-4 text-left transition ${
-              cause === c.id
-                ? "border-[#B91C1C] bg-red-50"
-                : "border-gray-100 bg-white hover:border-gray-200"
-            }`}
-          >
-            <span className="text-2xl block mb-1.5">{c.emoji}</span>
-            <p className={`text-sm font-bold leading-tight ${cause === c.id ? "text-[#B91C1C]" : "text-gray-800"}`}>
-              {c.title}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">{c.desc}</p>
-          </button>
-        ))}
-      </div>
+  const handleResendOtp = async () => {
+    if (otpTimer > 0) return;
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const res = await apiClient.post("/donations/send-otp", { phone: form.phone });
+      setOtpTimer(60);
+      const payload = res?.data || res;
+      if (payload?.otpSessionToken) {
+        setOtpSessionToken(payload.otpSessionToken);
+      }
+    } catch (err) {
+      setOtpError("Failed to resend OTP. Please try again.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
-      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-        {t("amountTitle")}
-      </p>
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        {presets.map((a) => (
-          <button
-            key={a.value}
-            onClick={() => { setPreset(a.value); setCustom(""); setErrors((e) => ({ ...e, amount: undefined })); }}
-            className={`rounded-2xl border-2 py-4 text-center transition ${
-              preset === a.value && !custom
-                ? "border-[#B91C1C] bg-red-50"
-                : "border-gray-100 bg-white hover:border-gray-200"
-            }`}
-          >
-            <p className={`font-extrabold text-base ${preset === a.value && !custom ? "text-[#B91C1C]" : "text-gray-800"}`}>
-              ₹{fmtINR(a.value)}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">{a.label}</p>
-          </button>
-        ))}
-      </div>
+  // Verify OTP and redirect to CCAvenue
+  const handleVerifyAndPayCCAvenue = async () => {
+    if (!otp || otp.length !== 6) {
+      setOtpError("Please enter the 6-digit OTP code");
+      return;
+    }
 
-      <div className={`flex items-center border-2 rounded-2xl px-4 py-3.5 transition-colors ${
-        custom
-          ? "border-[#B91C1C] bg-red-50"
-          : errors.amount
-          ? "border-red-400 bg-red-50"
-          : "border-gray-100 bg-white focus-within:border-[#B91C1C]"
-      }`}>
-        <span className="text-gray-400 font-semibold mr-2 text-base">₹</span>
-        <input
-          type="number"
-          min="1"
-          max="500000"
-          placeholder={t("customPlaceholder")}
-          value={custom}
-          onChange={(e) => { setCustom(e.target.value); setErrors((er) => ({ ...er, amount: undefined })); }}
-          className="w-full outline-none bg-transparent text-base text-gray-800 placeholder:text-gray-400"
-        />
-      </div>
-      {errors.amount && <p className="text-sm text-red-500 mt-2 pl-1">{errors.amount}</p>}
+    setOtpLoading(true);
+    setOtpError("");
 
-      {/* 80G notice */}
-      <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mt-5">
-        <FileText size={18} className="text-yellow-600 mt-0.5 shrink-0" />
-        <div>
-          <p className="text-sm font-bold text-yellow-800">{t("taxTitle")}</p>
-          <p className="text-sm text-yellow-700 mt-1 leading-relaxed">{t("taxBody")}</p>
-        </div>
-      </div>
+    try {
+      const verifyRes = await apiClient.post("/donations/verify-otp", {
+        phone: form.phone,
+        otp,
+        otpSessionToken,
+      });
 
-      {/* Trust row */}
-      <div className="grid grid-cols-3 gap-3 mt-6">
-        {[
-          { icon: Award,       lk: "trust1Label", sk: "trust1Sub" },
-          { icon: ShieldCheck, lk: "trust2Label", sk: "trust2Sub" },
-          { icon: Landmark,    lk: "trust3Label", sk: "trust3Sub" },
-        ].map(({ icon: Icon, lk, sk }) => (
-          <div key={lk} className="flex flex-col items-center text-center bg-white border border-gray-100 rounded-2xl py-4 px-2 shadow-sm">
-            <Icon size={20} className="text-[#B91C1C] mb-2" />
-            <p className="text-xs font-bold text-gray-800 leading-tight">{t(lk)}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{t(sk)}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+      const token = verifyRes?.data?.verificationToken || "verified";
+      setVerificationToken(token);
+
+      // Launch CCAvenue form redirection
+      setStep("redirecting");
+
+      const initRes = await apiClient.post("/donations/initiate", {
+        donorName: form.name,
+        donorPhone: form.phone,
+        donorAddress: form.address,
+        donorEmail: form.email || undefined,
+        amount: finalAmount,
+        disclaimerAccepted: true,
+        cause: selectedCause?.title || "शतक महोत्सवी निधी (Centenary Celebration Fund)",
+        verificationToken: token,
+      });
+
+      const paymentData = initRes?.data || initRes;
+
+      if (paymentData?.actionUrl && paymentData?.encRequest && paymentData?.accessCode) {
+        try {
+          sessionStorage.setItem("mcr_donation_form", JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            address: form.address,
+            email: form.email,
+          }));
+        } catch (e) {}
+
+        const formEl = document.createElement("form");
+        formEl.method = "POST";
+        formEl.action = paymentData.actionUrl;
+
+        const encInput = document.createElement("input");
+        encInput.type = "hidden";
+        encInput.name = "encRequest";
+        encInput.value = paymentData.encRequest;
+        formEl.appendChild(encInput);
+
+        const accessInput = document.createElement("input");
+        accessInput.type = "hidden";
+        accessInput.name = "access_code";
+        accessInput.value = paymentData.accessCode;
+        formEl.appendChild(accessInput);
+
+        document.body.appendChild(formEl);
+        formEl.submit();
+      } else {
+        throw new Error("Invalid payment gateway parameters received");
+      }
+    } catch (err) {
+      console.error("Donation initiation error:", err);
+      setStep("otp-modal");
+      const msg = err.response?.data?.error || err.message || "OTP verification or payment initiation failed";
+      setOtpError(msg);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleManualPavatiDownload = () => {
+    downloadDonationReceipt({
+      donationNo: successData?.donationNo,
+      donorName: successData?.donorName || form.name || "देणगीदार",
+      donorPhone: successData?.donorPhone || form.phone,
+      donorAddress: successData?.donorAddress || form.address,
+      amount: Number(successData?.amount) || finalAmount || 501,
+      txnId: successData?.txnId || successData?.donationNo || "",
+      paymentMode: successData?.paymentMode || "CCAvenue Online / UPI",
+      bankRefNo: "",
+      date: new Date(),
+    });
+  };
 
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
+    <div className="bg-gradient-to-b from-orange-50/40 via-white to-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
 
-      {/* ── Page header ── */}
-      <div className="pt-24 pb-6 px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto">
-        <div className="flex items-center gap-1.5 text-sm text-gray-400 mb-5">
-          <span>{t("breadHome")}</span>
-          <ChevronRight size={14} />
-          <span className="text-[#B91C1C] font-semibold">{t("breadDonate")}</span>
+      {/* ── Page Header & Breadcrumb ── */}
+      <div className="pt-20 sm:pt-24 pb-4 sm:pb-5 px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto border-b border-orange-200/50 mb-6 sm:mb-8">
+        <div className="flex items-center gap-1 text-xs text-gray-400 mb-3 sm:mb-4">
+          <span onClick={() => navigate("/")} className="hover:text-gray-700 cursor-pointer">{t("breadHome", { defaultValue: "Home" })}</span>
+          <ChevronRight size={12} />
+          <span className="text-[#B91C1C] font-bold">{t("breadDonate", { defaultValue: "Online Donation" })}</span>
         </div>
-        <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#B91C1C] flex items-center justify-center shrink-0 shadow-lg shadow-red-200">
-            <Heart size={26} className="text-white" fill="white" />
+
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#B91C1C] to-red-700 flex items-center justify-center shrink-0 shadow-md shadow-red-200">
+            <Heart size={24} className="text-white fill-white" />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-              {t("pageTitle")}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+              {t("pageTitle", { defaultValue: "Online Donation / देणगी" })}
             </h1>
-            <p className="text-gray-500 text-base mt-2 max-w-xl leading-relaxed">
-              {t("pageSubtitle")}
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 line-clamp-1 sm:line-clamp-none">
+              Lalbaug Sarvajanik Utsav Mandal · Ganeshgalli, Mumbai
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Devotional banner ── */}
-      <div className="relative w-full overflow-hidden mb-10">
+      {/* ── Alert Bar (Errors/Notices) ── */}
+      {pageAlert && (
+        <div className="px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto mb-4">
+          <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-red-200 bg-red-50 text-red-700 flex items-center gap-3 text-xs sm:text-sm">
+            <AlertCircle size={18} className="shrink-0 text-red-600" />
+            <p className="font-semibold flex-1">{pageAlert.text}</p>
+            <button onClick={() => setPageAlert(null)} className="p-1 hover:bg-red-100 rounded-lg">
+              <span className="text-lg leading-none">&times;</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Main Responsive Grid ── */}
+      <div className="px-4 sm:px-6 md:px-8 w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+
+        {/* ── DESKTOP LEFT SIDEBAR: Cause, Amount & Trust Details (Hidden on Mobile) ── */}
+        <div className="hidden lg:block lg:col-span-5 space-y-6 sticky top-24">
+          <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm">
+            <CauseAndAmountSection
+              causes={causes}
+              cause={cause}
+              setCause={setCause}
+              presets={presets}
+              preset={preset}
+              setPreset={setPreset}
+              custom={custom}
+              setCustom={setCustom}
+              errors={errors}
+              setErrors={setErrors}
+              t={t}
+              isMobileCompact={false}
+            />
+
+            {/* 12A Information Card */}
+            <div className="flex items-start gap-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl p-4 mt-6">
+              <FileText size={18} className="text-amber-700 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-amber-900 uppercase tracking-wide">12A Registration</p>
+                <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                  Registered Trust under Section 12A of the Income Tax Act.
+                </p>
+              </div>
+            </div>
+
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-2.5 mt-5">
+              {[
+                { icon: Award, label: "Est. 1928", sub: "98 Years" },
+                { icon: ShieldCheck, label: "12A Registered", sub: "Regd. Trust" },
+                { icon: Landmark, label: "Govt. Regd.", sub: "Trust A-7236" },
+              ].map(({ icon: Icon, label, sub }) => (
+                <div key={label} className="flex flex-col items-center text-center bg-gray-50/80 border border-gray-200/70 rounded-xl py-3 px-1.5">
+                  <Icon size={16} className="text-[#B91C1C] mb-1" />
+                  <p className="text-[11px] font-bold text-gray-800 leading-tight">{label}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── RIGHT COLUMN / MOBILE MAIN: Flow Steps (Form, Confirm, OTP, Done) ── */}
+        <div className="w-full lg:col-span-7 min-w-0">
+          <AnimatePresence mode="wait">
+
+            {/* ── Step 1: Form ── */}
+            {step === "form" && (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-4 sm:space-y-6 w-full min-w-0"
+              >
+                {/* Mobile-Only Cause & Amount Card (Top on Mobile) */}
+                <div className="lg:hidden bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
+                  <CauseAndAmountSection
+                    causes={causes}
+                    cause={cause}
+                    setCause={setCause}
+                    presets={presets}
+                    preset={preset}
+                    setPreset={setPreset}
+                    custom={custom}
+                    setCustom={setCustom}
+                    errors={errors}
+                    setErrors={setErrors}
+                    t={t}
+                    isMobileCompact={true}
+                  />
+                </div>
+
+                {/* Donor Details Card */}
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-gray-200/80 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3.5 mb-4 sm:mb-5">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-black text-gray-900">
+                        {t("formTitle", { defaultValue: "Donor Details / देणगीदाराचे नाव" })}
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Required for official Marathi Pavati receipt
+                      </p>
+                    </div>
+
+                    {/* Live Selected Amount Badge */}
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Total Offering</p>
+                      <p className="text-lg sm:text-2xl font-black text-[#B91C1C] leading-tight">
+                        ₹{fmtINR(finalAmount)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Input 1: Full Name */}
+                  <Field icon={User} label={t("labelName", { defaultValue: "Full Name (नाव) *" })} error={errors.name}>
+                    <input
+                      className="w-full px-3 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium"
+                      placeholder={t("placeholderName", { defaultValue: "Full Name as per ID" })}
+                      value={form.name}
+                      onChange={set("name")}
+                      autoComplete="name"
+                    />
+                  </Field>
+
+                  {/* Input 2: Mobile Phone */}
+                  <Field icon={Phone} label={t("labelPhone", { defaultValue: "Mobile Number (मोबाईल क्र.) *" })} error={errors.phone}>
+                    <span className="pl-2 pr-2 text-xs sm:text-sm font-bold text-gray-500 border-r border-gray-300 mr-1 py-3 select-none">
+                      +91
+                    </span>
+                    <input
+                      className="w-full px-2 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium tracking-wide"
+                      placeholder="10-digit mobile"
+                      value={form.phone}
+                      onChange={setPhone}
+                      inputMode="numeric"
+                      maxLength={10}
+                      autoComplete="tel"
+                    />
+                  </Field>
+
+                  {/* Input 3: Address */}
+                  <Field icon={MapPin} label="Residential Address (पत्ता) *" error={errors.address}>
+                    <input
+                      className="w-full px-3 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium"
+                      placeholder="Street, Area, City, Pin"
+                      value={form.address}
+                      onChange={set("address")}
+                    />
+                  </Field>
+
+                  {/* Input 4: Email Address (Optional) */}
+                  <Field icon={Mail} label={t("labelEmail", { defaultValue: "Email Address (Optional)" })} error={errors.email}>
+                    <input
+                      className="w-full px-3 py-3 sm:py-3.5 bg-transparent outline-none text-base text-gray-900 placeholder:text-gray-400 font-medium"
+                      placeholder="For digital receipt copy"
+                      value={form.email}
+                      onChange={set("email")}
+                      inputMode="email"
+                      autoComplete="email"
+                    />
+                  </Field>
+
+                  {/* Voluntary Disclaimer Checkbox */}
+                  <div className="pt-2 mb-5">
+                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={disclaimer}
+                        onChange={(e) => setDisclaimer(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 text-[#B91C1C] rounded border-gray-300 focus:ring-[#B91C1C] cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-500 leading-relaxed">
+                        I confirm that this contribution is made voluntarily out of devotion to Lalbaug Sarvajanik Utsav Mandal for charitable & social activities.
+                      </span>
+                    </label>
+                    {errors.disclaimer && (
+                      <p className="text-xs text-red-600 mt-1 pl-6 font-medium flex items-center gap-1">
+                        <AlertCircle size={13} className="shrink-0" />
+                        {errors.disclaimer}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* CTA Button */}
+                  <button
+                    type="button"
+                    onClick={handleReview}
+                    disabled={!finalAmount}
+                    className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 text-base cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[50px]"
+                  >
+                    <Heart size={18} fill="white" />
+                    <span>Proceed with Donation — ₹{fmtINR(finalAmount)}</span>
+                    <ChevronRight size={18} />
+                  </button>
+
+                  <p className="text-[11px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1.5 font-medium">
+                    <Lock size={12} className="text-emerald-600" />
+                    Secured by 256-bit Encryption · Official Trust Receipt
+                  </p>
+                </div>
+
+                {/* Mobile-Only Trust Badges Footer */}
+                <div className="lg:hidden grid grid-cols-3 gap-2 pt-2">
+                  {[
+                    { icon: Award, label: "Est. 1928", sub: "98th Year" },
+                    { icon: ShieldCheck, label: "12A Registered", sub: "Approved Trust" },
+                    { icon: Landmark, label: "Govt Regd.", sub: "Trust A-7236" },
+                  ].map(({ icon: Icon, label, sub }) => (
+                    <div key={label} className="flex flex-col items-center text-center bg-white border border-gray-200/80 rounded-xl py-3 px-1">
+                      <Icon size={16} className="text-[#B91C1C] mb-1" />
+                      <p className="text-[11px] font-bold text-gray-800 leading-tight">{label}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 2: Confirm Screen ── */}
+            {step === "confirm" && (
+              <motion.div
+                ref={setConfirmRef}
+                id="confirm-donation-section"
+                key="confirm"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 overflow-hidden"
+              >
+                {/* Clean Mobile-First Header */}
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setStep("form")}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200/80 text-gray-700 text-xs font-bold transition cursor-pointer active:scale-95 shrink-0"
+                  >
+                    <ChevronRight size={14} className="rotate-180 text-gray-500" />
+                    <span>{t("editDetails", { defaultValue: "Edit details" })}</span>
+                  </button>
+
+                  <div className="text-center px-2">
+                    <h3 className="text-sm sm:text-base font-black text-gray-900 tracking-tight leading-tight">
+                      {t("confirmTitle", { defaultValue: "Confirm Donation" })}
+                    </h3>
+                  </div>
+
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-red-50 text-[10px] font-bold text-[#B91C1C] border border-red-100 shrink-0">
+                    Step 2/2
+                  </span>
+                </div>
+
+                <div className="p-4 sm:p-6">
+                  {/* Selected Cause & Amount Hero Card */}
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50/80 via-red-50/50 to-orange-50/60 border border-red-100/90 p-4 mb-4 shadow-sm">
+                    <div className="relative flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-red-100 flex items-center justify-center shrink-0 text-2xl select-none">
+                          {selectedCause?.emoji || "🙏"}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="inline-block text-[10px] font-bold text-[#B91C1C] uppercase tracking-wider bg-red-100/70 px-2 py-0.5 rounded-md mb-0.5">
+                            {t("causeLabel", { defaultValue: "Cause" })}
+                          </span>
+                          <p className="font-extrabold text-base sm:text-lg text-gray-900 truncate leading-tight">
+                            {selectedCause?.title}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 pl-2">
+                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block">
+                          {t("amountLabel", { defaultValue: "Amount" })}
+                        </span>
+                        <span className="text-2xl sm:text-3xl font-black text-[#B91C1C] tracking-tight leading-none">
+                          ₹{fmtINR(finalAmount)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Donor Details Card — Structured Mobile-First Layout (Multi-language!) */}
+                  <div className="bg-gray-50/80 rounded-2xl border border-gray-200/70 p-2.5 sm:p-3.5 mb-4 space-y-2">
+                    {/* Name */}
+                    <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-red-50 text-[#B91C1C] flex items-center justify-center shrink-0 mt-0.5">
+                        <User size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          {t("labelName", { defaultValue: "Full Name" })}
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 break-words leading-snug mt-0.5">
+                          {form.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Phone */}
+                    <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <Phone size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          {t("labelPhone", { defaultValue: "Mobile Number" })}
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 tracking-wide leading-snug mt-0.5">
+                          +91 {form.phone}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <MapPin size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                          {t("labelAddress", { defaultValue: "Address" })}
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 break-words leading-snug mt-0.5">
+                          {form.address}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    {form.email && (
+                      <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 rounded-xl bg-white border border-gray-100 shadow-xs">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                          <Mail size={15} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            {t("labelEmail", { defaultValue: "Email Address" })}
+                          </p>
+                          <p className="text-xs sm:text-sm font-bold text-gray-900 break-all leading-snug mt-0.5">
+                            {form.email}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* SMS Notice Box */}
+                  <div className="flex items-start gap-2.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 mb-5 text-xs text-amber-900">
+                    <div className="w-6 h-6 rounded-full bg-amber-200/70 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <FileText size={13} className="text-amber-800" />
+                    </div>
+                    <p className="leading-relaxed">
+                      SMS receipt will be sent to <strong className="text-gray-900 font-bold">+91 {form.phone}</strong> after payment.
+                    </p>
+                  </div>
+
+                  {/* High-Conversion Devotional CTA */}
+                  <button
+                    type="button"
+                    disabled={otpLoading}
+                    onClick={handleProceedToOtp}
+                    className="w-full bg-gradient-to-r from-[#B91C1C] via-red-700 to-[#991B1B] hover:from-red-700 hover:to-red-900 active:scale-[0.98] text-white font-black py-3.5 sm:py-4 px-6 rounded-2xl transition-all shadow-lg shadow-red-600/25 flex items-center justify-center gap-2.5 text-base cursor-pointer disabled:opacity-50 min-h-[52px]"
+                  >
+                    {otpLoading ? (
+                      <>
+                        <RefreshCw size={19} className="animate-spin" />
+                        <span>Sending OTP...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Heart size={19} fill="white" className="shrink-0" />
+                        <span>{t("donateBtn", { defaultValue: "Donate Securely" })} — ₹{fmtINR(finalAmount)}</span>
+                        <ChevronRight size={18} className="shrink-0 opacity-80" />
+                      </>
+                    )}
+                  </button>
+
+                  <p className="text-[11px] text-gray-400 text-center mt-3.5 flex items-center justify-center gap-1.5 font-medium">
+                    <Lock size={12} className="text-emerald-600 shrink-0" />
+                    <span>CCAvenue Payment Gateway · PCI-DSS Level 1 · 256-bit SSL</span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 3: OTP Screen ── */}
+            {step === "otp-modal" && (
+              <motion.div
+                key="otp-modal"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 p-5 sm:p-8 text-center"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-red-50 text-[#B91C1C] flex items-center justify-center mx-auto mb-3 sm:mb-4 border border-red-100 shadow-sm">
+                  <ShieldCheck size={30} />
+                </div>
+
+                <h3 className="text-lg sm:text-xl font-black text-gray-900 mb-1">Verify Mobile Number</h3>
+                <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-5">
+                  Enter the 6-digit OTP code sent to <br />
+                  <strong className="text-gray-900 font-bold">+91 {form.phone}</strong>
+                </p>
+
+                {otpError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-2.5 text-xs text-red-600 font-semibold flex items-center justify-center gap-1.5">
+                    <AlertCircle size={14} className="shrink-0" />
+                    <span>{otpError}</span>
+                  </div>
+                )}
+
+                {/* 6-Digit Mobile-Friendly OTP Input */}
+                <div className="mb-5">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    autoFocus
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="• • • • • •"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    className="w-full text-center tracking-[0.5em] text-2xl sm:text-3xl font-black py-3 sm:py-4 bg-gray-50 border-2 border-gray-200 rounded-xl sm:rounded-2xl outline-none focus:border-[#B91C1C] focus:bg-white transition-all"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  disabled={otpLoading || otp.length !== 6}
+                  onClick={handleVerifyAndPayCCAvenue}
+                  className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-4 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 text-base cursor-pointer disabled:opacity-40 min-h-[50px]"
+                >
+                  {otpLoading ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      <span>Connecting to Payment Gateway...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={18} />
+                      <span>Verify & Pay ₹{fmtINR(finalAmount)}</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("confirm");
+                      setOtp("");
+                    }}
+                    className="text-gray-500 hover:text-gray-900 font-bold cursor-pointer py-1"
+                  >
+                    ← Back
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={otpTimer > 0 || otpLoading}
+                    onClick={handleResendOtp}
+                    className={`font-black cursor-pointer py-1 ${
+                      otpTimer > 0 ? "text-gray-400" : "text-[#B91C1C] hover:underline"
+                    }`}
+                  >
+                    {otpTimer > 0 ? `Resend in ${otpTimer}s` : "Resend Code"}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 4: Redirecting Spinner ── */}
+            {step === "redirecting" && (
+              <motion.div
+                key="redirecting"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 p-8 sm:p-12 text-center"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#B91C1C] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-red-200">
+                  <Lock size={26} className="text-white" />
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-gray-900 mb-1">
+                  Connecting to CCAvenue
+                </h3>
+                <p className="text-xs text-gray-400 mb-6">
+                  Please wait while we redirect you to the secure payment checkout...
+                </p>
+                <RefreshCw size={32} className="animate-spin text-[#B91C1C] mx-auto mb-4" />
+                <p className="text-[11px] text-gray-400">Do not refresh or close this browser window.</p>
+              </motion.div>
+            )}
+
+            {/* ── Step 5: Success / Done Step ── */}
+            {step === "done" && (
+              <motion.div
+                key="done"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-200/80 p-6 sm:p-8 text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", damping: 12, delay: 0.1 }}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-green-50 border border-green-100 flex items-center justify-center mx-auto mb-4 sm:mb-5 shadow-lg shadow-green-100"
+                >
+                  <CheckCircle2 size={46} className="text-green-600" strokeWidth={1.5} />
+                </motion.div>
+
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1">
+                  {t("doneTitle", { defaultValue: "Thank You for Your Seva! 🙏" })}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500 mb-5 leading-relaxed">
+                  Your donation has been confirmed successfully. May Mumbai Cha Raja bless you and your family.
+                </p>
+
+                {/* Summary Box */}
+                <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-left space-y-2.5 mb-5 border border-gray-200/70 text-xs sm:text-sm">
+                  {successData?.donationNo && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Receipt No:</span>
+                      <span className="font-mono font-black text-gray-900">{successData.donationNo}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Cause:</span>
+                    <span className="font-bold text-gray-800">{selectedCause?.emoji} {selectedCause?.title}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Amount Paid:</span>
+                    <span className="font-black text-[#B91C1C] text-sm sm:text-base">
+                      ₹{fmtINR(successData?.amount || finalAmount)}
+                    </span>
+                  </div>
+                  {successData?.txnId && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Transaction ID:</span>
+                      <span className="font-mono text-gray-700">{successData.txnId}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-5 text-xs text-emerald-800 text-left">
+                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                  <p>SMS containing your official Pavati receipt download link has been sent to your mobile.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleManualPavatiDownload}
+                    className="w-full bg-[#B91C1C] hover:bg-red-800 active:scale-[0.99] text-white font-black py-3.5 px-6 rounded-xl sm:rounded-2xl transition-all text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-100 min-h-[48px]"
+                  >
+                    <Download size={18} />
+                    <span>Download Receipt</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate("/donate-now", { replace: true });
+                      setStep("form");
+                      setForm({ name: "", email: "", phone: "", address: "" });
+                      setCustom("");
+                      setPreset(501);
+                      setSuccessData(null);
+                    }}
+                    className="w-full border-2 border-gray-300 text-gray-700 font-bold py-3.5 rounded-xl sm:rounded-2xl hover:bg-gray-50 transition text-sm cursor-pointer min-h-[48px]"
+                  >
+                    Make Another Offering
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ── Devotional Banner (Placed Below Form & Success View) ── */}
+      <div className="relative w-full overflow-hidden mt-12 sm:mt-16 mb-6">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-600 via-red-700 to-rose-800" />
         <div className="absolute -left-16 -top-10 w-64 h-64 rounded-full bg-white/5 pointer-events-none" />
         <div className="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
 
         <div className="relative w-full px-4 sm:px-10 py-10 max-w-6xl mx-auto">
-          {/* Mantra */}
           <div className="flex items-center justify-center gap-2 mb-5">
             <span className="text-yellow-300 text-lg">🪔</span>
             <p className="text-yellow-300 font-extrabold text-base sm:text-2xl tracking-wide sm:tracking-widest text-center"
@@ -273,17 +1147,14 @@ const DonationDrivePage = () => {
             <span className="text-yellow-300 text-lg">🪔</span>
           </div>
 
-          {/* Quote */}
           <p className="text-white/85 text-center text-sm sm:text-base font-medium leading-relaxed max-w-xl mx-auto mb-7 italic px-2">
             "Every offering, however small, made with a pure heart, is accepted by Bappa.
             Your donation is a <span className="text-yellow-300 font-bold not-italic">seva</span> — an act of devotion."
           </p>
 
-          {/* Stats grid — 2 cols on mobile, 4 on sm+ */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {impactStats.map((s) => (
-              <div key={s.label}
-                className="text-center bg-white/10 border border-white/20 rounded-2xl py-3 px-2">
+              <div key={s.label} className="text-center bg-white/10 border border-white/20 rounded-2xl py-3 px-2">
                 <p className="text-xl sm:text-3xl font-extrabold text-yellow-300 leading-none">{s.value}</p>
                 <p className="text-[11px] sm:text-xs text-white/70 mt-1.5 leading-tight">{s.label}</p>
               </div>
@@ -296,557 +1167,6 @@ const DonationDrivePage = () => {
         </div>
       </div>
 
-      {/* ── Main 2-column grid ── */}
-      <div className="px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-10">
-
-        {/* LEFT — cause + amount (hidden on mobile, shown after form) */}
-        <div className="hidden lg:block">
-          <CauseAmountPanel />
-        </div>
-
-        {/* RIGHT — form / confirm / done (shows FIRST on mobile) */}
-        <div className="w-full min-w-0">
-          <AnimatePresence mode="wait">
-
-            {/* ── Form ── */}
-            {step === "form" && (
-              <motion.div
-                key="form"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4 w-full min-w-0"
-              >
-                {/* ── Mobile-only: cause + amount ABOVE the details card ── */}
-                <div className="lg:hidden bg-white rounded-3xl shadow-sm border border-gray-100 p-4 w-full">
-                  {/* Cause selector */}
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t("whereTitle")}</p>
-                  <div className="flex gap-2 overflow-x-auto pb-2 mb-5 snap-x snap-mandatory"
-                       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                    {causes.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => setCause(c.id)}
-                        className={`snap-start shrink-0 w-28 rounded-2xl border-2 p-3 text-center transition ${
-                          cause === c.id ? "border-[#B91C1C] bg-red-50" : "border-gray-100 bg-gray-50"
-                        }`}
-                      >
-                        <span className="text-2xl block mb-1.5">{c.emoji}</span>
-                        <p className={`text-xs font-bold leading-tight ${cause === c.id ? "text-[#B91C1C]" : "text-gray-700"}`}>
-                          {c.title}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Amount presets */}
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{t("amountTitle")}</p>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    {presets.map((a) => (
-                      <button
-                        key={a.value}
-                        onClick={() => { setPreset(a.value); setCustom(""); setErrors((e) => ({ ...e, amount: undefined })); }}
-                        className={`rounded-2xl border-2 py-3 text-center transition ${
-                          preset === a.value && !custom ? "border-[#B91C1C] bg-red-50" : "border-gray-100 bg-gray-50"
-                        }`}
-                      >
-                        <p className={`font-extrabold text-sm ${preset === a.value && !custom ? "text-[#B91C1C]" : "text-gray-800"}`}>
-                          ₹{fmtINR(a.value)}
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{a.label}</p>
-                      </button>
-                    ))}
-                  </div>
-                  <div className={`flex items-center border-2 rounded-xl px-3 py-3 transition-colors ${
-                    custom ? "border-[#B91C1C] bg-red-50" : errors.amount ? "border-red-400 bg-red-50" : "border-gray-100 bg-gray-50 focus-within:border-[#B91C1C]"
-                  }`}>
-                    <span className="text-gray-400 font-semibold mr-2 text-sm">₹</span>
-                    <input
-                      type="number" min="1" max="500000"
-                      placeholder={t("customPlaceholder")}
-                      value={custom}
-                      onChange={(e) => { setCustom(e.target.value); setErrors((er) => ({ ...er, amount: undefined })); }}
-                      className="w-full outline-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400"
-                    />
-                  </div>
-                  {errors.amount && <p className="text-xs text-red-500 mt-1.5 pl-1">{errors.amount}</p>}
-                </div>
-
-                {/* ── Details card ── */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-8 w-full">
-                  <div className="mb-5">
-                    <h3 className="text-lg font-bold text-gray-900">{t("formTitle")}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{t("formSubtitle")}</p>
-                    {finalAmount ? (
-                      <div className="flex items-center gap-2 mt-3 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
-                        <Heart size={14} className="text-[#B91C1C] shrink-0" fill="#B91C1C" />
-                        <p className="text-xs text-gray-500">{t("donatingLabel")}</p>
-                        <p className="text-base font-extrabold text-[#B91C1C] ml-auto">₹{fmtINR(finalAmount)}</p>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <Field icon={User} label={t("labelName")} error={errors.name}>
-                    <input
-                      className="flex-1 px-3 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400"
-                      placeholder={t("placeholderName")}
-                      value={form.name}
-                      onChange={set("name")}
-                      autoComplete="name"
-                    />
-                  </Field>
-                  <Field icon={Phone} label={t("labelPhone")} error={errors.phone}>
-                    <span className="pl-2 pr-2 text-xs font-semibold text-gray-400 border-r border-gray-200 mr-1 py-3">+91</span>
-                    <input
-                      className="flex-1 px-2 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400 tracking-wide"
-                      placeholder={t("placeholderPhone")}
-                      value={form.phone}
-                      onChange={setPhone}
-                      inputMode="numeric"
-                      autoComplete="tel"
-                    />
-                  </Field>
-                  <Field icon={Mail} label={t("labelEmail")} error={errors.email}>
-                    <input
-                      className="flex-1 px-3 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400"
-                      placeholder={t("placeholderEmail")}
-                      value={form.email}
-                      onChange={set("email")}
-                      inputMode="email"
-                      autoComplete="email"
-                    />
-                  </Field>
-
-                  <div className="flex items-center gap-2 mb-5">
-                    <ShieldCheck size={13} className="text-green-600 shrink-0" />
-                    <p className="text-xs text-gray-400">{t("secureNote")}</p>
-                  </div>
-
-                  <button
-                    onClick={handleReview}
-                    disabled={!finalAmount}
-                    className="w-full bg-[#B91C1C] hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-100 flex items-center justify-center gap-2 text-base"
-                  >
-                    <Heart size={17} fill="white" />
-                    {t("reviewBtn")} — ₹{finalAmount ? fmtINR(finalAmount) : "—"}
-                    <ChevronRight size={17} />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── Confirm ── */}
-            {step === "confirm" && (
-              <motion.div
-                key="confirm"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
-              >
-                {/* Confirm header bar */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
-                  <button
-                    onClick={() => setStep("form")}
-                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#B91C1C] font-semibold transition"
-                  >
-                    <ChevronRight size={15} className="rotate-180" /> {t("editDetails")}
-                  </button>
-                  <h3 className="text-base font-bold text-gray-900">{t("confirmTitle")}</h3>
-                  <div className="w-20" /> {/* spacer */}
-                </div>
-
-                <div className="p-5 sm:p-6">
-                  {/* Amount hero */}
-                  <div className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-2xl p-4 mb-4">
-                    <span className="text-3xl">{selectedCause?.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{t("causeLabel")}</p>
-                      <p className="font-bold text-gray-900 truncate">{selectedCause?.title}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-gray-400">{t("amountLabel")}</p>
-                      <p className="text-2xl font-extrabold text-[#B91C1C]">₹{fmtINR(finalAmount)}</p>
-                    </div>
-                  </div>
-
-                  {/* Donor details */}
-                  <div className="bg-gray-50 rounded-2xl divide-y divide-gray-100 mb-4">
-                    {[
-                      { label: t("labelName"),  value: customer?.name },
-                      { label: t("labelPhone"), value: `+91 ${customer?.phone}` },
-                      { label: t("labelEmail"), value: customer?.email },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="flex items-center justify-between px-4 py-3">
-                        <span className="text-xs text-gray-500 font-medium shrink-0 mr-3">{label}</span>
-                        <span className="text-sm font-semibold text-gray-800 text-right break-all">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 80G note */}
-                  <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-5">
-                    <FileText size={14} className="text-yellow-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-yellow-700 leading-relaxed">
-                      80G receipt will be emailed to <strong className="break-all">{customer?.email}</strong> within 24 hours.
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => setPayOpen(true)}
-                    className="w-full bg-[#B91C1C] hover:bg-red-800 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-red-100 flex items-center justify-center gap-2 text-base"
-                  >
-                    <Heart size={17} fill="white" />
-                    {t("donateBtn")} — ₹{fmtINR(finalAmount)}
-                  </button>
-                  <p className="text-[10px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1">
-                    🔒 Razorpay · PCI-DSS Level 1 · 256-bit SSL
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── Success ── */}
-            {step === "done" && (
-              <motion.div
-                key="done"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 text-center"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", damping: 12, delay: 0.1 }}
-                  className="w-24 h-24 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-100"
-                >
-                  <CheckCircle2 size={52} className="text-green-500" strokeWidth={1.5} />
-                </motion.div>
-                <h3 className="text-2xl font-extrabold text-gray-900 mb-2">{t("doneTitle")}</h3>
-                <p className="text-base text-gray-500 mb-6 leading-relaxed">
-                  {t("doneThanks", {
-                    name:   customer?.name,
-                    amount: fmtINR(finalAmount),
-                    cause:  selectedCause?.title,
-                  })}
-                </p>
-                <div className="bg-gray-50 rounded-2xl p-5 text-left space-y-3 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">{t("causeLabel")}</span>
-                    <span className="font-semibold text-gray-800">{selectedCause?.emoji} {selectedCause?.title}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">{t("doneAmount")}</span>
-                    <span className="font-semibold text-gray-800">₹{fmtINR(finalAmount)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">{t("doneReceipt", { email: "" }).replace(/\{\{email\}\}/g, "").trim()}</span>
-                    <span className="font-semibold text-gray-800 text-right max-w-[55%] truncate">{customer?.email}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">80G</span>
-                    <span className="font-semibold text-gray-800">{t("done80g")}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => { setStep("form"); setForm({ name: "", email: "", phone: "" }); setCustom(""); setPreset(501); }}
-                  className="w-full border-2 border-[#B91C1C] text-[#B91C1C] font-bold py-4 rounded-2xl hover:bg-red-50 transition text-base"
-                >
-                  {t("doAgainBtn")}
-                </button>
-              </motion.div>
-            )}
-
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* ── Direct Payment Section ── */}
-      <div className="px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto mt-12">
-        <div className="text-center mb-6">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Or pay directly</p>
-          <h2 className="text-2xl font-extrabold text-gray-900 mt-1">UPI & Bank Transfer</h2>
-          <p className="text-sm text-gray-500 mt-1">No account needed. Scan or transfer directly to our mandal.</p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-6">
-
-          {/* QR Code */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col items-center">
-            <p className="text-sm font-bold text-gray-700 mb-4">Scan to Pay via UPI</p>
-            <div className="w-48 h-48 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center mb-4 overflow-hidden">
-              {/* Replace src with real QR image: /images/donation-qr.png */}
-              <img
-                src="/images/donation-qr.png"
-                alt="Donation QR Code"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "flex";
-                }}
-              />
-              <div className="hidden flex-col items-center justify-center text-center p-4">
-                <p className="text-3xl mb-2">📱</p>
-                <p className="text-xs text-gray-400">QR code coming soon</p>
-                <p className="text-xs text-gray-400 mt-1">Use UPI ID below</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 w-full">
-              <p className="text-sm font-mono text-gray-700 flex-1 truncate">{BANK.upiId}</p>
-              <CopyBtn text={BANK.upiId} />
-            </div>
-            <p className="text-xs text-gray-400 mt-2">Works with GPay · PhonePe · Paytm · Any UPI app</p>
-          </div>
-
-          {/* Bank details */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-            <p className="text-sm font-bold text-gray-700 mb-5">Bank Transfer / NEFT / RTGS</p>
-            <div className="space-y-4">
-              {[
-                { label: "Account Holder", value: BANK.holder },
-                { label: "Bank",           value: BANK.bank },
-                { label: "Account No.",    value: BANK.account },
-                { label: "IFSC Code",      value: BANK.ifsc },
-                { label: "Account Type",   value: "Savings" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium">{label}</p>
-                    <p className="text-sm font-semibold text-gray-800 mt-0.5">{value}</p>
-                  </div>
-                  <CopyBtn text={value} />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="text-xs text-blue-700 leading-relaxed">
-                📲 After transfer, WhatsApp your payment screenshot to get your 80G receipt.
-                We verify within 24 hours.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Receipt Upload Section ── */}
-      <div className="px-4 sm:px-6 md:px-10 w-full max-w-6xl mx-auto mt-8">
-        <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
-
-          {/* Header */}
-          <div className="flex items-center gap-4 p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0">
-              <Upload size={22} className="text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Upload Payment Receipt</h3>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Already paid via UPI or bank transfer? Upload your screenshot to get your 80G receipt.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-6">
-            <AnimatePresence mode="wait">
-
-              {/* ── Upload form ── */}
-              {!receiptSent && (
-                <motion.div
-                  key="upload-form"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="grid sm:grid-cols-2 gap-6"
-                >
-                  {/* Left — file drop zone */}
-                  <div>
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                      Payment Screenshot / Receipt
-                    </p>
-                    <div
-                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFilePick(e.dataTransfer.files[0]); }}
-                      onClick={() => document.getElementById("receipt-file-input").click()}
-                      className={`relative cursor-pointer border-2 border-dashed rounded-2xl transition-colors flex flex-col items-center justify-center text-center min-h-[200px] ${
-                        receiptErr.file
-                          ? "border-red-300 bg-red-50"
-                          : isDragging
-                          ? "border-blue-400 bg-blue-50"
-                          : receipt
-                          ? "border-green-300 bg-green-50"
-                          : "border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-blue-50"
-                      }`}
-                    >
-                      <input
-                        id="receipt-file-input"
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className="hidden"
-                        onChange={(e) => handleFilePick(e.target.files[0])}
-                      />
-
-                      {receipt ? (
-                        <div className="relative w-full h-full p-3">
-                          {receipt.preview ? (
-                            <img
-                              src={receipt.preview}
-                              alt="Receipt preview"
-                              className="w-full h-44 object-contain rounded-xl"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-44">
-                              <FileText size={40} className="text-blue-400 mb-2" />
-                              <p className="text-sm font-semibold text-gray-700">{receipt.file.name}</p>
-                            </div>
-                          )}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setReceipt(null); }}
-                            className="absolute top-4 right-4 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center hover:bg-red-50"
-                          >
-                            <XIcon size={14} className="text-gray-500" />
-                          </button>
-                          <p className="text-xs text-green-600 font-semibold text-center mt-2">✓ File ready to submit</p>
-                        </div>
-                      ) : (
-                        <div className="p-6">
-                          <div className="w-14 h-14 rounded-2xl bg-gray-200 flex items-center justify-center mx-auto mb-3">
-                            <ImagePlus size={26} className="text-gray-400" />
-                          </div>
-                          <p className="text-sm font-semibold text-gray-600">
-                            {isDragging ? "Drop it here!" : "Tap to upload or drag & drop"}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">JPG, PNG, PDF · Max 5 MB</p>
-                        </div>
-                      )}
-                    </div>
-                    {receiptErr.file && (
-                      <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                        <AlertCircle size={12} /> {receiptErr.file}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Right — donor details */}
-                  <div>
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                      Your Details
-                    </p>
-
-                    {/* Name */}
-                    <div className="mb-4">
-                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Full Name</label>
-                      <div className={`flex items-center border-2 rounded-xl overflow-hidden ${receiptErr.name ? "border-red-400 bg-red-50" : "border-gray-100 bg-gray-50 focus-within:border-blue-400 focus-within:bg-white"}`}>
-                        <span className="pl-3 text-gray-400"><User size={16} /></span>
-                        <input
-                          className="flex-1 px-3 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400"
-                          placeholder="As it appears on bank account"
-                          value={receiptName}
-                          onChange={(e) => setReceiptName(e.target.value)}
-                        />
-                      </div>
-                      {receiptErr.name && <p className="text-xs text-red-500 mt-1 pl-1">{receiptErr.name}</p>}
-                    </div>
-
-                    {/* Phone */}
-                    <div className="mb-4">
-                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Mobile Number</label>
-                      <div className={`flex items-center border-2 rounded-xl overflow-hidden ${receiptErr.phone ? "border-red-400 bg-red-50" : "border-gray-100 bg-gray-50 focus-within:border-blue-400 focus-within:bg-white"}`}>
-                        <span className="pl-3 text-gray-400"><Phone size={16} /></span>
-                        <span className="pl-2 pr-1.5 text-xs font-semibold text-gray-400 border-r border-gray-200 mr-1 py-3">+91</span>
-                        <input
-                          className="flex-1 px-2 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400"
-                          placeholder="10-digit mobile"
-                          value={receiptPhone}
-                          onChange={(e) => setReceiptPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                          inputMode="numeric"
-                        />
-                      </div>
-                      {receiptErr.phone && <p className="text-xs text-red-500 mt-1 pl-1">{receiptErr.phone}</p>}
-                    </div>
-
-                    {/* Amount */}
-                    <div className="mb-5">
-                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Amount Paid (₹)</label>
-                      <div className={`flex items-center border-2 rounded-xl overflow-hidden ${receiptErr.amount ? "border-red-400 bg-red-50" : "border-gray-100 bg-gray-50 focus-within:border-blue-400 focus-within:bg-white"}`}>
-                        <span className="pl-4 text-gray-400 font-semibold text-sm">₹</span>
-                        <input
-                          type="number"
-                          className="flex-1 px-2 py-3 bg-transparent outline-none text-sm placeholder:text-gray-400"
-                          placeholder="e.g. 501"
-                          value={receiptAmount}
-                          onChange={(e) => setReceiptAmount(e.target.value)}
-                          inputMode="numeric"
-                        />
-                      </div>
-                      {receiptErr.amount && <p className="text-xs text-red-500 mt-1 pl-1">{receiptErr.amount}</p>}
-                    </div>
-
-                    <button
-                      onClick={handleReceiptSubmit}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-100"
-                    >
-                      <Send size={16} />
-                      Submit Receipt for Verification
-                    </button>
-                    <p className="text-xs text-gray-400 text-center mt-2.5">
-                      🔒 Your receipt is securely handled · 80G sent within 24 hours
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Success state ── */}
-              {receiptSent && (
-                <motion.div
-                  key="upload-success"
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center text-center py-8"
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", damping: 12, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-5 shadow-lg shadow-green-100"
-                  >
-                    <CheckCircle2 size={44} className="text-green-500" strokeWidth={1.5} />
-                  </motion.div>
-                  <h3 className="text-xl font-extrabold text-gray-900 mb-2">Receipt Submitted! 🙏</h3>
-                  <p className="text-sm text-gray-500 max-w-sm leading-relaxed mb-6">
-                    Thank you, <strong>{receiptName}</strong>! We've received your payment receipt for{" "}
-                    <strong>₹{Number(receiptAmount).toLocaleString("en-IN")}</strong>.
-                    Your 80G certificate will be sent to your mobile within 24 hours.
-                  </p>
-                  <div className="bg-gray-50 rounded-2xl p-4 text-left space-y-2 w-full max-w-xs mb-6">
-                    <div className="flex justify-between text-sm"><span className="text-gray-400">Name</span><span className="font-semibold">{receiptName}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-400">Mobile</span><span className="font-semibold">+91 {receiptPhone}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-400">Amount</span><span className="font-semibold text-[#B91C1C]">₹{Number(receiptAmount).toLocaleString("en-IN")}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-400">Status</span><span className="text-green-600 font-semibold">Under verification</span></div>
-                  </div>
-                  <button
-                    onClick={() => { setReceiptSent(false); setReceipt(null); setReceiptName(""); setReceiptPhone(""); setReceiptAmount(""); }}
-                    className="text-sm text-blue-600 font-semibold hover:underline"
-                  >
-                    Submit another receipt
-                  </button>
-                </motion.div>
-              )}
-
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-
-      <PaymentGatewayModal
-        open={payOpen}
-        onClose={() => setPayOpen(false)}
-        amount={finalAmount}
-        title={`${t("breadDonate")} — ${selectedCause?.title}`}
-        showCod={false}
-        customer={customer}
-        onSuccess={handlePaymentSuccess}
-      />
     </div>
   );
 };

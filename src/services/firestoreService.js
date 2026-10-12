@@ -4,6 +4,8 @@ import {
   doc,
   addDoc,
   getDocs,
+  getDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
@@ -241,3 +243,60 @@ export const flashFirestoreService = {
     return { id, success: true };
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 🔴 4. LIVE STREAM FIRESTORE SERVICE
+// ─────────────────────────────────────────────────────────────────────────────
+export const liveStreamFirestoreService = {
+  // Real-time listener for live stream settings
+  listenLiveStream: (callback, onError) => {
+    if (!isFirebaseConfigured || !db) {
+      if (onError) onError(new Error("Firebase not configured"));
+      return () => {};
+    }
+    try {
+      const docRef = doc(db, "settings", "live_stream");
+      return onSnapshot(
+        docRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            callback({ id: docSnap.id, ...docSnap.data() });
+          } else {
+            callback(null);
+          }
+        },
+        (error) => {
+          console.warn("[Firestore] listenLiveStream error:", error);
+          if (onError) onError(error);
+        }
+      );
+    } catch (err) {
+      if (onError) onError(err);
+      return () => {};
+    }
+  },
+
+  // Fetch once
+  getLiveStream: async () => {
+    const firestore = ensureDb();
+    const docRef = doc(firestore, "settings", "live_stream");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  },
+
+  // Update live stream settings
+  updateLiveStream: async (liveData) => {
+    const firestore = ensureDb();
+    const docRef = doc(firestore, "settings", "live_stream");
+    const payload = {
+      ...liveData,
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(docRef, payload, { merge: true });
+    return payload;
+  },
+};
+

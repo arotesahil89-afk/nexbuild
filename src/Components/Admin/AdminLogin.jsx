@@ -151,7 +151,7 @@ const AdminLogin = () => {
                   <Mail size={15} style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#57534e" }} />
                   <input
                     type="email"
-                    placeholder="admin@mumbaicharaja.com"
+                    placeholder=""
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
@@ -178,7 +178,7 @@ const AdminLogin = () => {
                   <Lock size={15} style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", color: "#57534e" }} />
                   <input
                     type={showPw ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder=""
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
