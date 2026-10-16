@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { flashFirestoreService } from "../../services/firestoreService";
 import { isFirebaseConfigured } from "../../services/firebase";
+import apiClient from "../../services/apiService";
+import { Upload, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -9,6 +11,9 @@ const ManageFlashBanner = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -56,6 +61,41 @@ const ManageFlashBanner = () => {
       isActive: true,
     });
     setEditingId(null);
+    setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl("");
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Local file select — ONLY creates preview, DOES NOT upload to backend yet
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate image format
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("⚠️ Please select a valid image (JPG, PNG, WEBP, GIF, SVG)!");
+      return;
+    }
+
+    // Validate size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("⚠️ Image file size must be under 5MB!");
+      return;
+    }
+
+    setSelectedFile(file);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    const localUrl = URL.createObjectURL(file);
+    setPreviewUrl(localUrl);
+    toast.info("📸 Photo selected! It will be saved when you click Publish.");
   };
 
   const handleSave = async (e) => {
@@ -67,6 +107,84 @@ const ManageFlashBanner = () => {
 
     setSaving(true);
     try {
+      let finalImageUrl = formData.image.trim();
+
+      // If a local photo was chosen, upload and save to backend now upon publish!
+      if (selectedFile) {
+        const uploadToast = toast.loading("⏳ Uploading selected photo to backend...");
+        try {
+          // Read file as Base64 Data URL
+          const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(selectedFile);
+          });
+
+          // Upload to production backend API
+          try {
+            const res = await apiClient.post("/upload", {
+              image: base64Data,
+              filename: selectedFile.name,
+              folder: "flash_banners",
+            });
+
+            if (res && res.url) {
+              finalImageUrl = res.url;
+              toast.update(uploadToast, {
+                render: "✅ Photo uploaded to server!",
+                type: "success",
+                isLoading: false,
+                autoClose: 1500,
+              });
+            }
+          } catch (backendErr) {
+            console.warn("Backend upload endpoint unreachable, falling back to client compression:", backendErr);
+            // Fallback: compress client-side for Firestore resilience (<100KB)
+            finalImageUrl = await new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => {
+                const maxDim = 1200;
+                let { width, height } = img;
+                if (width > maxDim || height > maxDim) {
+                  if (width > height) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                  } else {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                  }
+                }
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL("image/webp", 0.82));
+              };
+              img.onerror = () => resolve(base64Data);
+              img.src = base64Data;
+            });
+            toast.update(uploadToast, {
+              render: "📸 Photo optimized and saved!",
+              type: "success",
+              isLoading: false,
+              autoClose: 1500,
+            });
+          }
+        } catch (uploadErr) {
+          console.error("Failed to upload photo:", uploadErr);
+          toast.update(uploadToast, {
+            render: "⚠️ Failed to upload photo: " + (uploadErr.message || "Error"),
+            type: "error",
+            isLoading: false,
+            autoClose: 3000,
+          });
+          setSaving(false);
+          return;
+        }
+      }
+
       // Build data payload
       const payload = {
         title: formData.title.trim(),
@@ -75,8 +193,8 @@ const ManageFlashBanner = () => {
         isActive: formData.isActive,
       };
 
-      if (formData.image.trim()) {
-        payload.image = formData.image.trim();
+      if (finalImageUrl) {
+        payload.image = finalImageUrl;
       }
 
       if (formData.imagesStr.trim()) {
@@ -165,6 +283,11 @@ const ManageFlashBanner = () => {
   };
 
   const startEdit = (msg) => {
+    setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl("");
+    }
     setFormData({
       title: msg.title || "",
       description: msg.description || "",
@@ -242,16 +365,101 @@ const ManageFlashBanner = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
-                MAIN IMAGE URL (or /images/... path)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. /images/award1.jpeg or https://..."
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="border p-2.5 rounded-lg w-full text-sm focus:ring-2 focus:ring-red-500"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-gray-600">
+                  MAIN IMAGE (Direct File Upload or URL)
+                </label>
+                {(previewUrl || formData.image) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (previewUrl) {
+                        URL.revokeObjectURL(previewUrl);
+                        setPreviewUrl("");
+                      }
+                      setFormData({ ...formData, image: "" });
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="text-[11px] text-red-600 hover:text-red-800 font-semibold transition"
+                  >
+                    ✕ Remove Image
+                  </button>
+                )}
+              </div>
+
+              {/* Photo Preview Above Inputs */}
+              {(previewUrl || formData.image) && (
+                <div className="mb-2 p-2.5 bg-red-50/40 border border-red-200 rounded-lg flex items-center gap-3">
+                  <img
+                    src={previewUrl || formData.image}
+                    alt="Photo Preview"
+                    className="w-16 h-16 object-cover rounded-md border border-gray-200 bg-white shadow-sm shrink-0"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-gray-800 block truncate">
+                      {selectedFile
+                        ? selectedFile.name
+                        : formData.image.startsWith("data:")
+                        ? "Uploaded Image Data"
+                        : formData.image.split("/").pop()}
+                    </span>
+                    <span className="text-[10px] text-gray-500 block truncate font-mono">
+                      {selectedFile
+                        ? `${(selectedFile.size / 1024).toFixed(1)} KB`
+                        : formData.image}
+                    </span>
+                    {selectedFile ? (
+                      <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                        📸 Photo selected — will save to backend on Publish
+                      </span>
+                    ) : (
+                      <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-green-100 text-green-700 border border-green-200">
+                        ✓ Current Image
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Direct Image File Upload + URL Input */}
+              <div className="flex gap-2 items-center">
+                <div className="relative shrink-0">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml"
+                    onChange={handleFileSelect}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    title="Choose image file from computer"
+                  />
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 px-3 py-2.5 border border-dashed border-red-300 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg transition"
+                  >
+                    <Upload size={15} className="text-red-600" />
+                    <span>Choose File</span>
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="Paste URL or choose file from device..."
+                  value={selectedFile ? selectedFile.name : formData.image}
+                  onChange={(e) => {
+                    setSelectedFile(null);
+                    if (previewUrl) {
+                      URL.revokeObjectURL(previewUrl);
+                      setPreviewUrl("");
+                    }
+                    setFormData({ ...formData, image: e.target.value });
+                  }}
+                  className="border p-2.5 rounded-lg flex-1 text-sm focus:ring-2 focus:ring-red-500"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">

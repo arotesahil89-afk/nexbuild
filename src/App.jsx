@@ -119,7 +119,7 @@ function App() {
   const isAdmin = location.pathname.startsWith("/admin");
 
   return (
-    <>
+    <>  
       <ScrollToTop />
       {!isAdmin && <Navbar />}
 
