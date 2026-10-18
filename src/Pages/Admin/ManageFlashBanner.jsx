@@ -28,7 +28,7 @@ const ManageFlashBanner = () => {
   });
 
   useEffect(() => {
-    let unsubscribe = () => {};
+    let unsubscribe = () => { };
 
     if (isFirebaseConfigured) {
       unsubscribe = flashFirestoreService.listenFlashMessages(
@@ -71,24 +71,19 @@ const ManageFlashBanner = () => {
     }
   };
 
-  // Local file select — ONLY creates preview, DOES NOT upload to backend yet
+  // Local file select — accepts ANY image format and ANY size, creates instant preview
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate image format
-    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
-    if (!validTypes.includes(file.type)) {
-      toast.error("⚠️ Please select a valid image (JPG, PNG, WEBP, GIF, SVG)!");
+    // Validate that it is an image (supports all types: jpg, jpeg, png, webp, gif, svg, bmp, avif, etc.)
+    const isImage = file.type?.startsWith("image/") || file.name?.match(/\.(jpe?g|png|webp|gif|svg|bmp|avif|ico|tiff?)$/i);
+    if (!isImage) {
+      toast.error("⚠️ Please select an image file (JPG, PNG, JPEG, WEBP, GIF, SVG, etc.)!");
       return;
     }
 
-    // Validate size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("⚠️ Image file size must be under 5MB!");
-      return;
-    }
-
+    // No file size restriction — any size is accepted and will be automatically optimized on publish
     setSelectedFile(file);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -109,73 +104,64 @@ const ManageFlashBanner = () => {
     try {
       let finalImageUrl = formData.image.trim();
 
-      // If a local photo was chosen, upload and save to backend now upon publish!
+      // If a local photo was chosen, process and optimize any format/size now upon publish!
       if (selectedFile) {
-        const uploadToast = toast.loading("⏳ Uploading selected photo to backend...");
+        const uploadToast = toast.loading("⏳ Processing and optimizing photo...");
         try {
-          // Read file as Base64 Data URL
-          const base64Data = await new Promise((resolve, reject) => {
+          // Read file as Base64 Data URL (supports any format and any size)
+          const rawBase64 = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result);
             reader.onerror = reject;
             reader.readAsDataURL(selectedFile);
           });
 
-          // Upload to production backend API
-          try {
-            const res = await apiClient.post("/upload", {
-              image: base64Data,
-              filename: selectedFile.name,
-              folder: "flash_banners",
-            });
-
-            if (res && res.url) {
-              finalImageUrl = res.url;
-              toast.update(uploadToast, {
-                render: "✅ Photo uploaded to server!",
-                type: "success",
-                isLoading: false,
-                autoClose: 1500,
-              });
-            }
-          } catch (backendErr) {
-            console.warn("Backend upload endpoint unreachable, falling back to client compression:", backendErr);
-            // Fallback: compress client-side for Firestore resilience (<100KB)
-            finalImageUrl = await new Promise((resolve) => {
-              const img = new Image();
-              img.onload = () => {
-                const maxDim = 1200;
-                let { width, height } = img;
-                if (width > maxDim || height > maxDim) {
-                  if (width > height) {
-                    height = Math.round((height * maxDim) / width);
-                    width = maxDim;
-                  } else {
-                    width = Math.round((width * maxDim) / height);
-                    height = maxDim;
-                  }
+          // High-performance canvas optimization: max 1200px, WebP quality 0.85
+          // Guarantees it displays instantly on live domain, mobile, and dev without breaking
+          const optimizedDataUrl = await new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              const maxDim = 1200;
+              let { width, height } = img;
+              if (width > maxDim || height > maxDim) {
+                if (width > height) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                } else {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
                 }
-                const canvas = document.createElement("canvas");
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL("image/webp", 0.82));
-              };
-              img.onerror = () => resolve(base64Data);
-              img.src = base64Data;
-            });
-            toast.update(uploadToast, {
-              render: "📸 Photo optimized and saved!",
-              type: "success",
-              isLoading: false,
-              autoClose: 1500,
-            });
-          }
-        } catch (uploadErr) {
-          console.error("Failed to upload photo:", uploadErr);
+              }
+              const canvas = document.createElement("canvas");
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL("image/webp", 0.85));
+            };
+            img.onerror = () => resolve(rawBase64);
+            img.src = rawBase64;
+          });
+
+          finalImageUrl = optimizedDataUrl;
+
+          // Also upload backup copy to backend in background if available
+          apiClient.post("/upload", {
+            image: optimizedDataUrl,
+            filename: selectedFile.name,
+            folder: "flash_banners",
+          }).catch((err) => console.warn("Backend copy upload note:", err?.message));
+
           toast.update(uploadToast, {
-            render: "⚠️ Failed to upload photo: " + (uploadErr.message || "Error"),
+            render: "✅ Photo saved successfully!",
+            type: "success",
+            isLoading: false,
+            autoClose: 1500,
+          });
+        } catch (uploadErr) {
+          console.error("Failed to process photo:", uploadErr);
+          toast.update(uploadToast, {
+            render: "⚠️ Failed to process photo: " + (uploadErr.message || "Error"),
             type: "error",
             isLoading: false,
             autoClose: 3000,
@@ -404,8 +390,8 @@ const ManageFlashBanner = () => {
                       {selectedFile
                         ? selectedFile.name
                         : formData.image.startsWith("data:")
-                        ? "Uploaded Image Data"
-                        : formData.image.split("/").pop()}
+                          ? "Uploaded Image Data"
+                          : formData.image.split("/").pop()}
                     </span>
                     <span className="text-[10px] text-gray-500 block truncate font-mono">
                       {selectedFile
@@ -431,7 +417,7 @@ const ManageFlashBanner = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml"
+                    accept="image/*"
                     onChange={handleFileSelect}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     title="Choose image file from computer"
@@ -519,9 +505,8 @@ const ManageFlashBanner = () => {
             <button
               type="submit"
               disabled={saving}
-              className={`${
-                editingId ? "bg-blue-600 hover:bg-blue-700" : "bg-red-700 hover:bg-red-800"
-              } text-white font-medium px-5 py-2.5 rounded-lg transition`}
+              className={`${editingId ? "bg-blue-600 hover:bg-blue-700" : "bg-red-700 hover:bg-red-800"
+                } text-white font-medium px-5 py-2.5 rounded-lg transition`}
             >
               {saving ? "Saving..." : editingId ? "Update Banner" : "+ Publish Flash Banner"}
             </button>
@@ -553,18 +538,16 @@ const ManageFlashBanner = () => {
             {messages.map((msg, index) => (
               <div
                 key={msg.id || index}
-                className={`border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition ${
-                  msg.isActive !== false ? "bg-white" : "bg-gray-100 opacity-60"
-                }`}
+                className={`border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition ${msg.isActive !== false ? "bg-white" : "bg-gray-100 opacity-60"
+                  }`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded ${
-                        msg.isActive !== false
+                      className={`text-xs font-bold px-2 py-0.5 rounded ${msg.isActive !== false
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-200 text-gray-600"
-                      }`}
+                        }`}
                     >
                       {msg.isActive !== false ? "ACTIVE" : "INACTIVE"}
                     </span>

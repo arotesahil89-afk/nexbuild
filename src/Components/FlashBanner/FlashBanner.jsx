@@ -146,9 +146,14 @@ const FlashBanner = () => {
               {popupMsg.image && (
                 <img
                   src={popupMsg.image}
-                  alt="Popup Visual"
+                  alt={popupMsg.title || "Popup Visual"}
                   className="w-40 rounded cursor-zoom-in transition hover:scale-105"
-                  onClick={() => setZoomImg(popupMsg.image)}
+                  onClick={(e) => setZoomImg(e.currentTarget.src || popupMsg.image)}
+                  onError={(e) => {
+                    if (!e.currentTarget.src.includes("/images/logo-removebg-preview.png")) {
+                      e.currentTarget.src = "/images/logo-removebg-preview.png";
+                    }
+                  }}
                 />
               )}
               {popupMsg.images &&
