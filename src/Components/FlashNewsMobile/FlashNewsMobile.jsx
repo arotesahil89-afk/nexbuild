@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { toast, ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,6 +17,7 @@ const FlashNewsMobile = () => {
   const [popupMsg, setPopupMsg] = useState(null);
   const [zoomImg, setZoomImg] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -96,6 +97,36 @@ const FlashNewsMobile = () => {
   const closePopup = () => setPopupMsg(null);
   const closeZoom = () => setZoomImg(null);
 
+  // Build combined image list: main image first, then gallery images
+  const allSlideImages = popupMsg
+    ? [
+        ...(popupMsg.image ? [popupMsg.image] : []),
+        ...(Array.isArray(popupMsg.images) ? popupMsg.images : []),
+      ]
+    : [];
+
+  const prevSlide = useCallback(() => {
+    setSlideIndex((i) => (i - 1 + allSlideImages.length) % allSlideImages.length);
+  }, [allSlideImages.length]);
+
+  const nextSlide = useCallback(() => {
+    setSlideIndex((i) => (i + 1) % allSlideImages.length);
+  }, [allSlideImages.length]);
+
+  // Reset slide index when popup opens/changes
+  useEffect(() => {
+    setSlideIndex(0);
+  }, [popupMsg]);
+
+  // Auto-slide every 3 seconds when multiple images exist
+  useEffect(() => {
+    if (allSlideImages.length <= 1) return;
+    const timer = setInterval(() => {
+      setSlideIndex((i) => (i + 1) % allSlideImages.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [allSlideImages.length, popupMsg]);
+
   if (!isMobile) return null;
 
   return (
@@ -144,32 +175,66 @@ const FlashNewsMobile = () => {
               </div>
             )}
 
-            <div className="flex flex-wrap gap-2 mt-3 mb-2">
-              {popupMsg.image && (
-                <img
-                  src={popupMsg.image}
-                  alt={popupMsg.title || "Popup Visual"}
-                  className="w-28 rounded cursor-zoom-in transition hover:scale-105"
-                  onClick={(e) => setZoomImg(e.currentTarget.src || popupMsg.image)}
-                  onError={(e) => {
-                    if (!e.currentTarget.src.includes("/images/logo-removebg-preview.png")) {
-                      e.currentTarget.src = "/images/logo-removebg-preview.png";
-                    }
-                  }}
-                />
-              )}
-              {popupMsg.images &&
-                Array.isArray(popupMsg.images) &&
-                popupMsg.images.map((img, idx) => (
+            {/* 📸 Image Slideshow */}
+            {allSlideImages.length > 0 && (
+              <div className="mt-3 mb-2">
+                {/* Main Slide */}
+                <div className="relative w-full overflow-hidden rounded-lg bg-black/20">
                   <img
-                    key={idx}
-                    src={img}
-                    alt={`Image ${idx + 1}`}
-                    className="w-28 rounded cursor-zoom-in transition hover:scale-105"
-                    onClick={() => setZoomImg(img)}
+                    key={slideIndex}
+                    src={allSlideImages[slideIndex]}
+                    alt={`Slide ${slideIndex + 1}`}
+                    className="w-full max-h-56 object-contain rounded-lg cursor-zoom-in animate-fadeIn"
+                    onClick={() => setZoomImg(allSlideImages[slideIndex])}
+                    onError={(e) => {
+                      if (!e.currentTarget.src.includes("/images/logo-removebg-preview.png")) {
+                        e.currentTarget.src = "/images/logo-removebg-preview.png";
+                      }
+                    }}
                   />
-                ))}
-            </div>
+
+                  {/* Prev / Next Arrows */}
+                  {allSlideImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevSlide}
+                        className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm transition"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={nextSlide}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm transition"
+                      >
+                        ›
+                      </button>
+                    </>
+                  )}
+
+                  {/* Image counter badge */}
+                  {allSlideImages.length > 1 && (
+                    <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                      {slideIndex + 1} / {allSlideImages.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* Dot indicators */}
+                {allSlideImages.length > 1 && (
+                  <div className="flex justify-center gap-1.5 mt-2">
+                    {allSlideImages.map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        onClick={() => setSlideIndex(dotIdx)}
+                        className={`w-2 h-2 rounded-full transition ${
+                          dotIdx === slideIndex ? "bg-white" : "bg-white/40"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               onClick={closePopup}
@@ -189,7 +254,7 @@ const FlashNewsMobile = () => {
           <img
             src={zoomImg}
             alt="Zoomed"
-            className="max-w-full max-h-full rounded-lg shadow-lg animate-popupOpen"
+            className="max-w-full max-h-full object-contain rounded-lg shadow-lg animate-popupOpen"
           />
           <button
             className="absolute top-4 right-5 text-white text-3xl font-bold"

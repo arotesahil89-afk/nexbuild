@@ -15,6 +15,11 @@ const ManageFlashBanner = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef(null);
 
+  // Multiple images state (up to 15)
+  const MAX_IMAGES = 15;
+  const [selectedMultiFiles, setSelectedMultiFiles] = useState([]); // [{file, previewUrl}]
+  const multiFileInputRef = useRef(null);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -69,6 +74,12 @@ const ManageFlashBanner = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    // Reset multiple images
+    selectedMultiFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+    setSelectedMultiFiles([]);
+    if (multiFileInputRef.current) {
+      multiFileInputRef.current.value = "";
+    }
   };
 
   // Local file select — accepts ANY image format and ANY size, creates instant preview
@@ -91,6 +102,51 @@ const ManageFlashBanner = () => {
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
     toast.info("📸 Photo selected! It will be saved when you click Publish.");
+  };
+
+  // Handle multiple images selection (up to 15)
+  const handleMultiFileSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const remaining = MAX_IMAGES - selectedMultiFiles.length;
+    if (remaining <= 0) {
+      toast.warning(`⚠️ Maximum ${MAX_IMAGES} images allowed!`);
+      if (multiFileInputRef.current) multiFileInputRef.current.value = "";
+      return;
+    }
+
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.warning(`⚠️ Only ${remaining} more image(s) can be added (max ${MAX_IMAGES}). First ${remaining} selected.`);
+    }
+
+    const newEntries = [];
+    for (const file of toAdd) {
+      const isImage = file.type?.startsWith("image/") || file.name?.match(/\.(jpe?g|png|webp|gif|svg|bmp|avif|ico|tiff?)$/i);
+      if (!isImage) {
+        toast.error(`⚠️ "${file.name}" is not a valid image file.`);
+        continue;
+      }
+      newEntries.push({ file, previewUrl: URL.createObjectURL(file) });
+    }
+
+    if (newEntries.length > 0) {
+      setSelectedMultiFiles((prev) => [...prev, ...newEntries]);
+      toast.info(`📸 ${newEntries.length} image(s) added! They will be saved on Publish.`);
+    }
+
+    if (multiFileInputRef.current) multiFileInputRef.current.value = "";
+  };
+
+  // Remove one image from multi selection
+  const removeMultiImage = (index) => {
+    setSelectedMultiFiles((prev) => {
+      const updated = [...prev];
+      URL.revokeObjectURL(updated[index].previewUrl);
+      updated.splice(index, 1);
+      return updated;
+    });
   };
 
   const handleSave = async (e) => {
@@ -183,11 +239,73 @@ const ManageFlashBanner = () => {
         payload.image = finalImageUrl;
       }
 
-      if (formData.imagesStr.trim()) {
-        payload.images = formData.imagesStr
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
+      // Process multiple uploaded images (convert each to WebP base64)
+      let processedMultiImages = [];
+      if (selectedMultiFiles.length > 0) {
+        const multiToast = toast.loading(`⏳ Processing ${selectedMultiFiles.length} image(s)...`);
+        try {
+          const processImage = (file) =>
+            new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const rawBase64 = reader.result;
+                const img = new Image();
+                img.onload = () => {
+                  const maxDim = 1200;
+                  let { width, height } = img;
+                  if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                      height = Math.round((height * maxDim) / width);
+                      width = maxDim;
+                    } else {
+                      width = Math.round((width * maxDim) / height);
+                      height = maxDim;
+                    }
+                  }
+                  const canvas = document.createElement("canvas");
+                  canvas.width = width;
+                  canvas.height = height;
+                  canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+                  resolve(canvas.toDataURL("image/webp", 0.85));
+                };
+                img.onerror = () => resolve(rawBase64);
+                img.src = rawBase64;
+              };
+              reader.onerror = () => resolve(null);
+              reader.readAsDataURL(file);
+            });
+
+          processedMultiImages = (
+            await Promise.all(selectedMultiFiles.map((f) => processImage(f.file)))
+          ).filter(Boolean);
+
+          toast.update(multiToast, {
+            render: `✅ ${processedMultiImages.length} image(s) processed!`,
+            type: "success",
+            isLoading: false,
+            autoClose: 1500,
+          });
+        } catch (multiErr) {
+          console.error("Failed to process multiple images:", multiErr);
+          toast.update(multiToast, {
+            render: "⚠️ Failed to process some images: " + (multiErr.message || "Error"),
+            type: "error",
+            isLoading: false,
+            autoClose: 3000,
+          });
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Merge: existing URL-based images + newly uploaded images
+      const urlBasedImages = formData.imagesStr.trim()
+        ? formData.imagesStr.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+      const allImages = [...urlBasedImages, ...processedMultiImages];
+
+      if (allImages.length > 0) {
+        payload.images = allImages;
       }
 
       if (formData.videoUrl.trim()) {
@@ -274,11 +392,15 @@ const ManageFlashBanner = () => {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl("");
     }
+    // Reset multiple images on edit start
+    selectedMultiFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+    setSelectedMultiFiles([]);
+    if (multiFileInputRef.current) multiFileInputRef.current.value = "";
     setFormData({
       title: msg.title || "",
       description: msg.description || "",
       image: msg.image || "",
-      imagesStr: Array.isArray(msg.images) ? msg.images.join(", ") : "",
+      imagesStr: Array.isArray(msg.images) ? msg.images.filter(s => !s.startsWith("data:")).join(", ") : "",
       videoUrl: Array.isArray(msg.videos) && msg.videos[0] ? msg.videos[0] : "",
       linkUrl: msg.links?.url || "",
       linkName: msg.links?.name || "",
@@ -461,6 +583,73 @@ const ManageFlashBanner = () => {
             </div>
           </div>
 
+          {/* Multiple Images Upload Section */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-gray-600">
+                MULTIPLE IMAGES (Upload up to {MAX_IMAGES} images for gallery/slideshow)
+              </label>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded ${selectedMultiFiles.length >= MAX_IMAGES ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-500"}`}>
+                {selectedMultiFiles.length}/{MAX_IMAGES}
+              </span>
+            </div>
+
+            {/* Add More Images Button */}
+            {selectedMultiFiles.length < MAX_IMAGES && (
+              <div className="relative inline-block mb-3">
+                <input
+                  ref={multiFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleMultiFileSelect}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  title="Choose multiple image files"
+                />
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 px-3 py-2.5 border border-dashed border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition"
+                >
+                  <ImageIcon size={15} className="text-blue-600" />
+                  <span>+ Add Images ({MAX_IMAGES - selectedMultiFiles.length} remaining)</span>
+                </button>
+              </div>
+            )}
+
+            {/* Preview Grid of Selected Multi Images */}
+            {selectedMultiFiles.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {selectedMultiFiles.map((entry, idx) => (
+                  <div key={idx} className="relative group">
+                    <img
+                      src={entry.previewUrl}
+                      alt={`Selected ${idx + 1}`}
+                      className="w-full h-20 object-cover rounded-lg border border-gray-200 shadow-sm"
+                      onError={(e) => { e.target.style.opacity = "0.3"; }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeMultiImage(idx)}
+                      className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition shadow"
+                      title="Remove image"
+                    >
+                      ✕
+                    </button>
+                    <span className="absolute bottom-1 left-1 text-[9px] bg-black/50 text-white px-1 rounded">
+                      {idx + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedMultiFiles.length > 0 && (
+              <p className="text-[11px] text-amber-700 mt-2 font-semibold">
+                📸 {selectedMultiFiles.length} image(s) ready — will be optimized and saved on Publish.
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">
@@ -558,6 +747,21 @@ const ManageFlashBanner = () => {
                   <h4 className="font-bold text-gray-900 text-base truncate">{msg.title}</h4>
                   {msg.description && (
                     <p className="text-xs text-gray-600 mt-1 line-clamp-2">{msg.description}</p>
+                  )}
+                  {/* Images count badge */}
+                  {(msg.image || (Array.isArray(msg.images) && msg.images.length > 0)) && (
+                    <div className="flex items-center gap-2 mt-1">
+                      {msg.image && (
+                        <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded font-semibold">
+                          🖼 Main Image
+                        </span>
+                      )}
+                      {Array.isArray(msg.images) && msg.images.length > 0 && (
+                        <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded font-semibold">
+                          🖼 {msg.images.length} Gallery Image{msg.images.length > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
 
