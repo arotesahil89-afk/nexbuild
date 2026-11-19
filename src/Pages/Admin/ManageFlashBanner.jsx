@@ -302,11 +302,15 @@ const ManageFlashBanner = () => {
       const urlBasedImages = formData.imagesStr.trim()
         ? formData.imagesStr.split(",").map((s) => s.trim()).filter(Boolean)
         : [];
-      const allImages = [...urlBasedImages, ...processedMultiImages];
+      const allGalleryImages = [...urlBasedImages, ...processedMultiImages];
 
-      if (allImages.length > 0) {
-        payload.images = allImages;
+      // Tareeqa 1: Subcollection architecture.
+      // Do NOT store big base64 images in main document (prevents 1MB document limit error).
+      // URLs stay in main doc; all uploaded images are stored as separate subcollection documents!
+      if (urlBasedImages.length > 0) {
+        payload.images = urlBasedImages;
       }
+      payload.imageCount = allGalleryImages.length;
 
       if (formData.videoUrl.trim()) {
         let embedUrl = formData.videoUrl.trim();
@@ -328,20 +332,24 @@ const ManageFlashBanner = () => {
 
       if (isFirebaseConfigured) {
         if (editingId) {
-          await flashFirestoreService.updateFlashMessage(editingId, payload);
+          // If user selected new multi files, pass allGalleryImages; otherwise pass null to keep existing subcollection images
+          const imagesToUpdate = selectedMultiFiles.length > 0 ? allGalleryImages : null;
+          await flashFirestoreService.updateFlashMessage(editingId, payload, imagesToUpdate);
           toast.success("✅ Flash banner updated successfully!");
         } else {
-          await flashFirestoreService.addFlashMessage(payload);
+          // Saves main document + creates individual 1MB documents in subcollection for each image
+          await flashFirestoreService.addFlashMessage(payload, allGalleryImages);
           toast.success("📢 New Flash banner created successfully!");
         }
       } else {
         toast.info("Firebase is not configured. Changes saved in demo state.");
+        const demoItem = { ...payload, images: allGalleryImages };
         if (editingId) {
           setMessages((prev) =>
-            prev.map((m) => (m.id === editingId ? { ...m, ...payload } : m))
+            prev.map((m) => (m.id === editingId ? { ...m, ...demoItem } : m))
           );
         } else {
-          setMessages((prev) => [{ id: `demo-${Date.now()}`, ...payload }, ...prev]);
+          setMessages((prev) => [{ id: `demo-${Date.now()}`, ...demoItem }, ...prev]);
         }
       }
 
@@ -386,7 +394,7 @@ const ManageFlashBanner = () => {
     }
   };
 
-  const startEdit = (msg) => {
+  const startEdit = async (msg) => {
     setSelectedFile(null);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -396,11 +404,21 @@ const ManageFlashBanner = () => {
     selectedMultiFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
     setSelectedMultiFiles([]);
     if (multiFileInputRef.current) multiFileInputRef.current.value = "";
+
+    let existingImages = Array.isArray(msg.images) ? msg.images : [];
+    if (existingImages.length === 0 && (msg.imageCount || 0) > 0 && isFirebaseConfigured && !msg.id.startsWith("demo-")) {
+      try {
+        existingImages = await flashFirestoreService.getBannerImages(msg.id);
+      } catch (e) {
+        console.warn("Could not load subcollection images for edit:", e);
+      }
+    }
+
     setFormData({
       title: msg.title || "",
       description: msg.description || "",
       image: msg.image || "",
-      imagesStr: Array.isArray(msg.images) ? msg.images.filter(s => !s.startsWith("data:")).join(", ") : "",
+      imagesStr: existingImages.filter((s) => !s.startsWith("data:")).join(", "),
       videoUrl: Array.isArray(msg.videos) && msg.videos[0] ? msg.videos[0] : "",
       linkUrl: msg.links?.url || "",
       linkName: msg.links?.name || "",
@@ -749,16 +767,16 @@ const ManageFlashBanner = () => {
                     <p className="text-xs text-gray-600 mt-1 line-clamp-2">{msg.description}</p>
                   )}
                   {/* Images count badge */}
-                  {(msg.image || (Array.isArray(msg.images) && msg.images.length > 0)) && (
+                  {(msg.image || (msg.imageCount > 0) || (Array.isArray(msg.images) && msg.images.length > 0)) && (
                     <div className="flex items-center gap-2 mt-1">
                       {msg.image && (
                         <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded font-semibold">
                           🖼 Main Image
                         </span>
                       )}
-                      {Array.isArray(msg.images) && msg.images.length > 0 && (
+                      {(msg.imageCount > 0 || (Array.isArray(msg.images) && msg.images.length > 0)) && (
                         <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded font-semibold">
-                          🖼 {msg.images.length} Gallery Image{msg.images.length > 1 ? "s" : ""}
+                          🖼 {msg.imageCount || msg.images.length} Gallery Image{(msg.imageCount || msg.images.length) > 1 ? "s" : ""}
                         </span>
                       )}
                     </div>

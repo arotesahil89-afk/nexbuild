@@ -118,6 +118,22 @@ const FlashNewsMobile = () => {
     setSlideIndex(0);
   }, [popupMsg]);
 
+  // On-demand fetch of subcollection images when popup is opened
+  useEffect(() => {
+    if (!popupMsg?.id || popupMsg.id.startsWith("demo-")) return;
+    if ((popupMsg.imageCount || 0) > 0 && (!popupMsg.images || popupMsg.images.length === 0)) {
+      flashFirestoreService.getBannerImages(popupMsg.id).then((subImgs) => {
+        if (subImgs && subImgs.length > 0) {
+          setPopupMsg((prev) =>
+            prev && prev.id === popupMsg.id
+              ? { ...prev, images: Array.from(new Set([...(prev.images || []), ...subImgs])) }
+              : prev
+          );
+        }
+      });
+    }
+  }, [popupMsg?.id]);
+
   // Auto-slide every 3 seconds when multiple images exist
   useEffect(() => {
     if (allSlideImages.length <= 1) return;

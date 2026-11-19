@@ -171,10 +171,55 @@ export const eventsFirestoreService = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 📢 3. FLASH BANNER FIRESTORE SERVICE
+// 📢 3. FLASH BANNER FIRESTORE SERVICE (Supports Subcollections for Images)
 // ─────────────────────────────────────────────────────────────────────────────
 export const flashFirestoreService = {
-  // Real-time listener
+  // Fetch images from subcollection for a specific banner
+  getBannerImages: async (bannerId) => {
+    if (!isFirebaseConfigured || !db || !bannerId) return [];
+    try {
+      const q = query(
+        collection(db, "flash_banners", bannerId, "images"),
+        orderBy("index", "asc")
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => d.data().url).filter(Boolean);
+    } catch (err) {
+      console.warn(`[Firestore] getBannerImages error for ${bannerId}:`, err);
+      return [];
+    }
+  },
+
+  // Save multiple images into the subcollection (each image gets its own 1MB document)
+  saveBannerImages: async (bannerId, imagesList = []) => {
+    if (!isFirebaseConfigured || !db || !bannerId) return [];
+    const firestore = ensureDb();
+    try {
+      // 1. Delete any existing subcollection docs for clean state
+      const existingSnap = await getDocs(
+        collection(firestore, "flash_banners", bannerId, "images")
+      );
+      const deletePromises = existingSnap.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+
+      // 2. Write each image as an individual document (separate 1 MB limit each!)
+      const addPromises = imagesList.map((imgUrl, idx) => {
+        const imgDocRef = doc(firestore, "flash_banners", bannerId, "images", `img_${idx}`);
+        return setDoc(imgDocRef, {
+          url: imgUrl,
+          index: idx,
+          createdAt: serverTimestamp(),
+        });
+      });
+      await Promise.all(addPromises);
+      return imagesList;
+    } catch (err) {
+      console.error(`[Firestore] saveBannerImages error for ${bannerId}:`, err);
+      throw err;
+    }
+  },
+
+  // Real-time listener: immediately returns banners, then asynchronously enriches subcollection images
   listenFlashMessages: (callback, onError) => {
     if (!isFirebaseConfigured || !db) {
       if (onError) onError(new Error("Firebase not configured"));
@@ -184,12 +229,41 @@ export const flashFirestoreService = {
       const q = query(collection(db, "flash_banners"), orderBy("createdAt", "desc"));
       return onSnapshot(
         q,
-        (snapshot) => {
+        async (snapshot) => {
           const items = snapshot.docs.map((docSnap) => ({
             id: docSnap.id,
             ...docSnap.data(),
           }));
+          // Immediately emit current data
           callback(items);
+
+          // Asynchronously enrich banners having subcollection images
+          const bannersWithSubcollection = items.filter((item) => (item.imageCount || 0) > 0);
+          if (bannersWithSubcollection.length > 0) {
+            try {
+              const enrichedItems = await Promise.all(
+                items.map(async (item) => {
+                  if ((item.imageCount || 0) > 0) {
+                    try {
+                      const subImgs = await flashFirestoreService.getBannerImages(item.id);
+                      if (subImgs && subImgs.length > 0) {
+                        return {
+                          ...item,
+                          images: Array.from(new Set([...(item.images || []), ...subImgs])),
+                        };
+                      }
+                    } catch (e) {
+                      console.warn("Could not load subcollection for banner", item.id, e);
+                    }
+                  }
+                  return item;
+                })
+              );
+              callback(enrichedItems);
+            } catch (enrichErr) {
+              console.warn("Error enriching flash banners with subcollections:", enrichErr);
+            }
+          }
         },
         (error) => {
           console.warn("[Firestore] listenFlashMessages error:", error);
@@ -207,38 +281,86 @@ export const flashFirestoreService = {
     const firestore = ensureDb();
     const q = query(collection(firestore, "flash_banners"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((docSnap) => ({
+    const items = snapshot.docs.map((docSnap) => ({
       id: docSnap.id,
       ...docSnap.data(),
     }));
+
+    // Enrich with subcollection images
+    const enriched = await Promise.all(
+      items.map(async (item) => {
+        if ((item.imageCount || 0) > 0) {
+          try {
+            const subImgs = await flashFirestoreService.getBannerImages(item.id);
+            if (subImgs.length > 0) {
+              return {
+                ...item,
+                images: Array.from(new Set([...(item.images || []), ...subImgs])),
+              };
+            }
+          } catch (e) {
+            console.warn("Error getting subcollection images:", e);
+          }
+        }
+        return item;
+      })
+    );
+    return enriched;
   },
 
-  // Add flash message
-  addFlashMessage: async (flashData) => {
+  // Add flash message with subcollection support
+  addFlashMessage: async (flashData, multiImages = []) => {
     const firestore = ensureDb();
     const docRef = await addDoc(collection(firestore, "flash_banners"), {
       ...flashData,
+      imageCount: Array.isArray(multiImages) ? multiImages.length : 0,
       isActive: flashData.isActive !== false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    return { id: docRef.id, ...flashData };
+
+    if (Array.isArray(multiImages) && multiImages.length > 0) {
+      await flashFirestoreService.saveBannerImages(docRef.id, multiImages);
+    }
+
+    return { id: docRef.id, ...flashData, images: multiImages };
   },
 
-  // Update flash message
-  updateFlashMessage: async (id, flashData) => {
+  // Update flash message with subcollection support
+  updateFlashMessage: async (id, flashData, multiImages = null) => {
     const firestore = ensureDb();
     const docRef = doc(firestore, "flash_banners", id);
-    await updateDoc(docRef, {
+    const updatePayload = {
       ...flashData,
       updatedAt: serverTimestamp(),
-    });
-    return { id, ...flashData };
+    };
+    if (multiImages !== null && Array.isArray(multiImages)) {
+      updatePayload.imageCount = multiImages.length;
+    }
+
+    await updateDoc(docRef, updatePayload);
+
+    if (multiImages !== null && Array.isArray(multiImages)) {
+      await flashFirestoreService.saveBannerImages(id, multiImages);
+    }
+
+    return { id, ...flashData, ...(multiImages ? { images: multiImages } : {}) };
   },
 
-  // Delete flash message
+  // Delete flash message and its subcollection
   deleteFlashMessage: async (id) => {
     const firestore = ensureDb();
+    // 1. Delete all images in subcollection first
+    try {
+      const existingSnap = await getDocs(
+        collection(firestore, "flash_banners", id, "images")
+      );
+      const deletePromises = existingSnap.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(deletePromises);
+    } catch (e) {
+      console.warn("[Firestore] Error deleting subcollection images for banner:", id, e);
+    }
+    // 2. Delete main banner document
     await deleteDoc(doc(firestore, "flash_banners", id));
     return { id, success: true };
   },
